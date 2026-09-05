@@ -161,7 +161,7 @@
 
     <footer>
         © 2026 KAIRO AI
-    </footer>
+    </footer
 <script>
 async function askKairo() {
   const input = document.querySelector("input");
@@ -179,15 +179,18 @@ async function askKairo() {
 
   const data = await response.json();
 
-  alert(data.reply || data.error || "KAIRO से जवाब नहीं मिला");
+  alert(data.reply || data.error || "KAIRA से जवाब नहीं मिला");
 
   input.value = "";
-voiceBtn.onclick const voiceBtn = document.getElementById("voiceBtn");
+<button id="voiceBtn">🎙️ बोलकर पूछें</button>
+
+const voiceBtn = document.getElementById("voiceBtn");
 
 if (voiceBtn) {
   voiceBtn.onclick = () => {
     const SpeechRecognition =
-      window.SpeechRecognition || window.webkitSpeechRecognition;
+      window.SpeechRecognition ||
+      window.webkitSpeechRecognition;
 
     if (!SpeechRecognition) {
       alert("आपके browser में Voice Assistant support नहीं है।");
@@ -195,21 +198,29 @@ if (voiceBtn) {
     }
 
     const recognition = new SpeechRecognition();
+
     recognition.lang = "hi-IN";
+    recognition.interimResults = false;
 
     recognition.start();
-    voiceBtn.innerText = "🎙️ सुन रहा हूँ...";
+
+    voiceBtn.innerText = "🎙️ सुन रही हूँ...";
 
     recognition.onresult = (event) => {
+      const input = document.querySelector("input");
+
       input.value = event.results[0][0].transcript;
+
       voiceBtn.innerText = "🎙️ बोलकर पूछें";
+
+      askKairo();
     };
 
     recognition.onerror = () => {
       voiceBtn.innerText = "🎙️ बोलकर पूछें";
     };
   };
-      }
-</script>
+}
+        </script>
 </body>
 </html>
