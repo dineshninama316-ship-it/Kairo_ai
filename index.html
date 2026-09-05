@@ -182,7 +182,34 @@ async function askKairo() {
   alert(data.reply || data.error || "KAIRO से जवाब नहीं मिला");
 
   input.value = "";
-}
+voiceBtn.onclick const voiceBtn = document.getElementById("voiceBtn");
+
+if (voiceBtn) {
+  voiceBtn.onclick = () => {
+    const SpeechRecognition =
+      window.SpeechRecognition || window.webkitSpeechRecognition;
+
+    if (!SpeechRecognition) {
+      alert("आपके browser में Voice Assistant support नहीं है।");
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognition.lang = "hi-IN";
+
+    recognition.start();
+    voiceBtn.innerText = "🎙️ सुन रहा हूँ...";
+
+    recognition.onresult = (event) => {
+      input.value = event.results[0][0].transcript;
+      voiceBtn.innerText = "🎙️ बोलकर पूछें";
+    };
+
+    recognition.onerror = () => {
+      voiceBtn.innerText = "🎙️ बोलकर पूछें";
+    };
+  };
+      }
 </script>
 </body>
 </html>
