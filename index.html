@@ -131,7 +131,7 @@
 
         <div class="chat-box">
             <input type="text" placeholder="KAIRO से कुछ पूछें...">
-            <button>पूछें</button>
+            <button onclick="askKairo()">पूछें</button>
         </div>
     </section>
 
@@ -162,6 +162,27 @@
     <footer>
         © 2026 KAIRO AI
     </footer>
+<script>
+async function askKairo() {
+  const input = document.querySelector("input");
+  const message = input.value.trim();
 
+  if (!message) return;
+
+  const response = await fetch("/api/chat", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ message })
+  });
+
+  const data = await response.json();
+
+  alert(data.reply || data.error || "KAIRO से जवाब नहीं मिला");
+
+  input.value = "";
+}
+</script>
 </body>
 </html>
