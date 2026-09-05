@@ -96,7 +96,7 @@ ${message}`
 
     return res.status(503).json({
       error:
-        "KAIRO AI अभी busy है। थोड़ी देर बाद फिर कोशिश करें।",
+        "KAIRA AI अभी busy है। थोड़ी देर बाद फिर कोशिश करें।",
       details: lastError
     });
 
