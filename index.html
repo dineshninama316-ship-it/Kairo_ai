@@ -4,12 +4,164 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>KAIRO AI</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            background: #05070d;
+            color: white;
+            min-height: 100vh;
+        }
+
+        header {
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #202532;
+        }
+
+        .logo {
+            font-size: 28px;
+            font-weight: bold;
+            letter-spacing: 2px;
+        }
+
+        .status {
+            font-size: 13px;
+            color: #55ff99;
+        }
+
+        .hero {
+            text-align: center;
+            padding: 70px 20px 40px;
+        }
+
+        .hero h1 {
+            font-size: 48px;
+            margin-bottom: 15px;
+        }
+
+        .hero p {
+            color: #aab1c3;
+            font-size: 18px;
+            margin-bottom: 35px;
+        }
+
+        .chat-box {
+            max-width: 700px;
+            margin: auto;
+            background: #10141f;
+            border: 1px solid #292f3d;
+            border-radius: 18px;
+            padding: 15px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .chat-box input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            outline: none;
+            color: white;
+            font-size: 16px;
+        }
+
+        .chat-box button {
+            background: white;
+            color: black;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 12px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .features {
+            max-width: 1000px;
+            margin: 40px auto;
+            padding: 20px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 18px;
+        }
+
+        .card {
+            background: #10141f;
+            border: 1px solid #292f3d;
+            border-radius: 18px;
+            padding: 25px;
+        }
+
+        .card h2 {
+            margin-bottom: 10px;
+            font-size: 20px;
+        }
+
+        .card p {
+            color: #9da5b8;
+            line-height: 1.5;
+        }
+
+        footer {
+            text-align: center;
+            padding: 30px;
+            color: #697185;
+        }
+    </style>
 </head>
 
 <body>
 
-    <h1>KAIRO AI में आपका स्वागत है</h1>
-    <p>आपका व्यक्तिगत AI सहायक</p>
+    <header>
+        <div class="logo">KAIRO</div>
+        <div class="status">● AI ONLINE</div>
+    </header>
+
+    <section class="hero">
+        <h1>KAIRO AI</h1>
+        <p>आपका Personal AI Assistant</p>
+
+        <div class="chat-box">
+            <input type="text" placeholder="KAIRO से कुछ पूछें...">
+            <button>पूछें</button>
+        </div>
+    </section>
+
+    <section class="features">
+
+        <div class="card">
+            <h2>🤖 AI Assistant</h2>
+            <p>KAIRO से सवाल पूछें और अपने काम में AI की मदद लें।</p>
+        </div>
+
+        <div class="card">
+            <h2>📊 Trading Analysis</h2>
+            <p>Market analysis और trading tools के लिए अलग सेक्शन।</p>
+        </div>
+
+        <div class="card">
+            <h2>🎤 Voice Assistant</h2>
+            <p>भविष्य में KAIRO से आवाज़ द्वारा बात करने की सुविधा।</p>
+        </div>
+
+        <div class="card">
+            <h2>⚡ Quick Actions</h2>
+            <p>आपके रोज़ के जरूरी काम जल्दी करने के लिए shortcuts।</p>
+        </div>
+
+    </section>
+
+    <footer>
+        © 2026 KAIRO AI
+    </footer>
 
 </body>
 </html>
