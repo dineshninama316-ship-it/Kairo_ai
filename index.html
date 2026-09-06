@@ -414,25 +414,35 @@
 
     <!-- ================= INPUT ================= -->
 
-    <div class="bottom-area">
+<div class="bottom-area">
 
-        <div class="input-area">
+    <div class="input-area">
 
-    <input
-        type="text"
-        id="messageInput"
-        placeholder="KAIRA से कुछ पूछें..."
-        autocomplete="off"
-    >
+        <input
+            type="text"
+            id="messageInput"
+            placeholder="KAIRA से कुछ पूछें..."
+            autocomplete="off"
+        >
 
-    <!-- SCREEN VISION BUTTON -->
-    <button
-        class="action-btn"
-        id="screenVisionBtn"
-        onclick="analyzeScreen()"
-        title="Screen Vision">
-        🖥️
-    </button>
+        <!-- SCREEN VISION BUTTON -->
+        <button
+            class="action-btn"
+            id="screenVisionBtn"
+            onclick="analyzeScreen()"
+            title="Screen Vision">
+            🖥️
+        </button>
+
+        <!-- VOICE BUTTON -->
+        <button
+            class="action-btn"
+            id="voiceBtn"
+            onclick="startVoice()"
+            title="Voice">
+            🎙️
+        </button>
+
         <!-- SEND BUTTON -->
         <button
             class="action-btn send-btn"
@@ -447,46 +457,7 @@
         Text mode • 🎙️ दबाकर voice में बात करें
     </div>
 
-    </div>
-    <!-- VOICE BUTTON -->
-    <button
-        class="action-btn"
-        id="voiceBtn"
-        onclick="startVoice()"
-        title="Voice">
-        🎙️
-    </button>
-
-    <!-- SEND BUTTON -->
-    <button
-        class="action-btn send-btn"
-        onclick="askKaira()"
-        title="Send">
-        ➤
-    </button>
-
 </div>
-
-<div id="modeText">
-    Text mode • 🎙️ दबाकर voice में बात करें
-</div>
-
-
-            <button
-                class="action-btn send-btn"
-                onclick="askKaira()"
-                title="Send">
-                ➤
-            </button>
-
-        </div>
-
-
-        <div id="modeText">
-            Text mode • 🎙️ दबाकर voice में बात करें
-        </div>
-
-    </div>
 
 <!-- =====================================================
          PART 2 — CHAT + WEATHER + VOICE
