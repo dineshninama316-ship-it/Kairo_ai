@@ -5,18 +5,15 @@ export default async function handler(req, res) {
     ========================= */
 
     if (req.method !== "POST") {
-
         return res.status(405).json({
             error: "Method not allowed"
         });
-
     }
-
 
     try {
 
         /* =========================
-           GET REQUEST DATA
+           REQUEST DATA
         ========================= */
 
         const {
@@ -24,16 +21,13 @@ export default async function handler(req, res) {
             image
         } = req.body || {};
 
-
         if (
             (!message || !message.trim()) &&
             !image
         ) {
-
             return res.status(400).json({
                 error: "Message or image is required"
             });
-
         }
 
 
@@ -44,18 +38,15 @@ export default async function handler(req, res) {
         const apiKey =
             process.env.GEMINI_API_KEY;
 
-
         if (!apiKey) {
-
             return res.status(500).json({
                 error: "GEMINI_API_KEY is missing"
             });
-
         }
 
 
         /* =========================
-           GEMINI MODEL
+           MODEL
         ========================= */
 
         const model =
@@ -63,47 +54,82 @@ export default async function handler(req, res) {
 
 
         /* =========================
-           KAIRA SYSTEM PROMPT
+           VISION MODE
         ========================= */
 
-        const prompt = `
+        const visionMode =
+            !!image;
+
+
+        /* =========================
+           SMART PROMPT
+        ========================= */
+
+        const prompt = visionMode
+            ? `
 तुम्हारा नाम KAIRA है।
 
-तुम एक intelligent, caring और friendly AI assistant हो।
-
-यूज़र से हमेशा natural और सरल हिंदी में बात करो।
+यूज़र तुम्हें camera से वर्तमान तस्वीर दिखा रहा है।
 
 यूज़र को "बॉस" कहकर बुलाओ।
 
-अगर यूज़र English में भी सवाल करे,
-तो जवाब हिंदी में देने की कोशिश करो।
+तस्वीर को ध्यान से देखो और सिर्फ वही बताओ
+जो वास्तव में दिखाई दे रहा है।
 
-अगर image भेजी गई है,
-तो image को ध्यान से देखकर analysis करो।
+बिना evidence के अनुमान मत लगाओ।
 
-Image में जो साफ दिखाई दे,
-सिर्फ उसी के बारे में बताओ।
+अगर व्यक्ति दिखाई दे तो उसके दिखाई देने वाले
+features या surroundings का वर्णन करो।
 
-बिना evidence के चीजों का अनुमान मत लगाओ।
+अगर object दिखाई दे तो उसे पहचानने और समझाने
+की कोशिश करो।
 
-अगर image में कोई object, person, text,
-document, chart या दूसरी चीज दिखाई दे,
-तो उसे सरल हिंदी में समझाओ।
+अगर text दिखाई दे तो उसे पढ़कर समझाओ।
 
-अगर trading chart दिखाई दे,
-तो trend, support, resistance और
-दिखाई देने वाले technical observations
-समझाने में मदद करो।
+अगर document दिखाई दे तो visible information
+समझाओ।
+
+अगर trading chart दिखाई दे तो visible trend,
+support, resistance और technical observations
+बताओ।
 
 लेकिन guaranteed profit या निश्चित भविष्यवाणी
-का दावा मत करो।
+मत करो।
 
-हमेशा helpful और natural जवाब दो।
+जवाब छोटा, natural और सरल हिंदी में दो।
 
 यूज़र का सवाल:
 
 ${message?.trim() ||
-"इस तस्वीर को ध्यान से देखकर बताओ कि इसमें क्या दिखाई दे रहा है।"}
+"इस तस्वीर को देखकर बताओ कि इसमें क्या दिखाई दे रहा है।"}
+`
+            : `
+तुम्हारा नाम KAIRA है।
+
+तुम एक intelligent, caring और friendly AI assistant हो।
+
+यूज़र से natural और सरल हिंदी में बात करो।
+
+यूज़र को "बॉस" कहकर बुलाओ।
+
+अगर यूज़र English में पूछे तो भी संभव हो तो
+हिंदी में जवाब दो।
+
+जवाब सीधा, उपयोगी और natural रखो।
+
+अनावश्यक लंबा जवाब मत दो।
+
+अगर जानकारी current/live हो सकती है,
+तो बिना उपलब्ध live data के उसे निश्चित तथ्य
+की तरह मत बताओ।
+
+अगर trading के बारे में पूछा जाए तो analysis
+में मदद करो, लेकिन guaranteed profit या
+निश्चित भविष्यवाणी का दावा मत करो।
+
+यूज़र का सवाल:
+
+${message?.trim()}
 `;
 
 
@@ -119,15 +145,13 @@ ${message?.trim() ||
 
 
         /* =========================
-           IMAGE
+           ADD IMAGE
         ========================= */
 
         if (image) {
 
             let base64Data = image;
-
-            let mimeType =
-                "image/jpeg";
+            let mimeType = "image/jpeg";
 
 
             if (image.startsWith("data:")) {
@@ -175,7 +199,7 @@ ${message?.trim() ||
 
 
         /* =========================
-           GEMINI API
+           GEMINI REQUEST
         ========================= */
 
         const response =
@@ -215,7 +239,9 @@ ${message?.trim() ||
                         generationConfig: {
 
                             maxOutputTokens:
-                                700
+                                visionMode
+                                    ? 450
+                                    : 500
 
                         }
 
@@ -227,12 +253,16 @@ ${message?.trim() ||
 
 
         /* =========================
-           RESPONSE
+           GEMINI RESPONSE
         ========================= */
 
         const data =
             await response.json();
 
+
+        /* =========================
+           QUOTA ERROR
+        ========================= */
 
         if (!response.ok) {
 
@@ -242,13 +272,45 @@ ${message?.trim() ||
             );
 
 
+            const errorMessage =
+                data.error?.message ||
+                "Gemini API error";
+
+
+            const isQuotaError =
+                response.status === 429 ||
+                errorMessage
+                    .toLowerCase()
+                    .includes("quota");
+
+
+            if (isQuotaError) {
+
+                return res.status(429).json({
+
+                    error:
+                        "बॉस, KAIRA का Gemini quota अभी पूरा हो गया है। थोड़ी देर बाद फिर कोशिश करें।",
+
+                    quotaExceeded:
+                        true,
+
+                    vision:
+                        visionMode
+
+                });
+
+            }
+
+
             return res.status(
                 response.status
             ).json({
 
                 error:
-                    data.error?.message ||
-                    "Gemini API error"
+                    errorMessage,
+
+                vision:
+                    visionMode
 
             });
 
@@ -256,7 +318,7 @@ ${message?.trim() ||
 
 
         /* =========================
-           GET AI REPLY
+           GET REPLY
         ========================= */
 
         const reply =
@@ -292,10 +354,13 @@ ${message?.trim() ||
                 reply,
 
             vision:
-                !!image,
+                visionMode,
 
             model:
-                model
+                model,
+
+            status:
+                "ok"
 
         });
 
@@ -311,8 +376,7 @@ ${message?.trim() ||
         return res.status(500).json({
 
             error:
-                error.message ||
-                "Server error"
+                "बॉस, server में अभी समस्या आ गई। थोड़ी देर बाद फिर कोशिश करें।"
 
         });
 
