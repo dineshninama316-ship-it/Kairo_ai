@@ -22,13 +22,12 @@ export default async function handler(req, res) {
       });
     }
 
-    // Models को fallback order में try करेंगे
+    // Stable models - एक busy हो तो अगला try होगा
     const models = [
-      "gemini-3.5-flash-lite",
-      "gemini-3.1-flash-lite"
+      "gemini-2.5-flash",
+      "gemini-3.5-flash",
+      "gemini-3.6-flash"
     ];
-
-    let lastError = "Gemini API error";
 
     const prompt = `तुम्हारा नाम KAIRA है।
 तुम एक प्यारी, caring और friendly AI assistant हो।
@@ -40,18 +39,24 @@ export default async function handler(req, res) {
 यूज़र का सवाल:
 ${message.trim()}`;
 
+    let lastError = "Gemini API error";
+
     for (const model of models) {
-      for (let attempt = 1; attempt <= 3; attempt++) {
+
+      for (let attempt = 1; attempt <= 2; attempt++) {
 
         try {
+
           const response = await fetch(
             `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`,
             {
               method: "POST",
+
               headers: {
                 "Content-Type": "application/json",
                 "x-goog-api-key": apiKey
               },
+
               body: JSON.stringify({
                 contents: [
                   {
@@ -63,6 +68,7 @@ ${message.trim()}`;
                     ]
                   }
                 ],
+
                 generationConfig: {
                   temperature: 0.7,
                   maxOutputTokens: 500
@@ -74,14 +80,17 @@ ${message.trim()}`;
           const data = await response.json();
 
           if (response.ok) {
+
             const reply =
               data.candidates?.[0]?.content?.parts?.[0]?.text;
 
             if (reply) {
+
               return res.status(200).json({
                 reply,
                 model
               });
+
             }
           }
 
@@ -89,7 +98,8 @@ ${message.trim()}`;
             data.error?.message ||
             `Gemini API error (${response.status})`;
 
-          const errorText = lastError.toLowerCase();
+          const errorText =
+            lastError.toLowerCase();
 
           const temporaryError =
             response.status === 429 ||
@@ -100,38 +110,49 @@ ${message.trim()}`;
             errorText.includes("overloaded") ||
             errorText.includes("temporarily");
 
-          if (temporaryError && attempt < 3) {
+          // Temporary error है तो थोड़ी देर बाद retry
+          if (temporaryError && attempt < 2) {
+
             await new Promise(resolve =>
-              setTimeout(resolve, attempt * 2000)
+              setTimeout(resolve, 2500)
+            );
+
+            continue;
+          }
+
+          // इस model को छोड़कर अगले model पर जाएँ
+          break;
+
+        } catch (error) {
+
+          lastError =
+            error.message || "Network error";
+
+          if (attempt < 2) {
+
+            await new Promise(resolve =>
+              setTimeout(resolve, 2500)
             );
 
             continue;
           }
 
           break;
-
-        } catch (error) {
-          lastError = error.message || "Network error";
-
-          if (attempt < 3) {
-            await new Promise(resolve =>
-              setTimeout(resolve, attempt * 2000)
-            );
-
-            continue;
-          }
         }
       }
     }
 
     return res.status(503).json({
-      error: "KAIRA AI अभी busy है। थोड़ी देर बाद फिर कोशिश करें।",
+      error:
+        "KAIRA AI अभी उपलब्ध नहीं है। थोड़ी देर बाद फिर कोशिश करें।",
       details: lastError
     });
 
   } catch (error) {
+
     return res.status(500).json({
-      error: error.message || "Server error"
+      error:
+        error.message || "Server error"
     });
   }
-            }
+}
