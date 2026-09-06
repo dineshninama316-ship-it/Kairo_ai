@@ -21,10 +21,6 @@
             min-height: 100vh;
         }
 
-        /* =========================
-           HEADER
-        ========================= */
-
         header {
             height: 60px;
             padding: 0 18px;
@@ -60,11 +56,6 @@
             font-size: 12px;
             color: #16a34a;
         }
-
-
-        /* =========================
-           CHAT
-        ========================= */
 
         #chatArea {
             max-width: 850px;
@@ -120,11 +111,6 @@
             border: 1px solid #e5e5e5;
             border-bottom-left-radius: 5px;
         }
-
-
-        /* =========================
-           BOTTOM BAR
-        ========================= */
 
         .bottom-area {
             position: fixed;
@@ -189,11 +175,6 @@
             color: #6b7280;
         }
 
-
-        /* =========================
-           USAGE PANEL
-        ========================= */
-
         #usagePanel {
             display: none;
             position: fixed;
@@ -233,11 +214,6 @@
             background: #f3f4f6;
             cursor: pointer;
         }
-
-
-        /* =========================
-           MOBILE
-        ========================= */
 
         @media (max-width: 600px) {
 
@@ -295,13 +271,7 @@
     </style>
 </head>
 
-
 <body>
-
-
-<!-- =========================
-     HEADER
-========================= -->
 
 <header>
 
@@ -327,39 +297,23 @@
 </header>
 
 
-<!-- =========================
-     USAGE PANEL
-========================= -->
-
 <div id="usagePanel">
 
     <h3>📊 KAIRA Usage</h3>
 
     <div class="usage-row">
         <span>💬 Normal</span>
-        <span
-            class="usage-value"
-            id="normalUsage">
-            0
-        </span>
+        <span class="usage-value" id="normalUsage">0</span>
     </div>
 
     <div class="usage-row">
         <span>👁️ Vision</span>
-        <span
-            class="usage-value"
-            id="visionUsage">
-            0
-        </span>
+        <span class="usage-value" id="visionUsage">0</span>
     </div>
 
     <div class="usage-row">
         <span>🔢 Total</span>
-        <span
-            class="usage-value"
-            id="totalUsage">
-            0
-        </span>
+        <span class="usage-value" id="totalUsage">0</span>
     </div>
 
     <button
@@ -370,10 +324,6 @@
 
 </div>
 
-
-<!-- =========================
-     CHAT
-========================= -->
 
 <main id="chatArea">
 
@@ -391,10 +341,6 @@
 
 </main>
 
-
-<!-- =========================
-     BOTTOM INPUT
-========================= -->
 
 <div class="bottom-area">
 
@@ -435,11 +381,6 @@
 
 <script>
 
-
-/* =========================
-   ELEMENTS
-========================= */
-
 const input =
     document.getElementById("messageInput");
 
@@ -457,95 +398,40 @@ const modeText =
 
 
 /* =========================
-   USAGE DATA
+   USAGE
 ========================= */
 
 let normalUsage =
     Number(
-        localStorage.getItem(
-            "kairaNormalUsage"
-        ) || 0
+        localStorage.getItem("kairaNormalUsage") || 0
     );
 
 let visionUsage =
     Number(
-        localStorage.getItem(
-            "kairaVisionUsage"
-        ) || 0
+        localStorage.getItem("kairaVisionUsage") || 0
     );
 
-
-/* =========================
-   UPDATE USAGE
-========================= */
 
 function updateUsage() {
 
     const total =
-        normalUsage +
+        normalUsage + visionUsage;
+
+    document.getElementById("usage").innerText =
+        "📊 " + total;
+
+    document.getElementById("normalUsage").innerText =
+        normalUsage;
+
+    document.getElementById("visionUsage").innerText =
         visionUsage;
 
-
-    const usage =
-        document.getElementById("usage");
-
-    const normal =
-        document.getElementById(
-            "normalUsage"
-        );
-
-    const vision =
-        document.getElementById(
-            "visionUsage"
-        );
-
-    const totalElement =
-        document.getElementById(
-            "totalUsage"
-        );
-
-
-    if (usage) {
-
-        usage.innerText =
-            "📊 " + total;
-
-    }
-
-
-    if (normal) {
-
-        normal.innerText =
-            normalUsage;
-
-    }
-
-
-    if (vision) {
-
-        vision.innerText =
-            visionUsage;
-
-    }
-
-
-    if (totalElement) {
-
-        totalElement.innerText =
-            total;
-
-    }
-
+    document.getElementById("totalUsage").innerText =
+        total;
 }
 
 
-/* =========================
-   COUNT REQUEST
-========================= */
-
-function countRequest(
-    isVision = false
-) {
+function countRequest(isVision = false) {
 
     if (isVision) {
 
@@ -568,56 +454,33 @@ function countRequest(
     }
 
     updateUsage();
-
 }
 
-
-/* =========================
-   USAGE PANEL
-========================= */
 
 function toggleUsagePanel() {
 
     const panel =
-        document.getElementById(
-            "usagePanel"
-        );
+        document.getElementById("usagePanel");
 
-    if (
+    panel.style.display =
         panel.style.display === "block"
-    ) {
-
-        panel.style.display = "none";
-
-    } else {
-
-        panel.style.display = "block";
-
-    }
-
+            ? "none"
+            : "block";
 }
 
 
-/* =========================
-   RESET USAGE
-========================= */
-
 function resetUsage() {
 
-    const confirmReset =
-        confirm(
+    if (
+        !confirm(
             "क्या आप KAIRA usage counter reset करना चाहते हैं?"
-        );
-
-    if (!confirmReset) {
+        )
+    ) {
         return;
     }
 
-
     normalUsage = 0;
-
     visionUsage = 0;
-
 
     localStorage.removeItem(
         "kairaNormalUsage"
@@ -627,81 +490,48 @@ function resetUsage() {
         "kairaVisionUsage"
     );
 
-
     updateUsage();
-
 }
 
-
-/* =========================
-   INITIAL USAGE
-========================= */
 
 updateUsage();
 
 
 /* =========================
-   ADD CHAT MESSAGE
+   CHAT MESSAGE
 ========================= */
 
-function addMessage(
-    text,
-    type
-) {
+function addMessage(text, type) {
 
     if (welcome) {
-
-        welcome.style.display =
-            "none";
-
+        welcome.style.display = "none";
     }
 
-
     const message =
-        document.createElement(
-            "div"
-        );
+        document.createElement("div");
 
     message.className =
         "message " + type;
 
-
     const bubble =
-        document.createElement(
-            "div"
-        );
+        document.createElement("div");
 
     bubble.className =
         "bubble";
 
-
     bubble.innerText =
         text;
 
+    message.appendChild(bubble);
 
-    message.appendChild(
-        bubble
-    );
-
-
-    chatArea.appendChild(
-        message
-    );
-
+    chatArea.appendChild(message);
 
     window.scrollTo({
-
-        top:
-            document.body.scrollHeight,
-
-        behavior:
-            "smooth"
-
+        top: document.body.scrollHeight,
+        behavior: "smooth"
     });
-
 }
 
-<script>
 
 /* =====================================================
    WEATHER + LOCATION
@@ -725,17 +555,14 @@ function isWeatherQuery(text) {
         "नमी"
     ];
 
-    const lower = text.toLowerCase();
+    const lower =
+        text.toLowerCase();
 
     return words.some(word =>
         lower.includes(word.toLowerCase())
     );
 }
 
-
-/* =====================================================
-   GET USER LOCATION
-===================================================== */
 
 function getUserLocation() {
 
@@ -744,13 +571,13 @@ function getUserLocation() {
         if (!navigator.geolocation) {
 
             reject(
-                new Error("Geolocation supported नहीं है")
+                new Error(
+                    "इस Browser में Location supported नहीं है।"
+                )
             );
 
             return;
-
         }
-
 
         navigator.geolocation.getCurrentPosition(
 
@@ -783,20 +610,17 @@ function getUserLocation() {
         );
 
     });
-
 }
 
-
-/* =====================================================
-   GET WEATHER FROM OPEN-METEO
-===================================================== */
 
 async function getWeather(latitude, longitude) {
 
     const url =
         "https://api.open-meteo.com/v1/forecast" +
-        "?latitude=" + encodeURIComponent(latitude) +
-        "&longitude=" + encodeURIComponent(longitude) +
+        "?latitude=" +
+        encodeURIComponent(latitude) +
+        "&longitude=" +
+        encodeURIComponent(longitude) +
         "&current=" +
         "temperature_2m," +
         "relative_humidity_2m," +
@@ -806,87 +630,54 @@ async function getWeather(latitude, longitude) {
         "wind_speed_10m" +
         "&timezone=auto";
 
-
     const response =
         await fetch(url);
-
 
     if (!response.ok) {
 
         throw new Error(
             "Weather API error"
         );
-
     }
 
-
     return await response.json();
-
 }
 
-
-/* =====================================================
-   WEATHER CODE → HINDI
-===================================================== */
 
 function weatherDescription(code) {
 
     const weather = {
 
         0: "आसमान साफ है",
-
         1: "मुख्य रूप से साफ है",
-
         2: "आंशिक रूप से बादल हैं",
-
         3: "बादल छाए हुए हैं",
-
         45: "कोहरा है",
-
         48: "कोहरा है",
-
         51: "हल्की बूंदाबांदी है",
-
         53: "बूंदाबांदी हो रही है",
-
         55: "तेज बूंदाबांदी हो रही है",
-
         61: "हल्की बारिश हो रही है",
-
         63: "बारिश हो रही है",
-
         65: "तेज बारिश हो रही है",
-
         71: "हल्की बर्फबारी हो रही है",
-
         73: "बर्फबारी हो रही है",
-
         75: "तेज बर्फबारी हो रही है",
-
         80: "हल्की बारिश की बौछारें हैं",
-
         81: "बारिश की बौछारें हैं",
-
         82: "तेज बारिश की बौछारें हैं",
-
         95: "गरज के साथ बारिश हो सकती है",
-
         96: "गरज के साथ बारिश और ओले हो सकते हैं",
-
         99: "गरज के साथ बारिश और ओले हो सकते हैं"
 
     };
 
-
-    return weather[code] ||
-        "मौसम की स्थिति उपलब्ध नहीं है";
-
+    return (
+        weather[code] ||
+        "मौसम की स्थिति उपलब्ध नहीं है"
+    );
 }
 
-
-/* =====================================================
-   PREPARE WEATHER DATA
-===================================================== */
 
 async function getWeatherContext() {
 
@@ -895,14 +686,11 @@ async function getWeatherContext() {
         modeText.innerText =
             "📍 Location पता की जा रही है...";
 
-
         const location =
             await getUserLocation();
 
-
         modeText.innerText =
             "🌦️ Live weather लिया जा रहा है...";
-
 
         const weather =
             await getWeather(
@@ -910,10 +698,8 @@ async function getWeatherContext() {
                 location.longitude
             );
 
-
         const current =
             weather.current;
-
 
         return {
 
@@ -955,70 +741,87 @@ async function getWeatherContext() {
             error
         );
 
-
         return null;
-
     }
-
-}
-
-</script>
-/* =========================
+} 
+    /* =====================================================
    TEXT CHAT
-========================= */
+===================================================== */
 
 async function askKaira() {
 
     const message =
         input.value.trim();
 
-
     if (!message) {
         return;
     }
-
 
     addMessage(
         message,
         "user"
     );
 
-
     input.value = "";
-
-
-    /*
-     * Normal Gemini request
-     */
 
     countRequest(false);
 
+    modeText.innerText =
+        "🧠 KAIRA सोच रही है...";
 
     try {
+
+        let weather = null;
+
+        /* =========================
+           WEATHER CHECK
+        ========================= */
+
+        if (isWeatherQuery(message)) {
+
+            weather =
+                await getWeatherContext();
+
+            if (!weather) {
+
+                addMessage(
+                    "बॉस, मौसम बताने के लिए Location permission चाहिए। कृपया Location Allow करें।",
+                    "kaira"
+                );
+
+                modeText.innerText =
+                    "Text mode • 🎙️ दबाकर voice में बात करें";
+
+                return;
+            }
+        }
+
+
+        /* =========================
+           SEND TO KAIRA API
+        ========================= */
 
         const response =
             await fetch(
                 "/api/chat",
                 {
-
-                    method:
-                        "POST",
+                    method: "POST",
 
                     headers: {
-
                         "Content-Type":
                             "application/json"
-
                     },
 
                     body:
                         JSON.stringify({
 
                             message:
-                                message
+                                message,
+
+                            weather:
+                                weather
 
                         })
-
                 }
             );
 
@@ -1039,97 +842,83 @@ async function askKaira() {
         );
 
 
+        modeText.innerText =
+            weather
+                ? "🌦️ Weather mode"
+                : "Text mode • 🎙️ दबाकर voice में बात करें";
+
+
     } catch (error) {
 
         console.error(
+            "Text API Error:",
             error
         );
 
-
         addMessage(
-
             "Kaira से connection नहीं हो पाया।",
-
             "kaira"
-
         );
 
+        modeText.innerText =
+            "Text mode • 🎙️ दबाकर voice में बात करें";
     }
-
 }
 
 
-/* =========================
+/* =====================================================
    ENTER TO SEND
-========================= */
+===================================================== */
 
 input.addEventListener(
-
     "keydown",
-
     function(event) {
 
-        if (
-            event.key === "Enter"
-        ) {
+        if (event.key === "Enter") {
 
             event.preventDefault();
 
             askKaira();
-
         }
-
     }
-
 );
 
 
-/* =========================
+/* =====================================================
    KAIRA SPEAK
-========================= */
+===================================================== */
 
 function speakKaira(text) {
 
     if (
         !("speechSynthesis" in window)
     ) {
-
         return;
-
     }
-
 
     window.speechSynthesis.cancel();
 
-
     const speech =
-        new SpeechSynthesisUtterance(
-            text
-        );
-
+        new SpeechSynthesisUtterance(text);
 
     speech.lang =
         "hi-IN";
 
-
     speech.rate =
         0.95;
-
 
     speech.pitch =
         1;
 
-
     window.speechSynthesis.speak(
         speech
     );
-
 }
 
 
-/* =========================
-   CAMERA FRAME
-========================= */
+/* =====================================================
+   CAMERA
+===================================================== */
 
 let cameraStream = null;
 
@@ -1138,23 +927,29 @@ async function captureCurrentFrame() {
 
     try {
 
+        if (
+            !navigator.mediaDevices ||
+            !navigator.mediaDevices.getUserMedia
+        ) {
+
+            throw new Error(
+                "Camera supported नहीं है।"
+            );
+        }
+
+
         cameraStream =
-            await navigator.mediaDevices
-            .getUserMedia({
+            await navigator.mediaDevices.getUserMedia({
 
                 video: {
 
                     facingMode: {
-
-                        ideal:
-                            "user"
-
+                        ideal: "user"
                     }
 
                 },
 
-                audio:
-                    false
+                audio: false
 
             });
 
@@ -1168,10 +963,8 @@ async function captureCurrentFrame() {
         video.srcObject =
             cameraStream;
 
-
         video.playsInline =
             true;
-
 
         video.muted =
             true;
@@ -1180,32 +973,29 @@ async function captureCurrentFrame() {
         await video.play();
 
 
-        await new Promise(
-            resolve => {
+        await new Promise(resolve => {
 
-                if (
-                    video.readyState >= 2
-                ) {
+            if (
+                video.readyState >= 2
+            ) {
 
-                    resolve();
+                resolve();
 
-                } else {
+            } else {
 
-                    video.onloadeddata =
-                        resolve;
-
-                }
+                video.onloadeddata =
+                    resolve;
 
             }
-        );
+
+        });
 
 
-        await new Promise(
-            resolve =>
-                setTimeout(
-                    resolve,
-                    250
-                )
+        await new Promise(resolve =>
+            setTimeout(
+                resolve,
+                500
+            )
         );
 
 
@@ -1216,11 +1006,10 @@ async function captureCurrentFrame() {
 
 
         canvas.width =
-            video.videoWidth;
-
+            video.videoWidth || 640;
 
         canvas.height =
-            video.videoHeight;
+            video.videoHeight || 480;
 
 
         const ctx =
@@ -1230,40 +1019,32 @@ async function captureCurrentFrame() {
 
 
         ctx.drawImage(
-
             video,
-
             0,
-
             0,
-
             canvas.width,
-
             canvas.height
-
         );
 
 
         const image =
             canvas.toDataURL(
-
                 "image/jpeg",
-
-                0.70
-
+                0.65
             );
 
 
-        cameraStream
-            .getTracks()
-            .forEach(
-                track =>
-                    track.stop()
-            );
+        if (cameraStream) {
 
+            cameraStream
+                .getTracks()
+                .forEach(
+                    track =>
+                        track.stop()
+                );
 
-        cameraStream =
-            null;
+            cameraStream = null;
+        }
 
 
         return image;
@@ -1277,16 +1058,27 @@ async function captureCurrentFrame() {
         );
 
 
+        if (cameraStream) {
+
+            cameraStream
+                .getTracks()
+                .forEach(
+                    track =>
+                        track.stop()
+                );
+
+            cameraStream = null;
+        }
+
+
         return null;
-
     }
-
 }
 
 
-/* =========================
+/* =====================================================
    VISION DETECTION
-========================= */
+===================================================== */
 
 function needsVision(text) {
 
@@ -1294,28 +1086,25 @@ function needsVision(text) {
 
         "देखो",
         "देख",
-        "दिख",
         "सामने",
-        "मेरे सामने",
         "मुझे देख",
-        "मेरा चेहरा",
         "चेहरा",
-        "कैसा दिख",
         "क्या दिखाई",
         "क्या दिख",
-        "पहचान",
         "पहचानो",
-        "फोटो",
         "तस्वीर",
-        "इमेज",
+        "फोटो",
         "image",
         "camera",
+        "कैमरा",
         "analysis",
-        "एनालिसिस",
+        "analyze",
         "चार्ट देख",
+        "चार्ट",
         "स्क्रीन देख",
-        "स्क्रीन को देख",
-        "मुझे देखकर"
+        "स्क्रीन",
+        "screen",
+        "trading chart"
 
     ];
 
@@ -1330,20 +1119,16 @@ function needsVision(text) {
                 word.toLowerCase()
             )
     );
-
 }
 
 
-/* =========================
+/* =====================================================
    VOICE ASSISTANT
-========================= */
+===================================================== */
 
-let recognition =
-    null;
+let recognition = null;
 
-
-let voiceMode =
-    false;
+let listening = false;
 
 
 function startVoice() {
@@ -1356,29 +1141,21 @@ function startVoice() {
     if (!SpeechRecognition) {
 
         alert(
-            "आपके browser में Voice Assistant support नहीं है।"
+            "इस Browser में Voice Recognition उपलब्ध नहीं है। Chrome इस्तेमाल करें।"
         );
 
         return;
-
     }
 
 
-    voiceMode =
-        true;
+    if (listening) {
 
+        if (recognition) {
+            recognition.stop();
+        }
 
-    voiceBtn.classList.add(
-        "voice-active"
-    );
-
-
-    voiceBtn.innerText =
-        "🔴";
-
-
-    modeText.innerText =
-        "Voice mode • Kaira सुन रही है...";
+        return;
+    }
 
 
     recognition =
@@ -1388,57 +1165,70 @@ function startVoice() {
     recognition.lang =
         "hi-IN";
 
+    recognition.continuous =
+        false;
 
     recognition.interimResults =
         false;
 
 
-    recognition.continuous =
-        false;
+    listening = true;
 
 
-    recognition.start();
+    voiceBtn.classList.add(
+        "voice-active"
+    );
+
+
+    voiceBtn.innerText =
+        "⏹️";
+
+
+    modeText.innerText =
+        "🎙️ सुन रही हूँ...";
 
 
     recognition.onresult =
         async function(event) {
 
             const spokenText =
-                event
-                    .results[0][0]
+                event.results[0][0]
                     .transcript
                     .trim();
 
 
-            modeText.innerText =
-                "Voice mode • Kaira सोच रही है...";
+            if (!spokenText) {
+                return;
+            }
 
 
-            /*
-             * Check whether
-             * camera vision is needed
-             */
-
-            const visionRequired =
+            const visionMode =
                 needsVision(
                     spokenText
                 );
 
 
-            let image =
-                null;
+            const weatherMode =
+                isWeatherQuery(
+                    spokenText
+                );
+
+
+            let image = null;
+
+            let weather = null;
 
 
             /* =========================
-               VISION
+               CAMERA VISION
             ========================= */
 
-            if (
-                visionRequired
-            ) {
+            if (visionMode) {
+
+                countRequest(true);
 
                 modeText.innerText =
-                    "👁️ Kaira आपको देख रही है...";
+                    "📷 Camera से देख रही हूँ...";
 
 
                 image =
@@ -1447,34 +1237,70 @@ function startVoice() {
 
                 if (!image) {
 
+                    modeText.innerText =
+                        "Text mode • 🎙️ दबाकर voice में बात करें";
+
+
                     speakKaira(
-
-                        "बॉस, camera की permission नहीं मिली। कृपया camera permission Allow करें।"
-
+                        "बॉस, Camera permission नहीं मिली। Camera की permission Allow करें।"
                     );
 
 
+                    return;
+                }
+            }
+
+
+            /* =========================
+               WEATHER
+            ========================= */
+
+            if (weatherMode) {
+
+                modeText.innerText =
+                    "📍 Location पता की जा रही है...";
+
+
+                weather =
+                    await getWeatherContext();
+
+
+                if (!weather) {
+
                     modeText.innerText =
-                        "Voice mode • Camera permission चाहिए";
+                        "Text mode • 🎙️ दबाकर voice में बात करें";
+
+
+                    speakKaira(
+                        "बॉस, मौसम बताने के लिए Location permission चाहिए। कृपया Location Allow करें।"
+                    );
 
 
                     return;
-
                 }
+            }
+
+
+            /* =========================
+               NORMAL VOICE COUNT
+            ========================= */
+
+            if (!visionMode) {
+
+                countRequest(false);
 
             }
 
 
-            /*
-             * Count request
-             */
-
-            countRequest(
-                visionRequired
-            );
-
-
             try {
+
+                modeText.innerText =
+                    visionMode
+                        ? "👁️ KAIRA देख रही है..."
+                        : weatherMode
+                            ? "🌦️ KAIRA मौसम देख रही है..."
+                            : "🧠 KAIRA सोच रही है...";
+
 
                 const response =
                     await fetch(
@@ -1491,20 +1317,22 @@ function startVoice() {
 
                             },
 
-                                                            body:
-                                    JSON.stringify({
+                            body:
+                                JSON.stringify({
 
-                                        message:
-                                            spokenText,
+                                    message:
+                                        spokenText,
 
-                                        image:
-                                            image
+                                    image:
+                                        image,
 
-                                    })
+                                    weather:
+                                        weather
 
-                            }
+                                })
 
-                        );
+                        }
+                    );
 
 
                 const data =
@@ -1518,250 +1346,196 @@ function startVoice() {
 
 
                 /*
-                 * Voice query chat में दिखाई नहीं जाएगी
+                 * Voice में user की बात
+                 * chat में दिखाई नहीं जाएगी।
                  */
 
-                speakKaira(reply);
+                addMessage(
+                    reply,
+                    "kaira"
+                );
+
+
+                speakKaira(
+                    reply
+                );
 
 
                 modeText.innerText =
-                    "Voice mode • Kaira तैयार है";
+                    visionMode
+                        ? "📷 Vision mode • 🎙️ फिर बोलें"
+                        : weatherMode
+                            ? "🌦️ Weather mode • 🎙️ फिर बोलें"
+                            : "Voice mode • 🎙️ फिर बोलें";
 
 
             } catch (error) {
 
                 console.error(
-                    "Voice Error:",
+                    "Voice API Error:",
                     error
                 );
 
 
+                const errorText =
+                    "Kaira से connection नहीं हो पाया।";
+
+
+                addMessage(
+                    errorText,
+                    "kaira"
+                );
+
+
                 speakKaira(
-                    "बॉस, Kaira से connection नहीं हो पाया।"
+                    errorText
                 );
 
 
                 modeText.innerText =
-                    "Voice mode • Connection error";
-
+                    "Voice mode • 🎙️ फिर बोलें";
             }
-
-
-            /*
-             * Voice button reset
-             */
-
-            voiceBtn.classList.remove(
-                "voice-active"
-            );
-
-            voiceBtn.innerText =
-                "🎙️";
-
-            voiceMode =
-                false;
 
         };
 
 
     recognition.onerror =
-        function(error) {
+        function(event) {
 
             console.error(
-                "Speech Recognition Error:",
-                error
+                "Voice Error:",
+                event.error
             );
 
 
-            voiceBtn.classList.remove(
-                "voice-active"
-            );
+            if (
+                event.error ===
+                "not-allowed"
+            ) {
 
-            voiceBtn.innerText =
-                "🎙️";
+                speakKaira(
+                    "बॉस, Microphone permission Allow करनी होगी।"
+                );
 
+            } else if (
+                event.error ===
+                "no-speech"
+            ) {
 
-            voiceMode =
-                false;
+                modeText.innerText =
+                    "🎙️ कोई आवाज़ नहीं मिली। फिर से बोलें।";
 
+            } else {
 
-            modeText.innerText =
-                "Text mode • 🎙️ दबाकर voice में बात करें";
-
+                modeText.innerText =
+                    "Voice में समस्या आई। फिर से कोशिश करें।";
+            }
         };
 
 
     recognition.onend =
         function() {
 
+            listening = false;
+
             voiceBtn.classList.remove(
                 "voice-active"
             );
 
             voiceBtn.innerText =
                 "🎙️";
-
-
-            voiceMode =
-                false;
-
         };
 
-}
 
-
-/* =====================================================
+    recognition.start();
+    } 
+    /* =====================================================
    SCREEN VISION
-   ===================================================== */
-
-let screenStream = null;
-
-
-/*
- * Screen से एक current frame capture करना
- */
+===================================================== */
 
 async function captureScreenFrame() {
 
+    let screenStream = null;
+
     try {
 
-        if (
-            !navigator.mediaDevices ||
-            !navigator.mediaDevices.getDisplayMedia
-        ) {
-
-            throw new Error(
-                "Screen sharing supported नहीं है।"
-            );
-
-        }
-
-
-        modeText.innerText =
-            "🖥️ Kaira आपकी screen देख रही है...";
-
-
-        /*
-         * Browser screen-share permission
-         */
-
         screenStream =
-            await navigator.mediaDevices
-                .getDisplayMedia({
+            await navigator.mediaDevices.getDisplayMedia({
 
-                    video: {
+                video: {
+                    frameRate: 5
+                },
 
-                        frameRate: 5
-
-                    },
-
-                    audio: false
-
-                });
+                audio: false
+            });
 
 
         const video =
-            document.createElement(
-                "video"
-            );
+            document.createElement("video");
 
 
         video.srcObject =
             screenStream;
 
-
-        video.muted =
+        video.playsInline =
             true;
 
-
-        video.playsInline =
+        video.muted =
             true;
 
 
         await video.play();
 
 
-        /*
-         * Screen को render होने के लिए थोड़ा समय
-         */
-
-        await new Promise(
-            resolve =>
-                setTimeout(
-                    resolve,
-                    500
-                )
+        await new Promise(resolve =>
+            setTimeout(resolve, 700)
         );
 
 
         const canvas =
-            document.createElement(
-                "canvas"
-            );
+            document.createElement("canvas");
 
 
         canvas.width =
-            video.videoWidth;
-
+            video.videoWidth || 1280;
 
         canvas.height =
-            video.videoHeight;
+            video.videoHeight || 720;
 
 
         const ctx =
-            canvas.getContext(
-                "2d"
-            );
+            canvas.getContext("2d");
 
 
         ctx.drawImage(
-
             video,
-
             0,
-
             0,
-
             canvas.width,
-
             canvas.height
-
         );
 
 
         const image =
             canvas.toDataURL(
-
                 "image/jpeg",
-
                 0.65
-
             );
 
-
-        /*
-         * Screen sharing बंद
-         */
 
         screenStream
             .getTracks()
-            .forEach(
-                track =>
-                    track.stop()
+            .forEach(track =>
+                track.stop()
             );
-
-
-        screenStream =
-            null;
 
 
         return image;
 
-
     } catch (error) {
 
         console.error(
-            "Screen Vision Error:",
+            "Screen Error:",
             error
         );
 
@@ -1770,56 +1544,41 @@ async function captureScreenFrame() {
 
             screenStream
                 .getTracks()
-                .forEach(
-                    track =>
-                        track.stop()
+                .forEach(track =>
+                    track.stop()
                 );
-
         }
 
 
-        screenStream =
-            null;
-
-
         return null;
-
     }
-
 }
 
 
-/*
- * Screen को KAIRA के पास भेजना
- */
+/* =====================================================
+   SCREEN ANALYSIS
+===================================================== */
 
 async function analyzeScreen() {
+
+    countRequest(true);
+
+    modeText.innerText =
+        "🖥️ Screen share शुरू करें...";
 
     const image =
         await captureScreenFrame();
 
-
     if (!image) {
 
-        speakKaira(
-            "बॉस, screen share की permission नहीं मिली।"
-        );
-
-
         modeText.innerText =
-            "Screen Vision • Permission चाहिए";
+            "Text mode • 🎙️ दबाकर voice में बात करें";
 
         return;
-
     }
 
-
-    /*
-     * Vision request count
-     */
-
-    countRequest(true);
-
+    modeText.innerText =
+        "👁️ KAIRA आपकी screen देख रही है...";
 
     try {
 
@@ -1828,14 +1587,11 @@ async function analyzeScreen() {
                 "/api/chat",
                 {
 
-                    method:
-                        "POST",
+                    method: "POST",
 
                     headers: {
-
                         "Content-Type":
                             "application/json"
-
                     },
 
                     body:
@@ -1848,7 +1604,6 @@ async function analyzeScreen() {
                                 image
 
                         })
-
                 }
             );
 
@@ -1860,12 +1615,8 @@ async function analyzeScreen() {
         const reply =
             data.reply ||
             data.error ||
-            "KAIRA screen को समझ नहीं पाई।";
+            "Screen का analysis नहीं हो पाया।";
 
-
-        /*
-         * Screen का result chat में दिखेगा
-         */
 
         addMessage(
             reply,
@@ -1873,70 +1624,52 @@ async function analyzeScreen() {
         );
 
 
-        /*
-         * Voice में भी जवाब
-         */
-
-        speakKaira(reply);
+        speakKaira(
+            reply
+        );
 
 
         modeText.innerText =
-            "Screen Vision • Analysis पूरा हुआ";
+            "🖥️ Screen Vision • 🎙️ फिर बोलें";
 
 
     } catch (error) {
 
         console.error(
-            "Screen Analysis Error:",
+            "Screen API Error:",
             error
         );
 
 
         addMessage(
-            "बॉस, screen analysis नहीं हो पाया।",
+            "Screen analysis में समस्या आ गई।",
             "kaira"
         );
 
 
-        speakKaira(
-            "बॉस, screen analysis नहीं हो पाया।"
-        );
-
-
         modeText.innerText =
-            "Screen Vision • Error";
-
+            "Text mode • 🎙️ दबाकर voice में बात करें";
     }
-
 }
 
 
 /* =====================================================
-   SCREEN VISION BUTTON
-   ===================================================== */
+   SCREEN BUTTON
+===================================================== */
 
 function createScreenButton() {
-
-    /*
-     * अगर button पहले से मौजूद है
-     * तो दोबारा create नहीं होगा
-     */
 
     if (
         document.getElementById(
             "screenVisionBtn"
         )
     ) {
-
         return;
-
     }
 
 
     const button =
-        document.createElement(
-            "button"
-        );
+        document.createElement("button");
 
 
     button.id =
@@ -1959,27 +1692,42 @@ function createScreenButton() {
         analyzeScreen;
 
 
-    /*
-     * Voice button के पहले button लगाना
-     */
-
     voiceBtn.parentNode.insertBefore(
         button,
         voiceBtn
     );
-
 }
 
 
-/* =====================================================
-   START
-   ===================================================== */
-
 createScreenButton();
 
+
+/* =====================================================
+   CLEANUP
+===================================================== */
+
+window.addEventListener(
+    "beforeunload",
+    function() {
+
+        if (cameraStream) {
+
+            cameraStream
+                .getTracks()
+                .forEach(track =>
+                    track.stop()
+                );
+        }
+
+        if (window.speechSynthesis) {
+
+            window.speechSynthesis.cancel();
+        }
+
+    }
+);
 
 </script>
 
 </body>
 </html>
-                           
