@@ -181,10 +181,24 @@ async function askKairo() {
 
   alert(data.reply || data.error || "KAIRA से जवाब नहीं मिला");
 
-  input.value = "";
+<input ...>
+
 <button id="voiceBtn">🎙️ बोलकर पूछें</button>
 
+<script>
+async function askKairo() {
+  ...
+  input.value = "";
+}
+
 const voiceBtn = document.getElementById("voiceBtn");
+
+if (voiceBtn) {
+  voiceBtn.onclick = () => {
+    ...
+  };
+}
+</script>
 
 if (voiceBtn) {
   voiceBtn.onclick = () => {
