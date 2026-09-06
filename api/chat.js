@@ -62,14 +62,79 @@ export default async function handler(req, res) {
 
 
         /* =========================
+           LIVE SEARCH DETECTION
+        ========================= */
+
+        const text =
+            message?.trim() || "";
+
+        const liveKeywords = [
+
+            "आज",
+            "अभी",
+            "वर्तमान",
+            "लेटेस्ट",
+            "न्यूज़",
+            "न्यूज",
+            "खबर",
+            "ताजा खबर",
+            "मौसम",
+            "weather",
+            "today",
+            "now",
+            "current",
+            "latest",
+            "news",
+            "live",
+            "price",
+            "प्राइस",
+            "भाव",
+            "रेट",
+            "rate",
+            "कीमत",
+            "कितना है",
+            "अभी कितना",
+            "आज कितना",
+            "market",
+            "मार्केट",
+            "bitcoin",
+            "crypto",
+            "सोना",
+            "चांदी",
+            "gold",
+            "silver",
+            "share",
+            "stock",
+            "शेयर",
+            "स्टॉक",
+            "ipl",
+            "cricket",
+            "result",
+            "रिजल्ट",
+            "election",
+            "चुनाव"
+
+        ];
+
+        const liveMode =
+            !visionMode &&
+            liveKeywords.some(
+                keyword =>
+                    text.toLowerCase()
+                        .includes(keyword.toLowerCase())
+            );
+
+
+        /* =========================
            SMART PROMPT
         ========================= */
 
         const prompt = visionMode
+
             ? `
 तुम्हारा नाम KAIRA है।
 
-यूज़र तुम्हें camera से वर्तमान तस्वीर दिखा रहा है।
+यूज़र तुम्हें camera या screen से वर्तमान तस्वीर दिखा रहा है।
 
 यूज़र को "बॉस" कहकर बुलाओ।
 
@@ -78,7 +143,7 @@ export default async function handler(req, res) {
 
 बिना evidence के अनुमान मत लगाओ।
 
-अगर व्यक्ति दिखाई दे तो उसके दिखाई देने वाले
+अगर व्यक्ति दिखाई दे तो दिखाई देने वाले
 features या surroundings का वर्णन करो।
 
 अगर object दिखाई दे तो उसे पहचानने और समझाने
@@ -100,9 +165,46 @@ support, resistance और technical observations
 
 यूज़र का सवाल:
 
-${message?.trim() ||
+${text ||
 "इस तस्वीर को देखकर बताओ कि इसमें क्या दिखाई दे रहा है।"}
 `
+
+            : liveMode
+
+            ? `
+तुम्हारा नाम KAIRA है।
+
+तुम्हारे पास Google Search के माध्यम से
+current web information देखने की सुविधा है।
+
+यूज़र को "बॉस" कहकर बुलाओ।
+
+यूज़र का सवाल current/live information मांग रहा है।
+
+जरूरत पड़ने पर Google Search का इस्तेमाल करके
+ताजा और विश्वसनीय जानकारी प्राप्त करो।
+
+जो जानकारी search से मिले उसी के आधार पर
+जवाब दो।
+
+अगर अलग-अलग sources में जानकारी अलग हो,
+तो यह स्पष्ट बताओ।
+
+अनिश्चित जानकारी को निश्चित तथ्य की तरह मत बताओ।
+
+जवाब सरल, natural और हिंदी में दो।
+
+जरूरत हो तो तारीख और समय भी स्पष्ट करो।
+
+अगर trading/market पूछा जाए तो current data के
+आधार पर analysis दो, लेकिन guaranteed profit
+या निश्चित भविष्यवाणी मत करो।
+
+यूज़र का सवाल:
+
+${text}
+`
+
             : `
 तुम्हारा नाम KAIRA है।
 
@@ -129,7 +231,7 @@ ${message?.trim() ||
 
 यूज़र का सवाल:
 
-${message?.trim()}
+${text}
 `;
 
 
@@ -199,6 +301,56 @@ ${message?.trim()}
 
 
         /* =========================
+           GEMINI REQUEST BODY
+        ========================= */
+
+        const requestBody = {
+
+            contents: [
+
+                {
+
+                    role: "user",
+
+                    parts:
+                        parts
+
+                }
+
+            ],
+
+            generationConfig: {
+
+                maxOutputTokens:
+                    visionMode
+                        ? 450
+                        : 500
+
+            }
+
+        };
+
+
+        /* =========================
+           GOOGLE SEARCH TOOL
+        ========================= */
+
+        if (liveMode) {
+
+            requestBody.tools = [
+
+                {
+
+                    google_search: {}
+
+                }
+
+            ];
+
+        }
+
+
+        /* =========================
            GEMINI REQUEST
         ========================= */
 
@@ -221,31 +373,10 @@ ${message?.trim()}
 
                     },
 
-                    body: JSON.stringify({
-
-                        contents: [
-
-                            {
-
-                                role: "user",
-
-                                parts:
-                                    parts
-
-                            }
-
-                        ],
-
-                        generationConfig: {
-
-                            maxOutputTokens:
-                                visionMode
-                                    ? 450
-                                    : 500
-
-                        }
-
-                    })
+                    body:
+                        JSON.stringify(
+                            requestBody
+                        )
 
                 }
 
@@ -261,7 +392,7 @@ ${message?.trim()}
 
 
         /* =========================
-           QUOTA ERROR
+           ERROR HANDLING
         ========================= */
 
         if (!response.ok) {
@@ -295,7 +426,10 @@ ${message?.trim()}
                         true,
 
                     vision:
-                        visionMode
+                        visionMode,
+
+                    live:
+                        liveMode
 
                 });
 
@@ -310,7 +444,10 @@ ${message?.trim()}
                     errorMessage,
 
                 vision:
-                    visionMode
+                    visionMode,
+
+                live:
+                    liveMode
 
             });
 
@@ -326,7 +463,8 @@ ${message?.trim()}
                 .candidates?.[0]
                 ?.content?.parts
                 ?.map(
-                    part => part.text || ""
+                    part =>
+                        part.text || ""
                 )
                 .join("")
                 .trim();
@@ -355,6 +493,9 @@ ${message?.trim()}
 
             vision:
                 visionMode,
+
+            live:
+                liveMode,
 
             model:
                 model,
