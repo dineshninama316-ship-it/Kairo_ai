@@ -523,14 +523,12 @@ async function analyzeScreen(){
         }
 
 
-        const stream =
-            await navigator.mediaDevices.getDisplayMedia({
-
-                video:true,
-
-                audio:false
-
-            });
+        const stream = await navigator.mediaDevices.getDisplayMedia({
+    video: {
+        displaySurface: "monitor"
+    },
+    audio: false
+});
 
 
         const video = document.createElement("video");
