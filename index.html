@@ -2,12 +2,13 @@
 <html lang="hi">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
 
     <title>KAIRA AI</title>
 
     <style>
-
         * {
             box-sizing: border-box;
             margin: 0;
@@ -16,71 +17,134 @@
         }
 
         body {
-            background: #ffffff;
-            color: #202123;
+            background: #05070d;
+            color: white;
             min-height: 100vh;
+            display: flex;
+            flex-direction: column;
         }
 
+        /* ================= HEADER ================= */
+
         header {
-            height: 60px;
-            padding: 0 18px;
+            height: 65px;
+            background: #0b0f18;
+            border-bottom: 1px solid #202735;
+
             display: flex;
             align-items: center;
-            border-bottom: 1px solid #e5e5e5;
-            background: #ffffff;
+            justify-content: space-between;
+
+            padding: 0 15px;
+
             position: sticky;
             top: 0;
             z-index: 10;
         }
 
         .logo {
-            font-size: 22px;
+            font-size: 24px;
             font-weight: bold;
             letter-spacing: 1px;
         }
 
-        .header-right {
-            margin-left: auto;
-            display: flex;
-            align-items: center;
-            gap: 14px;
+        .online {
+            color: #00ff88;
+            font-size: 13px;
         }
 
-        .usage {
-            font-size: 12px;
-            color: #6b7280;
+        #usageBtn {
+            background: #151b27;
+            border: 1px solid #293244;
+            color: white;
+
+            padding: 8px 12px;
+            border-radius: 10px;
+
             cursor: pointer;
         }
 
-        .status {
+        /* ================= USAGE PANEL ================= */
+
+        #usagePanel {
+            display: none;
+
+            background: #0d121c;
+            border-bottom: 1px solid #202735;
+
+            padding: 15px;
+        }
+
+        .usage-box {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .usage-card {
+            background: #151b27;
+            border: 1px solid #293244;
+
+            border-radius: 12px;
+            padding: 12px;
+
+            flex: 1;
+            min-width: 140px;
+        }
+
+        .usage-title {
             font-size: 12px;
-            color: #16a34a;
+            color: #9da7b8;
         }
 
-        #chatArea {
-            max-width: 850px;
+        .usage-number {
+            font-size: 22px;
+            font-weight: bold;
+            margin-top: 5px;
+        }
+
+        #resetUsageBtn {
+            margin-top: 12px;
+
+            background: #1d2635;
+            border: 1px solid #303b4e;
+
+            color: white;
+            padding: 8px 12px;
+
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        /* ================= CHAT AREA ================= */
+
+        main {
+            flex: 1;
+
+            width: 100%;
+            max-width: 900px;
+
             margin: auto;
-            padding: 25px 16px 150px;
+
+            padding: 20px 15px 120px;
+
+            overflow-y: auto;
         }
 
-        .welcome {
+        #welcome {
             text-align: center;
-            padding: 90px 10px 40px;
-        }
 
-        .welcome h1 {
-            font-size: 34px;
-            margin-bottom: 10px;
-        }
+            margin-top: 80px;
 
-        .welcome p {
-            color: #6b7280;
-            font-size: 16px;
+            color: #9da7b8;
+            font-size: 18px;
+            line-height: 1.6;
         }
 
         .message {
             display: flex;
-            margin: 18px 0;
+            margin-bottom: 15px;
         }
 
         .message.user {
@@ -92,1341 +156,777 @@
         }
 
         .bubble {
-            max-width: 80%;
-            padding: 13px 16px;
-            border-radius: 18px;
+            max-width: 85%;
+
+            padding: 12px 15px;
+
+            border-radius: 16px;
+
             line-height: 1.5;
-            font-size: 16px;
+
             white-space: pre-wrap;
+
             word-wrap: break-word;
         }
 
         .user .bubble {
-            background: #f1f1f1;
-            border-bottom-right-radius: 5px;
+            background: #1769ff;
+            border-bottom-right-radius: 4px;
         }
 
         .kaira .bubble {
-            background: #ffffff;
-            border: 1px solid #e5e5e5;
-            border-bottom-left-radius: 5px;
+            background: #151b27;
+            border: 1px solid #293244;
+            border-bottom-left-radius: 4px;
         }
+
+        /* ================= BOTTOM AREA ================= */
 
         .bottom-area {
             position: fixed;
+
+            bottom: 0;
             left: 0;
             right: 0;
-            bottom: 0;
-            background: rgba(255,255,255,0.96);
-            border-top: 1px solid #e5e5e5;
-            padding: 10px 12px 14px;
+
+            background: #05070d;
+
+            border-top: 1px solid #202735;
+
+            padding: 10px 12px;
+
             z-index: 20;
         }
 
         .input-area {
-            max-width: 850px;
+            max-width: 900px;
             margin: auto;
+
             display: flex;
             align-items: center;
-            gap: 8px;
-            border: 1px solid #d1d5db;
-            border-radius: 22px;
-            padding: 7px 8px 7px 14px;
-            background: #ffffff;
-            box-shadow: 0 2px 12px rgba(0,0,0,0.05);
+
+            gap: 7px;
         }
 
         #messageInput {
             flex: 1;
-            border: none;
+
+            background: #111722;
+
+            border: 1px solid #293244;
+
+            color: white;
+
             outline: none;
-            font-size: 16px;
-            background: transparent;
-            color: #111827;
-            min-width: 0;
+
+            padding: 13px 14px;
+
+            border-radius: 14px;
+
+            font-size: 15px;
         }
 
-        .icon-button {
-            width: 42px;
-            height: 42px;
-            border: none;
-            border-radius: 50%;
-            background: #f3f4f6;
+        #messageInput::placeholder {
+            color: #7f8999;
+        }
+
+        .action-btn {
+            width: 45px;
+            height: 45px;
+
+            border-radius: 12px;
+
+            border: 1px solid #293244;
+
+            background: #111722;
+
+            color: white;
+
+            font-size: 20px;
+
             cursor: pointer;
-            font-size: 19px;
-            flex-shrink: 0;
-        }
 
-        .send-button {
-            background: #111827;
-            color: white;
-        }
-
-        .voice-active {
-            background: #dc2626 !important;
-            color: white;
-        }
-
-        .mode-text {
-            max-width: 850px;
-            margin: 6px auto 0;
-            text-align: center;
-            font-size: 11px;
-            color: #6b7280;
-        }
-
-        #usagePanel {
-            display: none;
-            position: fixed;
-            top: 65px;
-            right: 12px;
-            width: 240px;
-            background: #ffffff;
-            border: 1px solid #e5e5e5;
-            border-radius: 16px;
-            padding: 16px;
-            box-shadow: 0 8px 30px rgba(0,0,0,0.12);
-            z-index: 50;
-        }
-
-        #usagePanel h3 {
-            font-size: 16px;
-            margin-bottom: 14px;
-        }
-
-        .usage-row {
             display: flex;
-            justify-content: space-between;
-            margin: 10px 0;
-            font-size: 14px;
+            align-items: center;
+            justify-content: center;
         }
 
-        .usage-value {
-            font-weight: bold;
+        .action-btn:hover {
+            background: #1a2230;
         }
 
-        .reset-button {
-            width: 100%;
-            margin-top: 12px;
-            padding: 9px;
-            border: none;
-            border-radius: 10px;
-            background: #f3f4f6;
-            cursor: pointer;
+        .send-btn {
+            background: #1769ff;
+            border-color: #1769ff;
         }
+
+        .send-btn:hover {
+            background: #0f58dd;
+        }
+
+        #modeText {
+            max-width: 900px;
+
+            margin: 7px auto 0;
+
+            color: #707b8e;
+
+            font-size: 11px;
+
+            text-align: center;
+        }
+
+        /* ================= MOBILE ================= */
 
         @media (max-width: 600px) {
 
             header {
-                height: 55px;
+                height: 58px;
+                padding: 0 10px;
             }
 
             .logo {
-                font-size: 20px;
+                font-size: 21px;
             }
 
-            .header-right {
-                gap: 9px;
-            }
-
-            .usage {
+            .online {
                 font-size: 11px;
             }
 
-            .status {
-                font-size: 10px;
+            #usageBtn {
+                padding: 7px 9px;
+                font-size: 12px;
             }
 
-            #chatArea {
-                padding: 15px 10px 145px;
+            main {
+                padding: 15px 10px 120px;
             }
 
-            .welcome {
-                padding-top: 100px;
-            }
-
-            .welcome h1 {
-                font-size: 30px;
+            #welcome {
+                margin-top: 60px;
+                font-size: 16px;
             }
 
             .bubble {
-                max-width: 88%;
-                font-size: 15px;
-            }
-
-            .input-area {
-                border-radius: 20px;
+                max-width: 90%;
+                font-size: 14px;
             }
 
             #messageInput {
-                font-size: 15px;
+                font-size: 14px;
+                padding: 12px;
             }
 
-            #usagePanel {
-                right: 8px;
-                width: 220px;
+            .action-btn {
+                width: 42px;
+                height: 42px;
+                font-size: 18px;
             }
         }
-
     </style>
 </head>
 
 <body>
 
-<header>
+    <!-- ================= HEADER ================= -->
 
-    <div class="logo">
-        KAIRA
-    </div>
+    <header>
 
-    <div class="header-right">
-
-        <div
-            class="usage"
-            id="usage"
-            onclick="toggleUsagePanel()">
-            📊 0
+        <div class="logo">
+            KAIRA
         </div>
 
-        <div class="status">
+        <div class="online">
             ● ONLINE
         </div>
 
-    </div>
-
-</header>
-
-
-<div id="usagePanel">
-
-    <h3>📊 KAIRA Usage</h3>
-
-    <div class="usage-row">
-        <span>💬 Normal</span>
-        <span class="usage-value" id="normalUsage">0</span>
-    </div>
-
-    <div class="usage-row">
-        <span>👁️ Vision</span>
-        <span class="usage-value" id="visionUsage">0</span>
-    </div>
-
-    <div class="usage-row">
-        <span>🔢 Total</span>
-        <span class="usage-value" id="totalUsage">0</span>
-    </div>
-
-    <button
-        class="reset-button"
-        onclick="resetUsage()">
-        🗑️ Counter Reset
-    </button>
-
-</div>
-
-
-<main id="chatArea">
-
-    <div
-        class="welcome"
-        id="welcome">
-
-        <h1>कैसे मदद करूँ?</h1>
-
-        <p>
-            मैं Kaira हूँ। आप मुझसे बात कर सकते हैं।
-        </p>
-
-    </div>
-
-</main>
-
-
-<div class="bottom-area">
-
-    <div class="input-area">
-
-        <input
-            id="messageInput"
-            type="text"
-            placeholder="Kaira से पूछें..."
-            autocomplete="off"
-        >
-
-        <button
-            id="voiceBtn"
-            class="icon-button"
-            onclick="startVoice()"
-            title="Voice">
-            🎙️
+        <button id="usageBtn"
+                onclick="toggleUsagePanel()">
+            Usage
         </button>
 
-        <button
-            class="icon-button send-button"
-            onclick="askKaira()"
-            title="Send">
-            ➤
-        </button>
+    </header>
 
-    </div>
 
-    <div
-        class="mode-text"
-        id="modeText">
-        Text mode • 🎙️ दबाकर voice में बात करें
-    </div>
+    <!-- ================= USAGE PANEL ================= -->
 
-</div>
+    <div id="usagePanel">
 
+        <div class="usage-box">
 
-<script>
+            <div class="usage-card">
+                <div class="usage-title">
+                    Normal Requests
+                </div>
 
-const input =
-    document.getElementById("messageInput");
-
-const chatArea =
-    document.getElementById("chatArea");
-
-const welcome =
-    document.getElementById("welcome");
-
-const voiceBtn =
-    document.getElementById("voiceBtn");
-
-const modeText =
-    document.getElementById("modeText");
-
-
-/* =========================
-   USAGE
-========================= */
-
-let normalUsage =
-    Number(
-        localStorage.getItem("kairaNormalUsage") || 0
-    );
-
-let visionUsage =
-    Number(
-        localStorage.getItem("kairaVisionUsage") || 0
-    );
-
-
-function updateUsage() {
-
-    const total =
-        normalUsage + visionUsage;
-
-    document.getElementById("usage").innerText =
-        "📊 " + total;
-
-    document.getElementById("normalUsage").innerText =
-        normalUsage;
-
-    document.getElementById("visionUsage").innerText =
-        visionUsage;
-
-    document.getElementById("totalUsage").innerText =
-        total;
-}
-
-
-function countRequest(isVision = false) {
-
-    if (isVision) {
-
-        visionUsage++;
-
-        localStorage.setItem(
-            "kairaVisionUsage",
-            visionUsage
-        );
-
-    } else {
-
-        normalUsage++;
-
-        localStorage.setItem(
-            "kairaNormalUsage",
-            normalUsage
-        );
-
-    }
-
-    updateUsage();
-}
-
-
-function toggleUsagePanel() {
-
-    const panel =
-        document.getElementById("usagePanel");
-
-    panel.style.display =
-        panel.style.display === "block"
-            ? "none"
-            : "block";
-}
-
-
-function resetUsage() {
-
-    if (
-        !confirm(
-            "क्या आप KAIRA usage counter reset करना चाहते हैं?"
-        )
-    ) {
-        return;
-    }
-
-    normalUsage = 0;
-    visionUsage = 0;
-
-    localStorage.removeItem(
-        "kairaNormalUsage"
-    );
-
-    localStorage.removeItem(
-        "kairaVisionUsage"
-    );
-
-    updateUsage();
-}
-
-
-updateUsage();
-
-
-/* =========================
-   CHAT MESSAGE
-========================= */
-
-function addMessage(text, type) {
-
-    if (welcome) {
-        welcome.style.display = "none";
-    }
-
-    const message =
-        document.createElement("div");
-
-    message.className =
-        "message " + type;
-
-    const bubble =
-        document.createElement("div");
-
-    bubble.className =
-        "bubble";
-
-    bubble.innerText =
-        text;
-
-    message.appendChild(bubble);
-
-    chatArea.appendChild(message);
-
-    window.scrollTo({
-        top: document.body.scrollHeight,
-        behavior: "smooth"
-    });
-}
-
-
-/* =====================================================
-   WEATHER + LOCATION
-===================================================== */
-
-function isWeatherQuery(text) {
-
-    const words = [
-        "मौसम",
-        "आज का मौसम",
-        "आज का वेदर",
-        "weather",
-        "today weather",
-        "temperature",
-        "तापमान",
-        "बारिश",
-        "बारिस",
-        "rain",
-        "हवा",
-        "humidity",
-        "नमी"
-    ];
-
-    const lower =
-        text.toLowerCase();
-
-    return words.some(word =>
-        lower.includes(word.toLowerCase())
-    );
-}
-
-/* =====================================================
-   GET KAIRA LOCATION
-===================================================== */
-
-function getUserLocation() {
-
-    return new Promise(function(resolve, reject) {
-
-        /* पहले saved location check करें */
-
-        const savedLat =
-            localStorage.getItem(
-                "kairaLatitude"
-            );
-
-        const savedLon =
-            localStorage.getItem(
-                "kairaLongitude"
-            );
-
-
-        if (
-            savedLat &&
-            savedLon
-        ) {
-
-            resolve({
-
-                latitude:
-                    Number(savedLat),
-
-                longitude:
-                    Number(savedLon)
-            });
-
-            return;
-        }
-
-
-        /* अगर location saved नहीं है */
-
-        if (
-            !navigator.geolocation
-        ) {
-
-            reject(
-                new Error(
-                    "Location उपलब्ध नहीं है।"
-                )
-            );
-
-            return;
-        }
-
-
-        modeText.innerText =
-            "📍 Location permission मांगी जा रही है...";
-
-
-        navigator.geolocation.getCurrentPosition(
-
-            function(position) {
-
-                const lat =
-                    position.coords.latitude;
-
-                const lon =
-                    position.coords.longitude;
-
-
-                /* Location save करें */
-
-                localStorage.setItem(
-                    "kairaLatitude",
-                    lat
-                );
-
-                localStorage.setItem(
-                    "kairaLongitude",
-                    lon
-                );
-
-
-                modeText.innerText =
-                    "📍 Location मिल गई";
-
-
-                resolve({
-
-                    latitude:
-                        lat,
-
-                    longitude:
-                        lon
-                });
-            },
-
-
-            function(error) {
-
-                console.error(
-                    "Location Error:",
-                    error
-                );
-
-
-                modeText.innerText =
-                    "📍 Location नहीं मिली";
-
-
-                reject(error);
-            },
-
-
-            {
-
-                enableHighAccuracy:
-                    true,
-
-                timeout:
-                    15000,
-
-                maximumAge:
+                <div class="usage-number"
+                     id="normalUsage">
                     0
-            }
-        );
+                </div>
+            </div>
 
-    });
-}
 
-    return new Promise((resolve, reject) => {
+            <div class="usage-card">
+                <div class="usage-title">
+                    Vision Requests
+                </div>
 
-        if (!navigator.geolocation) {
+                <div class="usage-number"
+                     id="visionUsage">
+                    0
+                </div>
+            </div>
 
-            reject(
-                new Error(
-                    "इस Browser में Location supported नहीं है।"
-                )
+        </div>
+
+
+        <button id="resetUsageBtn"
+                onclick="resetUsage()">
+            Reset Usage
+        </button>
+
+    </div>
+
+
+    <!-- ================= CHAT ================= -->
+
+    <main id="chatArea">
+
+        <div id="welcome">
+
+            <div style="font-size:45px;">
+                🤖
+            </div>
+
+            <div>
+                <b>नमस्ते बॉस 👋</b>
+            </div>
+
+            <div>
+                मैं <b>KAIRA</b> हूँ।<br>
+                बताइए, आज क्या काम करना है?
+            </div>
+
+        </div>
+
+    </main>
+
+
+    <!-- ================= INPUT ================= -->
+
+    <div class="bottom-area">
+
+        <div class="input-area">
+
+            <input
+                type="text"
+                id="messageInput"
+                placeholder="KAIRA से कुछ पूछें..."
+                autocomplete="off"
+            >
+
+
+            <button
+                class="action-btn"
+                id="screenVisionBtn"
+                onclick="analyzeScreen()"
+                title="Screen Vision">
+                🖥️
+            </button>
+
+
+            <button
+                class="action-btn"
+                id="voiceBtn"
+                onclick="startVoice()"
+                title="Voice">
+                🎙️
+            </button>
+
+
+            <button
+                class="action-btn send-btn"
+                onclick="askKaira()"
+                title="Send">
+                ➤
+            </button>
+
+        </div>
+
+
+        <div id="modeText">
+            Text mode • 🎙️ दबाकर voice में बात करें
+        </div>
+
+    </div>
+
+<!-- =====================================================
+         PART 2 — CHAT + WEATHER + VOICE
+    ===================================================== -->
+
+    <script>
+
+        /* ================= BASIC ELEMENTS ================= */
+
+        const input =
+            document.getElementById("messageInput");
+
+        const chatArea =
+            document.getElementById("chatArea");
+
+        const welcome =
+            document.getElementById("welcome");
+
+        const voiceBtn =
+            document.getElementById("voiceBtn");
+
+        const modeText =
+            document.getElementById("modeText");
+
+
+        /* ================= USAGE ================= */
+
+        let normalUsage =
+            Number(
+                localStorage.getItem("kairaNormalUsage") || 0
             );
 
-            return;
+        let visionUsage =
+            Number(
+                localStorage.getItem("kairaVisionUsage") || 0
+            );
+
+
+        function updateUsage() {
+
+            document.getElementById("normalUsage").innerText =
+                normalUsage;
+
+            document.getElementById("visionUsage").innerText =
+                visionUsage;
         }
 
-        navigator.geolocation.getCurrentPosition(
 
-            position => {
+        function countRequest(isVision = false) {
 
-                resolve({
+            if (isVision) {
 
-                    latitude:
-                        position.coords.latitude,
+                visionUsage++;
 
-                    longitude:
-                        position.coords.longitude
-
-                });
-
-            },
-
-            error => {
-
-                reject(error);
-
-            },
-
-            {
-                enableHighAccuracy: false,
-                timeout: 10000,
-                maximumAge: 300000
-            }
-
-        );
-
-    });
-}
-
-
-async function getWeather(latitude, longitude) {
-
-    const url =
-        "https://api.open-meteo.com/v1/forecast" +
-        "?latitude=" +
-        encodeURIComponent(latitude) +
-        "&longitude=" +
-        encodeURIComponent(longitude) +
-        "&current=" +
-        "temperature_2m," +
-        "relative_humidity_2m," +
-        "apparent_temperature," +
-        "precipitation," +
-        "weather_code," +
-        "wind_speed_10m" +
-        "&timezone=auto";
-
-    const response =
-        await fetch(url);
-
-    if (!response.ok) {
-
-        throw new Error(
-            "Weather API error"
-        );
-    }
-
-    return await response.json();
-}
-
-
-function weatherDescription(code) {
-
-    const weather = {
-
-        0: "आसमान साफ है",
-        1: "मुख्य रूप से साफ है",
-        2: "आंशिक रूप से बादल हैं",
-        3: "बादल छाए हुए हैं",
-        45: "कोहरा है",
-        48: "कोहरा है",
-        51: "हल्की बूंदाबांदी है",
-        53: "बूंदाबांदी हो रही है",
-        55: "तेज बूंदाबांदी हो रही है",
-        61: "हल्की बारिश हो रही है",
-        63: "बारिश हो रही है",
-        65: "तेज बारिश हो रही है",
-        71: "हल्की बर्फबारी हो रही है",
-        73: "बर्फबारी हो रही है",
-        75: "तेज बर्फबारी हो रही है",
-        80: "हल्की बारिश की बौछारें हैं",
-        81: "बारिश की बौछारें हैं",
-        82: "तेज बारिश की बौछारें हैं",
-        95: "गरज के साथ बारिश हो सकती है",
-        96: "गरज के साथ बारिश और ओले हो सकते हैं",
-        99: "गरज के साथ बारिश और ओले हो सकते हैं"
-
-    };
-
-    return (
-        weather[code] ||
-        "मौसम की स्थिति उपलब्ध नहीं है"
-    );
-}
-
-
-async function getWeatherContext() {
-
-    try {
-
-        modeText.innerText =
-            "📍 Location पता की जा रही है...";
-
-        const location =
-            await getUserLocation();
-
-        modeText.innerText =
-            "🌦️ Live weather लिया जा रहा है...";
-
-        const weather =
-            await getWeather(
-                location.latitude,
-                location.longitude
-            );
-
-        const current =
-            weather.current;
-
-        return {
-
-            latitude:
-                location.latitude,
-
-            longitude:
-                location.longitude,
-
-            temperature:
-                current.temperature_2m,
-
-            humidity:
-                current.relative_humidity_2m,
-
-            apparentTemperature:
-                current.apparent_temperature,
-
-            precipitation:
-                current.precipitation,
-
-            windSpeed:
-                current.wind_speed_10m,
-
-            weatherCode:
-                current.weather_code,
-
-            description:
-                weatherDescription(
-                    current.weather_code
-                )
-
-        };
-
-    } catch (error) {
-
-        console.error(
-            "Weather Error:",
-            error
-        );
-
-        return null;
-    }
-} 
-    /* =====================================================
-   TEXT CHAT
-===================================================== */
-
-async function askKaira() {
-
-    const message =
-        input.value.trim();
-
-    if (!message) {
-        return;
-    }
-
-    addMessage(
-        message,
-        "user"
-    );
-
-    input.value = "";
-
-    countRequest(false);
-
-    modeText.innerText =
-        "🧠 KAIRA सोच रही है...";
-
-    try {
-
-        let weather = null;
-
-        /* =========================
-           WEATHER CHECK
-        ========================= */
-
-        if (isWeatherQuery(message)) {
-
-            weather =
-                await getWeatherContext();
-
-            if (!weather) {
-
-                addMessage(
-                    "बॉस, मौसम बताने के लिए Location permission चाहिए। कृपया Location Allow करें।",
-                    "kaira"
+                localStorage.setItem(
+                    "kairaVisionUsage",
+                    visionUsage
                 );
-
-                modeText.innerText =
-                    "Text mode • 🎙️ दबाकर voice में बात करें";
-
-                return;
-            }
-        }
-
-
-        /* =========================
-           SEND TO KAIRA API
-        ========================= */
-
-        const response =
-            await fetch(
-                "/api/chat",
-                {
-                    method: "POST",
-
-                    headers: {
-                        "Content-Type":
-                            "application/json"
-                    },
-
-                    body:
-                        JSON.stringify({
-
-                            message:
-                                message,
-
-                            weather:
-                                weather
-
-                        })
-                }
-            );
-
-
-        const data =
-            await response.json();
-
-
-        const reply =
-            data.reply ||
-            data.error ||
-            "Kaira से जवाब नहीं मिला।";
-
-
-        addMessage(
-            reply,
-            "kaira"
-        );
-
-
-        modeText.innerText =
-            weather
-                ? "🌦️ Weather mode"
-                : "Text mode • 🎙️ दबाकर voice में बात करें";
-
-
-    } catch (error) {
-
-        console.error(
-            "Text API Error:",
-            error
-        );
-
-        addMessage(
-            "Kaira से connection नहीं हो पाया।",
-            "kaira"
-        );
-
-        modeText.innerText =
-            "Text mode • 🎙️ दबाकर voice में बात करें";
-    }
-}
-
-
-/* =====================================================
-   ENTER TO SEND
-===================================================== */
-
-input.addEventListener(
-    "keydown",
-    function(event) {
-
-        if (event.key === "Enter") {
-
-            event.preventDefault();
-
-            askKaira();
-        }
-    }
-);
-
-
-/* =====================================================
-   KAIRA SPEAK
-===================================================== */
-
-function speakKaira(text) {
-
-    if (
-        !("speechSynthesis" in window)
-    ) {
-        return;
-    }
-
-    window.speechSynthesis.cancel();
-
-    const speech =
-        new SpeechSynthesisUtterance(text);
-
-    speech.lang =
-        "hi-IN";
-
-    speech.rate =
-        0.95;
-
-    speech.pitch =
-        1;
-
-    window.speechSynthesis.speak(
-        speech
-    );
-}
-
-
-/* =====================================================
-   CAMERA
-===================================================== */
-
-let cameraStream = null;
-
-
-async function captureCurrentFrame() {
-
-    try {
-
-        if (
-            !navigator.mediaDevices ||
-            !navigator.mediaDevices.getUserMedia
-        ) {
-
-            throw new Error(
-                "Camera supported नहीं है।"
-            );
-        }
-
-
-        cameraStream =
-            await navigator.mediaDevices.getUserMedia({
-
-                video: {
-
-                    facingMode: {
-                        ideal: "user"
-                    }
-
-                },
-
-                audio: false
-
-            });
-
-
-        const video =
-            document.createElement(
-                "video"
-            );
-
-
-        video.srcObject =
-            cameraStream;
-
-        video.playsInline =
-            true;
-
-        video.muted =
-            true;
-
-
-        await video.play();
-
-
-        await new Promise(resolve => {
-
-            if (
-                video.readyState >= 2
-            ) {
-
-                resolve();
 
             } else {
 
-                video.onloadeddata =
-                    resolve;
+                normalUsage++;
 
+                localStorage.setItem(
+                    "kairaNormalUsage",
+                    normalUsage
+                );
             }
 
-        });
+            updateUsage();
+        }
 
 
-        await new Promise(resolve =>
-            setTimeout(
-                resolve,
-                500
-            )
-        );
+        function toggleUsagePanel() {
+
+            const panel =
+                document.getElementById("usagePanel");
+
+            if (panel.style.display === "block") {
+
+                panel.style.display = "none";
+
+            } else {
+
+                panel.style.display = "block";
+            }
+        }
 
 
-        const canvas =
-            document.createElement(
-                "canvas"
+        function resetUsage() {
+
+            normalUsage = 0;
+            visionUsage = 0;
+
+            localStorage.setItem(
+                "kairaNormalUsage",
+                "0"
             );
 
-
-        canvas.width =
-            video.videoWidth || 640;
-
-        canvas.height =
-            video.videoHeight || 480;
-
-
-        const ctx =
-            canvas.getContext(
-                "2d"
+            localStorage.setItem(
+                "kairaVisionUsage",
+                "0"
             );
 
-
-        ctx.drawImage(
-            video,
-            0,
-            0,
-            canvas.width,
-            canvas.height
-        );
+            updateUsage();
+        }
 
 
-        const image =
-            canvas.toDataURL(
-                "image/jpeg",
-                0.65
+        updateUsage();
+
+
+        /* ================= ADD MESSAGE ================= */
+
+        function addMessage(text, type) {
+
+            if (welcome) {
+                welcome.style.display = "none";
+            }
+
+            const message =
+                document.createElement("div");
+
+            message.className =
+                "message " + type;
+
+
+            const bubble =
+                document.createElement("div");
+
+            bubble.className = "bubble";
+
+            bubble.innerText = text;
+
+
+            message.appendChild(bubble);
+
+            chatArea.appendChild(message);
+
+
+            chatArea.scrollTop =
+                chatArea.scrollHeight;
+        }
+
+
+        /* ================= WEATHER ================= */
+
+        function isWeatherQuery(text) {
+
+            const t =
+                text.toLowerCase();
+
+            const keywords = [
+
+                "मौसम",
+                "बारिश",
+                "तापमान",
+                "गर्मी",
+                "ठंड",
+                "weather",
+                "temperature",
+                "rain",
+                "rainfall",
+                "climate"
+
+            ];
+
+            return keywords.some(
+                word => t.includes(word)
             );
+        }
 
 
-        if (cameraStream) {
+        /* ================= LOCATION ================= */
 
-            cameraStream
-                .getTracks()
-                .forEach(
-                    track =>
-                        track.stop()
+        function getUserLocation() {
+
+            return new Promise(
+                (resolve, reject) => {
+
+                    const saved =
+                        localStorage.getItem(
+                            "kairaLocation"
+                        );
+
+
+                    if (saved) {
+
+                        try {
+
+                            resolve(
+                                JSON.parse(saved)
+                            );
+
+                            return;
+
+                        } catch (error) {
+
+                            localStorage.removeItem(
+                                "kairaLocation"
+                            );
+                        }
+                    }
+
+
+                    if (!navigator.geolocation) {
+
+                        reject(
+                            new Error(
+                                "Location उपलब्ध नहीं है।"
+                            )
+                        );
+
+                        return;
+                    }
+
+
+                    navigator.geolocation.getCurrentPosition(
+
+                        position => {
+
+                            const location = {
+
+                                latitude:
+                                    position.coords.latitude,
+
+                                longitude:
+                                    position.coords.longitude
+
+                            };
+
+
+                            localStorage.setItem(
+                                "kairaLocation",
+                                JSON.stringify(location)
+                            );
+
+
+                            resolve(location);
+                        },
+
+
+                        error => {
+
+                            reject(
+                                new Error(
+                                    "Location permission नहीं मिली।"
+                                )
+                            );
+
+                        },
+
+                        {
+                            enableHighAccuracy: false,
+                            timeout: 10000,
+                            maximumAge: 600000
+                        }
+                    );
+                }
+            );
+        }
+
+
+        /* ================= WEATHER API ================= */
+
+        async function getWeather(
+            latitude,
+            longitude
+        ) {
+
+            const url =
+                "https://api.open-meteo.com/v1/forecast" +
+                "?latitude=" + latitude +
+                "&longitude=" + longitude +
+                "&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m" +
+                "&timezone=auto";
+
+
+            const response =
+                await fetch(url);
+
+
+            if (!response.ok) {
+
+                throw new Error(
+                    "Weather API error"
+                );
+            }
+
+
+            return await response.json();
+        }
+
+
+        /* ================= WEATHER DESCRIPTION ================= */
+
+        function weatherDescription(code) {
+
+            const descriptions = {
+
+                0: "आसमान साफ है ☀️",
+
+                1: "मुख्यतः साफ मौसम है 🌤️",
+
+                2: "आंशिक बादल हैं ⛅",
+
+                3: "बादल छाए हुए हैं ☁️",
+
+                45: "कोहरा है 🌫️",
+
+                48: "कोहरा है 🌫️",
+
+                51: "हल्की बूंदाबांदी हो रही है 🌦️",
+
+                53: "बूंदाबांदी हो रही है 🌦️",
+
+                55: "तेज बूंदाबांदी हो रही है 🌧️",
+
+                61: "हल्की बारिश हो रही है 🌧️",
+
+                63: "बारिश हो रही है 🌧️",
+
+                65: "तेज बारिश हो रही है ⛈️",
+
+                71: "हल्की बर्फबारी हो रही है ❄️",
+
+                73: "बर्फबारी हो रही है ❄️",
+
+                75: "तेज बर्फबारी हो रही है ❄️",
+
+                80: "हल्की बारिश की बौछारें हैं 🌦️",
+
+                81: "बारिश की बौछारें हैं 🌧️",
+
+                82: "तेज बारिश की बौछारें हैं ⛈️",
+
+                95: "गरज के साथ बारिश हो सकती है ⛈️",
+
+                96: "गरज के साथ बारिश और ओले हो सकते हैं ⛈️",
+
+                99: "गरज के साथ तेज बारिश और ओले हो सकते हैं ⛈️"
+
+            };
+
+
+            return (
+                descriptions[code] ||
+                "मौसम की जानकारी उपलब्ध है।"
+            );
+        }
+
+
+        async function getWeatherContext() {
+
+            try {
+
+                const location =
+                    await getUserLocation();
+
+
+                const weather =
+                    await getWeather(
+                        location.latitude,
+                        location.longitude
+                    );
+
+
+                const current =
+                    weather.current;
+
+
+                return {
+
+                    temperature:
+                        current.temperature_2m,
+
+                    humidity:
+                        current.relative_humidity_2m,
+
+                    apparent_temperature:
+                        current.apparent_temperature,
+
+                    wind_speed:
+                        current.wind_speed_10m,
+
+                    weather_code:
+                        current.weather_code,
+
+                    description:
+                        weatherDescription(
+                            current.weather_code
+                        )
+
+                };
+
+            } catch (error) {
+
+                console.error(
+                    "Weather error:",
+                    error
                 );
 
-            cameraStream = null;
+                return null;
+            }
         }
 
 
-        return image;
+        /* ================= TEXT CHAT ================= */
+
+        async function askKaira() {
+
+            const message =
+                input.value.trim();
 
 
-    } catch (error) {
-
-        console.error(
-            "Camera Error:",
-            error
-        );
-
-
-        if (cameraStream) {
-
-            cameraStream
-                .getTracks()
-                .forEach(
-                    track =>
-                        track.stop()
-                );
-
-            cameraStream = null;
-        }
-
-
-        return null;
-    }
-}
-
-
-/* =====================================================
-   VISION DETECTION
-===================================================== */
-
-function needsVision(text) {
-
-    const words = [
-
-        "देखो",
-        "देख",
-        "सामने",
-        "मुझे देख",
-        "चेहरा",
-        "क्या दिखाई",
-        "क्या दिख",
-        "पहचानो",
-        "तस्वीर",
-        "फोटो",
-        "image",
-        "camera",
-        "कैमरा",
-        "analysis",
-        "analyze",
-        "चार्ट देख",
-        "चार्ट",
-        "स्क्रीन देख",
-        "स्क्रीन",
-        "screen",
-        "trading chart"
-
-    ];
-
-
-    const lower =
-        text.toLowerCase();
-
-
-    return words.some(
-        word =>
-            lower.includes(
-                word.toLowerCase()
-            )
-    );
-}
-
-
-/* =====================================================
-   VOICE ASSISTANT
-===================================================== */
-
-let recognition = null;
-
-let listening = false;
-
-
-function startVoice() {
-
-    const SpeechRecognition =
-        window.SpeechRecognition ||
-        window.webkitSpeechRecognition;
-
-
-    if (!SpeechRecognition) {
-
-        alert(
-            "इस Browser में Voice Recognition उपलब्ध नहीं है। Chrome इस्तेमाल करें।"
-        );
-
-        return;
-    }
-
-
-    if (listening) {
-
-        if (recognition) {
-            recognition.stop();
-        }
-
-        return;
-    }
-
-
-    recognition =
-        new SpeechRecognition();
-
-
-    recognition.lang =
-        "hi-IN";
-
-    recognition.continuous =
-        false;
-
-    recognition.interimResults =
-        false;
-
-
-    listening = true;
-
-
-    voiceBtn.classList.add(
-        "voice-active"
-    );
-
-
-    voiceBtn.innerText =
-        "⏹️";
-
-
-    modeText.innerText =
-        "🎙️ सुन रही हूँ...";
-
-
-    recognition.onresult =
-        async function(event) {
-
-            const spokenText =
-                event.results[0][0]
-                    .transcript
-                    .trim();
-
-
-            if (!spokenText) {
+            if (!message) {
                 return;
             }
 
 
-            const visionMode =
-                needsVision(
-                    spokenText
-                );
+            addMessage(
+                message,
+                "user"
+            );
 
 
-            const weatherMode =
-                isWeatherQuery(
-                    spokenText
-                );
+            input.value = "";
 
 
-            let image = null;
-
-            let weather = null;
+            countRequest(false);
 
 
-            /* =========================
-               CAMERA VISION
-            ========================= */
-
-            if (visionMode) {
-
-                countRequest(true);
-
-                modeText.innerText =
-                    "📷 Camera से देख रही हूँ...";
-
-
-                image =
-                    await captureCurrentFrame();
-
-
-                if (!image) {
-
-                    modeText.innerText =
-                        "Text mode • 🎙️ दबाकर voice में बात करें";
-
-
-                    speakKaira(
-                        "बॉस, Camera permission नहीं मिली। Camera की permission Allow करें।"
-                    );
-
-
-                    return;
-                }
-            }
-
-
-            /* =========================
-               WEATHER
-            ========================= */
-
-            if (weatherMode) {
-
-                modeText.innerText =
-                    "📍 Location पता की जा रही है...";
-
-
-                weather =
-                    await getWeatherContext();
-
-
-                if (!weather) {
-
-                    modeText.innerText =
-                        "Text mode • 🎙️ दबाकर voice में बात करें";
-
-
-                    speakKaira(
-                        "बॉस, मौसम बताने के लिए Location permission चाहिए। कृपया Location Allow करें।"
-                    );
-
-
-                    return;
-                }
-            }
-
-
-            /* =========================
-               NORMAL VOICE COUNT
-            ========================= */
-
-            if (!visionMode) {
-
-                countRequest(false);
-
-            }
+            modeText.innerText =
+                "🧠 KAIRA सोच रही है...";
 
 
             try {
 
-                modeText.innerText =
-                    visionMode
-                        ? "👁️ KAIRA देख रही है..."
-                        : weatherMode
-                            ? "🌦️ KAIRA मौसम देख रही है..."
-                            : "🧠 KAIRA सोच रही है...";
+                let weather = null;
+
+
+                if (isWeatherQuery(message)) {
+
+                    weather =
+                        await getWeatherContext();
+
+
+                    if (!weather) {
+
+                        const reply =
+                            "बॉस, मौसम की सही जानकारी देने के लिए Location permission चाहिए। कृपया Location permission Allow करें।";
+
+
+                        addMessage(
+                            reply,
+                            "kaira"
+                        );
+
+
+                        speakKaira(reply);
+
+
+                        modeText.innerText =
+                            "Text mode • 🎙️ दबाकर voice में बात करें";
+
+
+                        return;
+                    }
+                }
 
 
                 const response =
@@ -1434,32 +934,36 @@ function startVoice() {
                         "/api/chat",
                         {
 
-                            method:
-                                "POST",
+                            method: "POST",
 
                             headers: {
-
                                 "Content-Type":
                                     "application/json"
-
                             },
 
-                            body:
-                                JSON.stringify({
+                            body: JSON.stringify({
 
-                                    message:
-                                        spokenText,
+                                message:
+                                    message,
 
-                                    image:
-                                        image,
+                                weather:
+                                    weather,
 
-                                    weather:
-                                        weather
+                                image:
+                                    null
 
-                                })
+                            })
 
                         }
                     );
+
+
+                if (!response.ok) {
+
+                    throw new Error(
+                        "Server response error"
+                    );
+                }
 
 
                 const data =
@@ -1472,10 +976,636 @@ function startVoice() {
                     "Kaira से जवाब नहीं मिला।";
 
 
-                /*
-                 * Voice में user की बात
-                 * chat में दिखाई नहीं जाएगी।
-                 */
+                addMessage(
+                    reply,
+                    "kaira"
+                );
+
+
+                modeText.innerText =
+                    "Text mode • 🎙️ दबाकर voice में बात करें";
+
+            } catch (error) {
+
+                console.error(
+                    error
+                );
+
+
+                const errorMessage =
+                    "बॉस, अभी KAIRA के server से connection नहीं हो पा रहा है।";
+
+
+                addMessage(
+                    errorMessage,
+                    "kaira"
+                );
+
+
+                modeText.innerText =
+                    "⚠️ Connection error";
+            }
+        }
+
+
+        /* ================= ENTER KEY ================= */
+
+        input.addEventListener(
+            "keydown",
+            function(event) {
+
+                if (event.key === "Enter") {
+
+                    event.preventDefault();
+
+                    askKaira();
+                }
+            }
+        );
+
+
+        /* ================= TEXT TO SPEECH ================= */
+
+        function speakKaira(text) {
+
+            if (!("speechSynthesis" in window)) {
+                return;
+            }
+
+
+            window.speechSynthesis.cancel();
+
+
+            const speech =
+                new SpeechSynthesisUtterance(
+                    text
+                );
+
+
+            speech.lang = "hi-IN";
+
+            speech.rate = 1;
+
+            speech.pitch = 1;
+
+            speech.volume = 1;
+
+
+            window.speechSynthesis.speak(
+                speech
+            );
+        }
+
+
+        /* ================= CAMERA ================= */
+
+        let cameraStream = null;
+
+
+        async function captureCurrentFrame() {
+
+            try {
+
+                cameraStream =
+                    await navigator.mediaDevices.getUserMedia({
+
+                        video: {
+                            facingMode: "environment"
+                        },
+
+                        audio: false
+
+                    });
+
+
+                const video =
+                    document.createElement(
+                        "video"
+                    );
+
+
+                video.srcObject =
+                    cameraStream;
+
+
+                video.setAttribute(
+                    "playsinline",
+                    ""
+                );
+
+
+                await video.play();
+
+
+                await new Promise(
+                    resolve =>
+                        setTimeout(
+                            resolve,
+                            700
+                        )
+                );
+
+
+                const canvas =
+                    document.createElement(
+                        "canvas"
+                    );
+
+
+                canvas.width =
+                    video.videoWidth || 640;
+
+                canvas.height =
+                    video.videoHeight || 480;
+
+
+                const context =
+                    canvas.getContext(
+                        "2d"
+                    );
+
+
+                context.drawImage(
+                    video,
+                    0,
+                    0,
+                    canvas.width,
+                    canvas.height
+                );
+
+
+                const image =
+                    canvas.toDataURL(
+                        "image/jpeg",
+                        0.8
+                    );
+
+
+                stopCamera();
+
+
+                return image;
+
+            } catch (error) {
+
+                console.error(
+                    "Camera error:",
+                    error
+                );
+
+
+                stopCamera();
+
+                return null;
+            }
+        }
+
+
+        function stopCamera() {
+
+            if (!cameraStream) {
+                return;
+            }
+
+
+            cameraStream
+                .getTracks()
+                .forEach(
+                    track =>
+                        track.stop()
+                );
+
+
+            cameraStream = null;
+        }
+
+
+        /* ================= VISION KEYWORDS ================= */
+
+        function needsVision(text) {
+
+            const t =
+                text.toLowerCase();
+
+
+            const keywords = [
+
+                "देखो",
+                "देखना",
+                "क्या है",
+                "पहचान",
+                "पहचानो",
+                "फोटो",
+                "तस्वीर",
+                "image",
+                "photo",
+                "picture",
+                "camera",
+                "कैमरा",
+                "स्क्रीन",
+                "screen",
+                "chart",
+                "चार्ट",
+                "tradingview",
+                "ट्रेडिंगव्यू"
+
+            ];
+
+
+            return keywords.some(
+                word =>
+                    t.includes(word)
+            );
+        }
+
+
+        /* ================= VOICE RECOGNITION ================= */
+
+        let recognition = null;
+
+        let listening = false;
+
+
+        function startVoice() {
+
+            const SpeechRecognition =
+                window.SpeechRecognition ||
+                window.webkitSpeechRecognition;
+
+
+            if (!SpeechRecognition) {
+
+                alert(
+                    "इस Browser में Voice Recognition उपलब्ध नहीं है। Chrome इस्तेमाल करें।"
+                );
+
+                return;
+            }
+
+
+            if (listening) {
+
+                if (recognition) {
+                    recognition.stop();
+                }
+
+                return;
+            }
+
+
+            recognition =
+                new SpeechRecognition();
+
+
+            listening = true;
+
+
+            voiceBtn.innerText = "⏹️";
+
+
+            modeText.innerText =
+                "🎙️ सुन रहा हूँ... बोलिए";
+
+
+            recognition.lang =
+                "hi-IN";
+
+
+            recognition.continuous =
+                false;
+
+
+            recognition.interimResults =
+                false;
+
+
+            recognition.maxAlternatives =
+                1;
+
+
+            recognition.onresult =
+                async function(event) {
+
+                    const spokenText =
+                        event
+                            .results[0][0]
+                            .transcript
+                            .trim();
+
+
+                    if (!spokenText) {
+                        return;
+                    }
+
+
+                    addMessage(
+                        spokenText,
+                        "user"
+                    );
+
+
+                    const visionMode =
+                        needsVision(
+                            spokenText
+                        );
+
+
+                    const weatherMode =
+                        isWeatherQuery(
+                            spokenText
+                        );
+
+
+                    let image = null;
+
+                    let weather = null;
+
+
+                    /* ===== CAMERA VISION ===== */
+
+                    if (visionMode) {
+
+                        countRequest(
+                            true
+                        );
+
+
+                        modeText.innerText =
+                            "📷 Camera से image ले रहा हूँ...";
+
+
+                        image =
+                            await captureCurrentFrame();
+
+
+                        if (!image) {
+
+                            const reply =
+                                "बॉस, Camera permission नहीं मिली या camera उपलब्ध नहीं है।";
+
+
+                            addMessage(
+                                reply,
+                                "kaira"
+                            );
+
+
+                            speakKaira(
+                                reply
+                            );
+
+
+                            return;
+                        }
+                    }
+
+
+                    /* ===== WEATHER ===== */
+
+                    if (weatherMode) {
+
+                        weather =
+                            await getWeatherContext();
+
+
+                        if (!weather) {
+
+                            const reply =
+                                "बॉस, मौसम बताने के लिए Location permission चाहिए।";
+
+
+                            addMessage(
+                                reply,
+                                "kaira"
+                            );
+
+
+                            speakKaira(
+                                reply
+                            );
+
+
+                            return;
+                        }
+                    }
+
+
+                    if (!visionMode) {
+
+                        countRequest(
+                            false
+                        );
+                    /* =====================================================
+           SCREEN VISION
+        ===================================================== */
+
+        async function captureScreenFrame() {
+
+            let screenStream = null;
+
+            try {
+
+                if (!navigator.mediaDevices ||
+                    !navigator.mediaDevices.getDisplayMedia) {
+
+                    throw new Error(
+                        "Screen sharing उपलब्ध नहीं है।"
+                    );
+                }
+
+
+                screenStream =
+                    await navigator.mediaDevices.getDisplayMedia({
+
+                        video: true,
+
+                        audio: false
+
+                    });
+
+
+                const video =
+                    document.createElement("video");
+
+
+                video.srcObject =
+                    screenStream;
+
+
+                video.setAttribute(
+                    "playsinline",
+                    ""
+                );
+
+
+                await video.play();
+
+
+                await new Promise(
+                    resolve =>
+                        setTimeout(
+                            resolve,
+                            700
+                        )
+                );
+
+
+                const canvas =
+                    document.createElement("canvas");
+
+
+                canvas.width =
+                    video.videoWidth || 1280;
+
+                canvas.height =
+                    video.videoHeight || 720;
+
+
+                const context =
+                    canvas.getContext("2d");
+
+
+                context.drawImage(
+                    video,
+                    0,
+                    0,
+                    canvas.width,
+                    canvas.height
+                );
+
+
+                const image =
+                    canvas.toDataURL(
+                        "image/jpeg",
+                        0.8
+                    );
+
+
+                return image;
+
+
+            } catch (error) {
+
+                console.error(
+                    "Screen capture error:",
+                    error
+                );
+
+
+                return null;
+
+
+            } finally {
+
+                if (screenStream) {
+
+                    screenStream
+                        .getTracks()
+                        .forEach(
+                            track =>
+                                track.stop()
+                        );
+                }
+            }
+        }
+
+
+        /* =====================================================
+           ANALYZE SCREEN
+        ===================================================== */
+
+        async function analyzeScreen() {
+
+            countRequest(true);
+
+
+            modeText.innerText =
+                "🖥️ Screen share करें...";
+
+
+            try {
+
+                const image =
+                    await captureScreenFrame();
+
+
+                if (!image) {
+
+                    addMessage(
+                        "बॉस, Screen share नहीं हो पाई। कृपया permission Allow करें।",
+                        "kaira"
+                    );
+
+
+                    modeText.innerText =
+                        "Text mode • 🎙️ दबाकर voice में बात करें";
+
+
+                    return;
+                }
+
+
+                addMessage(
+                    "🖥️ मैंने आपकी screen देख ली है। अब उसका analysis कर रहा हूँ...",
+                    "user"
+                );
+
+
+                modeText.innerText =
+                    "🧠 Screen का analysis हो रहा है...";
+
+
+                const message =
+                    "बॉस ने अपनी screen share की है। इस screen/image को ध्यान से analyze करो। अगर इसमें TradingView या trading chart है तो trend, market structure, support, resistance, possible entry/exit zones और risk को समझाओ। किसी भी trade को guaranteed profit या guaranteed prediction मत बताना।";
+
+
+                const response =
+                    await fetch(
+                        "/api/chat",
+                        {
+
+                            method: "POST",
+
+                            headers: {
+                                "Content-Type":
+                                    "application/json"
+                            },
+
+                            body:
+                                JSON.stringify({
+
+                                    message:
+                                        message,
+
+                                    image:
+                                        image,
+
+                                    weather:
+                                        null
+
+                                })
+
+                        }
+                    );
+
+
+                if (!response.ok) {
+
+                    throw new Error(
+                        "Server response error"
+                    );
+                }
+
+
+                const data =
+                    await response.json();
+
+
+                const reply =
+                    data.reply ||
+                    data.error ||
+                    "Screen analysis का जवाब नहीं मिला।";
+
 
                 addMessage(
                     reply,
@@ -1483,376 +1613,70 @@ function startVoice() {
                 );
 
 
-                speakKaira(
-                    reply
-                );
-
-
                 modeText.innerText =
-                    visionMode
-                        ? "📷 Vision mode • 🎙️ फिर बोलें"
-                        : weatherMode
-                            ? "🌦️ Weather mode • 🎙️ फिर बोलें"
-                            : "Voice mode • 🎙️ फिर बोलें";
+                    "Text mode • 🎙️ दबाकर voice में बात करें";
 
 
             } catch (error) {
 
                 console.error(
-                    "Voice API Error:",
+                    "Screen analysis error:",
                     error
                 );
 
 
-                const errorText =
-                    "Kaira से connection नहीं हो पाया।";
-
-
                 addMessage(
-                    errorText,
+                    "बॉस, screen analysis के दौरान server से connection में समस्या आई।",
                     "kaira"
                 );
 
 
-                speakKaira(
-                    errorText
-                );
-
-
                 modeText.innerText =
-                    "Voice mode • 🎙️ फिर बोलें";
+                    "⚠️ Connection error";
             }
-
-        };
-
-
-    recognition.onerror =
-        function(event) {
-
-            console.error(
-                "Voice Error:",
-                event.error
-            );
-
-
-            if (
-                event.error ===
-                "not-allowed"
-            ) {
-
-                speakKaira(
-                    "बॉस, Microphone permission Allow करनी होगी।"
-                );
-
-            } else if (
-                event.error ===
-                "no-speech"
-            ) {
-
-                modeText.innerText =
-                    "🎙️ कोई आवाज़ नहीं मिली। फिर से बोलें।";
-
-            } else {
-
-                modeText.innerText =
-                    "Voice में समस्या आई। फिर से कोशिश करें।";
-            }
-        };
-
-
-    recognition.onend =
-        function() {
-
-            listening = false;
-
-            voiceBtn.classList.remove(
-                "voice-active"
-            );
-
-            voiceBtn.innerText =
-                "🎙️";
-        };
-
-
-    recognition.start();
-    } 
-    /* =====================================================
-   SCREEN VISION
-===================================================== */
-
-async function captureScreenFrame() {
-
-    let screenStream = null;
-
-    try {
-
-    screenStream =
-    await navigator.mediaDevices.getDisplayMedia({
-
-        video: true,
-
-        audio: false
-    });
-
-
-        const video =
-            document.createElement("video");
-
-
-        video.srcObject =
-            screenStream;
-
-        video.playsInline =
-            true;
-
-        video.muted =
-            true;
-
-
-        await video.play();
-
-
-        await new Promise(resolve =>
-            setTimeout(resolve, 700)
-        );
-
-
-        const canvas =
-            document.createElement("canvas");
-
-
-        canvas.width =
-            video.videoWidth || 1280;
-
-        canvas.height =
-            video.videoHeight || 720;
-
-
-        const ctx =
-            canvas.getContext("2d");
-
-
-        ctx.drawImage(
-            video,
-            0,
-            0,
-            canvas.width,
-            canvas.height
-        );
-
-
-        const image =
-            canvas.toDataURL(
-                "image/jpeg",
-                0.65
-            );
-
-
-        screenStream
-            .getTracks()
-            .forEach(track =>
-                track.stop()
-            );
-
-
-        return image;
-
-    } catch (error) {
-
-        console.error(
-            "Screen Error:",
-            error
-        );
-
-
-        if (screenStream) {
-
-            screenStream
-                .getTracks()
-                .forEach(track =>
-                    track.stop()
-                );
         }
 
 
-        return null;
-    }
-}
+        /* =====================================================
+           PAGE CLOSE CLEANUP
+        ===================================================== */
+
+        window.addEventListener(
+            "beforeunload",
+            function() {
+
+                stopCamera();
 
 
-/* =====================================================
-   SCREEN ANALYSIS
-===================================================== */
+                if (
+                    "speechSynthesis" in window
+                ) {
 
-async function analyzeScreen() {
-
-    countRequest(true);
-
-    modeText.innerText =
-        "🖥️ Screen share शुरू करें...";
-
-    const image =
-        await captureScreenFrame();
-
-    if (!image) {
-
-        modeText.innerText =
-            "Text mode • 🎙️ दबाकर voice में बात करें";
-
-        return;
-    }
-
-    modeText.innerText =
-        "👁️ KAIRA आपकी screen देख रही है...";
-
-    try {
-
-        const response =
-            await fetch(
-                "/api/chat",
-                {
-
-                    method: "POST",
-
-                    headers: {
-                        "Content-Type":
-                            "application/json"
-                    },
-
-                    body:
-                        JSON.stringify({
-
-                            message:
-                                "बॉस ने अपनी screen share की है। इस स्क्रीन को ध्यान से देखकर बताओ कि इसमें क्या दिखाई दे रहा है। अगर TradingView या कोई trading chart दिखाई दे रहा है तो trend, support, resistance और दिखाई देने वाले technical observations सरल हिंदी में समझाओ। निश्चित profit या guaranteed prediction मत दो।",
-
-                            image:
-                                image
-
-                        })
+                    window.speechSynthesis.cancel();
                 }
-            );
 
 
-        const data =
-            await response.json();
+                if (recognition) {
 
-
-        const reply =
-            data.reply ||
-            data.error ||
-            "Screen का analysis नहीं हो पाया।";
-
-
-        addMessage(
-            reply,
-            "kaira"
+                    try {
+                        recognition.stop();
+                    } catch (error) {
+                        console.log(error);
+                    }
+                }
+            }
         );
 
 
-        speakKaira(
-            reply
-        );
+        /* =====================================================
+           INITIAL MESSAGE
+        ===================================================== */
+
+        updateUsage();
 
 
-        modeText.innerText =
-            "🖥️ Screen Vision • 🎙️ फिर बोलें";
-
-
-    } catch (error) {
-
-        console.error(
-            "Screen API Error:",
-            error
-        );
-
-
-        addMessage(
-            "Screen analysis में समस्या आ गई।",
-            "kaira"
-        );
-
-
-        modeText.innerText =
-            "Text mode • 🎙️ दबाकर voice में बात करें";
-    }
-}
-
-
-/* =====================================================
-   SCREEN BUTTON
-===================================================== */
-
-function createScreenButton() {
-
-    if (
-        document.getElementById(
-            "screenVisionBtn"
-        )
-    ) {
-        return;
-    }
-
-
-    const button =
-        document.createElement("button");
-
-
-    button.id =
-        "screenVisionBtn";
-
-
-    button.className =
-        "icon-button";
-
-
-    button.innerText =
-        "🖥️";
-
-
-    button.title =
-        "Screen Vision";
-
-
-    button.onclick =
-        analyzeScreen;
-
-
-    voiceBtn.parentNode.insertBefore(
-        button,
-        voiceBtn
-    );
-}
-
-
-createScreenButton();
-
-
-/* =====================================================
-   CLEANUP
-===================================================== */
-
-window.addEventListener(
-    "beforeunload",
-    function() {
-
-        if (cameraStream) {
-
-            cameraStream
-                .getTracks()
-                .forEach(track =>
-                    track.stop()
-                );
-        }
-
-        if (window.speechSynthesis) {
-
-            window.speechSynthesis.cancel();
-        }
-
-    }
-);
-
-</script>
+    </script>
 
 </body>
 </html>
+    
