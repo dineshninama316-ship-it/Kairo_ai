@@ -356,7 +356,11 @@
         };
 
     </script>
-<script>
+
+<button onclick="testKairaVoice()">
+    🔊 Kaira की आवाज़ सुनें
+</button>
+    <script>
 function speakKaira(text) {
     if (!window.speechSynthesis) {
         alert("आपके browser में Voice Support नहीं है।");
@@ -375,9 +379,7 @@ function speakKaira(text) {
 
 function testKairaVoice() {
     speakKaira("नमस्ते! मैं Kaira हूँ। बताइए, मैं आपकी क्या मदद करूँ?");
-<button onclick="testKairaVoice()">
-    🔊 Kaira की आवाज़ सुनें
-</button>  
-            </script>
+}
+    </script>
 </body>
 </html>
