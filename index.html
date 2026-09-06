@@ -99,39 +99,6 @@
             border-bottom-left-radius: 5px;
         }
 
-        /* CAMERA */
-
-        #cameraBox {
-            display: none;
-            max-width: 850px;
-            margin: 0 auto 100px;
-            padding: 15px;
-            text-align: center;
-        }
-
-        #cameraVideo {
-            width: 100%;
-            max-width: 500px;
-            border-radius: 18px;
-            background: #000;
-        }
-
-        .camera-buttons {
-            margin-top: 12px;
-            display: flex;
-            justify-content: center;
-            gap: 10px;
-        }
-
-        .camera-buttons button {
-            border: none;
-            padding: 10px 15px;
-            border-radius: 12px;
-            cursor: pointer;
-        }
-
-        /* BOTTOM BAR */
-
         .bottom-area {
             position: fixed;
             left: 0;
@@ -230,558 +197,455 @@
                 font-size: 15px;
             }
         }
-
     </style>
 </head>
 
 <body>
 
-    <!-- HEADER -->
+<header>
 
-    <header>
+    <div class="logo">
+        KAIRA
+    </div>
 
-        <div class="logo">
-            KAIRA
-        </div>
+    <div class="status">
+        ● ONLINE
+    </div>
 
-        <div class="status">
-            ● ONLINE
-        </div>
-
-    </header>
+</header>
 
 
-    <!-- CHAT -->
+<main id="chatArea">
 
-    <main id="chatArea">
+    <div class="welcome" id="welcome">
 
-        <div class="welcome" id="welcome">
+        <h1>कैसे मदद करूँ?</h1>
 
-            <h1>कैसे मदद करूँ?</h1>
+        <p>
+            मैं Kaira हूँ। आप मुझसे बात कर सकते हैं।
+        </p>
 
-            <p>
-                मैं Kaira हूँ। आप मुझसे बात कर सकते हैं।
-            </p>
+    </div>
 
-        </div>
-
-    </main>
+</main>
 
 
-    <!-- =========================
-     CAMERA
-========================= -->
+<div class="bottom-area">
 
-<section id="cameraBox">
+    <div class="input-area">
 
-    <video
-        id="cameraVideo"
-        autoplay
-        playsinline>
-    </video>
+        <input
+            id="messageInput"
+            type="text"
+            placeholder="Kaira से पूछें..."
+            autocomplete="off"
+        >
 
-    <div class="camera-buttons">
-
-        <button onclick="analyzeCamera()">
-            👁️ Analyze
+        <button
+            id="voiceBtn"
+            class="icon-button"
+            onclick="startVoice()"
+            title="Voice">
+            🎙️
         </button>
 
-        <button onclick="switchCamera()">
-            🔄 Camera बदलें
-        </button>
-
-        <button onclick="closeCamera()">
-            ✕ बंद करें
+        <button
+            class="icon-button send-button"
+            onclick="askKaira()"
+            title="Send">
+            ➤
         </button>
 
     </div>
 
-</section>
-
-
-    <!-- BOTTOM INPUT -->
-
-    <div class="bottom-area">
-
-        <div class="input-area">
-
-            <button
-                class="icon-button"
-                onclick="openCamera()"
-                title="Camera">
-                📷
-            </button>
-
-            <input
-                id="messageInput"
-                type="text"
-                placeholder="Kaira से पूछें..."
-                autocomplete="off"
-            >
-
-            <button
-                id="voiceBtn"
-                class="icon-button"
-                onclick="startVoice()"
-                title="Voice">
-                🎙️
-            </button>
-
-            <button
-                class="icon-button send-button"
-                onclick="askKaira()"
-                title="Send">
-                ➤
-            </button>
-
-        </div>
-
-        <div class="mode-text" id="modeText">
-            Text mode • 🎙️ दबाकर voice में बात करें
-        </div>
-
+    <div class="mode-text" id="modeText">
+        Text mode • 🎙️ दबाकर voice में बात करें
     </div>
 
-
-    <!-- JAVASCRIPT -->
-
-    <script>
-
-        /* =========================
-           ELEMENTS
-        ========================= */
-
-        const input =
-            document.getElementById("messageInput");
-
-        const chatArea =
-            document.getElementById("chatArea");
-
-        const welcome =
-            document.getElementById("welcome");
-
-        const voiceBtn =
-            document.getElementById("voiceBtn");
-
-        const modeText =
-            document.getElementById("modeText");
+</div>
 
 
-        /* =========================
-           ADD CHAT MESSAGE
-        ========================= */
+<script>
 
-        function addMessage(text, type) {
+const input =
+    document.getElementById("messageInput");
 
-            if (welcome) {
-                welcome.style.display = "none";
-            }
+const chatArea =
+    document.getElementById("chatArea");
 
-            const message =
-                document.createElement("div");
+const welcome =
+    document.getElementById("welcome");
 
-            message.className =
-                "message " + type;
+const voiceBtn =
+    document.getElementById("voiceBtn");
 
-            const bubble =
-                document.createElement("div");
+const modeText =
+    document.getElementById("modeText");
 
-            bubble.className = "bubble";
 
-            bubble.innerText = text;
+/* =========================
+   CHAT MESSAGE
+========================= */
 
-            message.appendChild(bubble);
+function addMessage(text, type) {
 
-            chatArea.appendChild(message);
+    if (welcome) {
+        welcome.style.display = "none";
+    }
 
-            window.scrollTo({
-                top: document.body.scrollHeight,
-                behavior: "smooth"
+    const message =
+        document.createElement("div");
+
+    message.className =
+        "message " + type;
+
+    const bubble =
+        document.createElement("div");
+
+    bubble.className = "bubble";
+
+    bubble.innerText = text;
+
+    message.appendChild(bubble);
+
+    chatArea.appendChild(message);
+
+    window.scrollTo({
+        top: document.body.scrollHeight,
+        behavior: "smooth"
+    });
+}
+
+
+/* =========================
+   TEXT CHAT
+========================= */
+
+async function askKaira() {
+
+    const message =
+        input.value.trim();
+
+    if (!message) {
+        return;
+    }
+
+    addMessage(message, "user");
+
+    input.value = "";
+
+    try {
+
+        const response =
+            await fetch("/api/chat", {
+
+                method: "POST",
+
+                headers: {
+                    "Content-Type":
+                        "application/json"
+                },
+
+                body: JSON.stringify({
+                    message: message
+                })
+
             });
+
+        const data =
+            await response.json();
+
+        const reply =
+            data.reply ||
+            data.error ||
+            "Kaira से जवाब नहीं मिला।";
+
+        addMessage(reply, "kaira");
+
+    } catch (error) {
+
+        console.error(error);
+
+        addMessage(
+            "Kaira से connection नहीं हो पाया।",
+            "kaira"
+        );
+    }
+}
+
+
+/* =========================
+   ENTER TO SEND
+========================= */
+
+input.addEventListener(
+    "keydown",
+    function(event) {
+
+        if (event.key === "Enter") {
+
+            event.preventDefault();
+
+            askKaira();
         }
+    }
+);
 
 
-        /* =========================
-           TEXT CHAT
-        ========================= */
+/* =========================
+   KAIRA SPEAK
+========================= */
 
-        async function askKaira() {
+function speakKaira(text) {
 
-            const message =
-                input.value.trim();
+    if (!("speechSynthesis" in window)) {
+        return;
+    }
 
-            if (!message) {
-                return;
+    window.speechSynthesis.cancel();
+
+    const speech =
+        new SpeechSynthesisUtterance(text);
+
+    speech.lang = "hi-IN";
+    speech.rate = 0.95;
+    speech.pitch = 1;
+
+    window.speechSynthesis.speak(speech);
+}
+
+
+/* =========================
+   CAMERA FRAME
+========================= */
+
+let cameraStream = null;
+
+
+async function captureCurrentFrame() {
+
+    try {
+
+        cameraStream =
+            await navigator.mediaDevices.getUserMedia({
+
+                video: {
+                    facingMode: {
+                        ideal: "user"
+                    }
+                },
+
+                audio: false
+
+            });
+
+        const video =
+            document.createElement("video");
+
+        video.srcObject =
+            cameraStream;
+
+        video.playsInline = true;
+        video.muted = true;
+
+        await video.play();
+
+        await new Promise(resolve => {
+
+            if (video.readyState >= 2) {
+                resolve();
+            } else {
+                video.onloadeddata = resolve;
             }
 
-            addMessage(message, "user");
+        });
 
-            input.value = "";
-
-            try {
-
-                const response =
-                    await fetch("/api/chat", {
-
-                        method: "POST",
-
-                        headers: {
-                            "Content-Type":
-                                "application/json"
-                        },
-
-                        body: JSON.stringify({
-                            message: message
-                        })
-
-                    });
-
-                const data =
-                    await response.json();
-
-                const reply =
-                    data.reply ||
-                    data.error ||
-                    "Kaira से जवाब नहीं मिला।";
-
-                addMessage(reply, "kaira");
-
-            } catch (error) {
-
-                console.error(error);
-
-                addMessage(
-                    "Kaira से connection नहीं हो पाया।",
-                    "kaira"
-                );
-
-            }
-
-        }
-
-
-        /* =========================
-           ENTER TO SEND
-        ========================= */
-
-        input.addEventListener(
-            "keydown",
-            function(event) {
-
-                if (event.key === "Enter") {
-
-                    event.preventDefault();
-
-                    askKaira();
-
-                }
-
-            }
+        await new Promise(resolve =>
+            setTimeout(resolve, 300)
         );
 
+        const canvas =
+            document.createElement("canvas");
 
-        /* =========================
-           KAIRA VOICE
-        ========================= */
+        canvas.width =
+            video.videoWidth;
 
-        function speakKaira(text) {
+        canvas.height =
+            video.videoHeight;
 
-            if (!("speechSynthesis" in window)) {
-                return;
-            }
+        const ctx =
+            canvas.getContext("2d");
 
-            window.speechSynthesis.cancel();
+        ctx.drawImage(
+            video,
+            0,
+            0,
+            canvas.width,
+            canvas.height
+        );
 
-            const speech =
-                new SpeechSynthesisUtterance(text);
-
-            speech.lang = "hi-IN";
-            speech.rate = 0.95;
-            speech.pitch = 1;
-
-            window.speechSynthesis.speak(speech);
-
-        }
-
-
-        /* =========================
-           VOICE ASSISTANT
-        ========================= */
-
-        let recognition = null;
-
-        let voiceMode = false;
-
-
-        function startVoice() {
-
-            const SpeechRecognition =
-                window.SpeechRecognition ||
-                window.webkitSpeechRecognition;
-
-            if (!SpeechRecognition) {
-
-                alert(
-                    "आपके browser में Voice Assistant support नहीं है।"
-                );
-
-                return;
-
-            }
-
-            voiceMode = true;
-
-            voiceBtn.classList.add(
-                "voice-active"
+        const image =
+            canvas.toDataURL(
+                "image/jpeg",
+                0.75
             );
 
-            voiceBtn.innerText = "🔴";
+        cameraStream
+            .getTracks()
+            .forEach(track => track.stop());
+
+        cameraStream = null;
+
+        return image;
+
+    } catch (error) {
+
+        console.error(
+            "Camera Error:",
+            error
+        );
+
+        return null;
+    }
+}
+
+
+/* =========================
+   CHECK VISION QUESTION
+========================= */
+
+function needsVision(text) {
+
+    const words = [
+
+        "देखो",
+        "देख",
+        "दिख",
+        "सामने",
+        "मेरे सामने",
+        "मुझे देख",
+        "मेरा चेहरा",
+        "चेहरा",
+        "कैसा दिख",
+        "क्या दिखाई",
+        "क्या दिख",
+        "पहचान",
+        "पहचानो",
+        "फोटो",
+        "तस्वीर",
+        "इमेज",
+        "image",
+        "camera",
+        "analysis",
+        "एनालिसिस",
+        "चार्ट देख",
+        "स्क्रीन देख"
+
+    ];
+
+    const lower =
+        text.toLowerCase();
+
+    return words.some(word =>
+        lower.includes(word.toLowerCase())
+    );
+}
+
+
+/* =========================
+   VOICE ASSISTANT
+========================= */
+
+let recognition = null;
+
+let voiceMode = false;
+
+
+function startVoice() {
+
+    const SpeechRecognition =
+        window.SpeechRecognition ||
+        window.webkitSpeechRecognition;
+
+    if (!SpeechRecognition) {
+
+        alert(
+            "आपके browser में Voice Assistant support नहीं है।"
+        );
+
+        return;
+    }
+
+    voiceMode = true;
+
+    voiceBtn.classList.add(
+        "voice-active"
+    );
+
+    voiceBtn.innerText = "🔴";
+
+    modeText.innerText =
+        "Voice mode • Kaira सुन रही है...";
+
+
+    recognition =
+        new SpeechRecognition();
+
+    recognition.lang = "hi-IN";
+
+    recognition.interimResults = false;
+
+    recognition.continuous = false;
+
+    recognition.start();
+
+
+    recognition.onresult =
+        async function(event) {
+
+            const spokenText =
+                event.results[0][0]
+                .transcript
+                .trim();
 
             modeText.innerText =
-                "Voice mode • Kaira सुन रही है...";
-
-            recognition =
-                new SpeechRecognition();
-
-            recognition.lang = "hi-IN";
-            recognition.interimResults = false;
-            recognition.continuous = false;
-
-            recognition.start();
+                "Voice mode • Kaira सोच रही है...";
 
 
-            recognition.onresult =
-                async function(event) {
+            /*
+             * अगर सवाल vision वाला है,
+             * तो current camera frame लिया जाएगा।
+             */
 
-                    const spokenText =
-                        event.results[0][0]
-                        .transcript;
+            const visionRequired =
+                needsVision(spokenText);
 
-                    modeText.innerText =
-                        "Voice mode • Kaira जवाब दे रही है...";
-
-                    try {
-
-                        const response =
-                            await fetch("/api/chat", {
-
-                                method: "POST",
-
-                                headers: {
-                                    "Content-Type":
-                                        "application/json"
-                                },
-
-                                body: JSON.stringify({
-                                    message: spokenText
-                                })
-
-                            });
-
-                        const data =
-                            await response.json();
-
-                        const reply =
-                            data.reply ||
-                            data.error ||
-                            "Kaira से जवाब नहीं मिला।";
-
-                        speakKaira(reply);
-
-                        modeText.innerText =
-                            "Voice mode • 🎙️ बोलने के लिए फिर दबाएँ";
-
-                    } catch (error) {
-
-                        console.error(error);
-
-                        speakKaira(
-                            "माफ़ कीजिए, अभी connection में समस्या है।"
-                        );
-
-                        modeText.innerText =
-                            "Voice mode • Connection समस्या";
-
-                    }
-
-                };
+            let image = null;
 
 
-            recognition.onerror =
-                function() {
-
-                    voiceMode = false;
-
-                    voiceBtn.classList.remove(
-                        "voice-active"
-                    );
-
-                    voiceBtn.innerText = "🎙️";
-
-                    modeText.innerText =
-                        "Microphone में समस्या हुई। Permission check करें।";
-
-                };
-
-
-            recognition.onend =
-                function() {
-
-                    voiceMode = false;
-
-                    voiceBtn.classList.remove(
-                        "voice-active"
-                    );
-
-                    voiceBtn.innerText = "🎙️";
-
-                    modeText.innerText =
-                        "Text mode • 🎙️ दबाकर voice में बात करें";
-
-                };
-
-        }
-
-
-        /* =========================
-           CAMERA
-        ========================= */
-
-        let cameraStream = null;
-
-
-        async function openCamera() {
-
-            const cameraBox =
-                document.getElementById("cameraBox");
-
-            const video =
-                document.getElementById("cameraVideo");
-
-            try {
-
-                cameraStream =
-                    await navigator.mediaDevices
-                    .getUserMedia({
-
-                        video: true,
-                        audio: false
-
-                    });
-
-                video.srcObject =
-                    cameraStream;
-
-                cameraBox.style.display =
-                    "block";
+            if (visionRequired) {
 
                 modeText.innerText =
-                    "📷 Camera चालू है";
+                    "👁️ Kaira आपको देख रही है...";
 
-            } catch (error) {
+                image =
+                    await captureCurrentFrame();
 
-                console.error(error);
+                if (!image) {
 
-                alert(
-                    "Camera permission नहीं मिली। कृपया Allow करें।"
-                );
-
-            }
-
-        }
-
-
-        /* =========================
-           CLOSE CAMERA
-        ========================= */
-
-        function closeCamera() {
-
-            const cameraBox =
-                document.getElementById("cameraBox");
-
-            if (cameraStream) {
-
-                cameraStream
-                    .getTracks()
-                    .forEach(
-                        track => track.stop()
+                    speakKaira(
+                        "बॉस, camera की permission नहीं मिली। कृपया camera permission Allow करें।"
                     );
 
-                cameraStream = null;
+                    modeText.innerText =
+                        "Voice mode • Camera permission चाहिए";
 
+                    return;
+                }
             }
 
-            cameraBox.style.display =
-                "none";
-
-            modeText.innerText =
-                "Text mode • 🎙️ दबाकर voice में बात करें";
-
-        }
-
-
-        /* =========================
-           CAMERA VISION
-        ========================= */
-
-        async function analyzeCamera() {
-
-            const video =
-                document.getElementById("cameraVideo");
-
-            if (!cameraStream) {
-
-                alert(
-                    "पहले Camera चालू करो।"
-                );
-
-                return;
-            }
-
-            if (
-                !video.videoWidth ||
-                !video.videoHeight
-            ) {
-
-                alert(
-                    "Camera अभी तैयार नहीं है। 1-2 सेकंड रुकें।"
-                );
-
-                return;
-            }
 
             try {
-
-                modeText.innerText =
-                    "👁️ Kaira camera देख रही है...";
-
-                const canvas =
-                    document.createElement("canvas");
-
-                canvas.width =
-                    video.videoWidth;
-
-                canvas.height =
-                    video.videoHeight;
-
-                const ctx =
-                    canvas.getContext("2d");
-
-                ctx.drawImage(
-                    video,
-                    0,
-                    0,
-                    canvas.width,
-                    canvas.height
-                );
-
-                const image =
-                    canvas.toDataURL(
-                        "image/jpeg",
-                        0.8
-                    );
-
 
                 const response =
                     await fetch("/api/chat", {
@@ -795,8 +659,7 @@
 
                         body: JSON.stringify({
 
-                            message:
-                                "इस तस्वीर को ध्यान से देखकर बताओ कि इसमें क्या दिखाई दे रहा है। केवल साफ दिखाई देने वाली चीजों के बारे में सरल और natural हिंदी में जवाब दो। अगर कोई वस्तु, व्यक्ति, टेक्स्ट या दूसरी जानकारी दिखाई दे रही है तो उसका analysis करो।",
+                            message: spokenText,
 
                             image: image
 
@@ -812,53 +675,107 @@
                 const reply =
                     data.reply ||
                     data.error ||
-                    "Kaira image को समझ नहीं पाई।";
+                    "Kaira से जवाब नहीं मिला।";
 
 
-                addMessage(
-                    reply,
-                    "kaira"
-                );
+                /*
+                 * Voice question chat में नहीं दिखेगा।
+                 *
+                 * सिर्फ Kaira का जवाब voice में।
+                 */
+
+                speakKaira(reply);
 
 
                 modeText.innerText =
-                    "📷 Camera चालू है";
+                    visionRequired
+                    ? "👁️ Vision • 🎙️ फिर बोलें"
+                    : "Voice mode • 🎙️ फिर बोलें";
 
 
             } catch (error) {
 
                 console.error(error);
 
-                addMessage(
-                    "माफ़ कीजिए बॉस, अभी camera analysis में समस्या आई।",
-                    "kaira"
+                speakKaira(
+                    "माफ़ कीजिए बॉस, अभी connection में समस्या है।"
                 );
 
                 modeText.innerText =
-                    "📷 Camera चालू है";
-
+                    "Connection समस्या";
             }
 
-        }
+        };
 
 
-        /* =========================
-           WELCOME
-        ========================= */
+    recognition.onerror =
+        function(error) {
 
-        setTimeout(
-            function() {
+            console.error(
+                "Voice Error:",
+                error
+            );
 
-                /*
-                 Browser permission/autoplay rules के कारण
-                 Kaira खुद से voice शुरू नहीं करेगी.
-                */
+            voiceMode = false;
 
-            },
-            500
-        );
+            voiceBtn.classList.remove(
+                "voice-active"
+            );
 
-    </script>
+            voiceBtn.innerText = "🎙️";
+
+            modeText.innerText =
+                "Microphone में समस्या हुई। Permission check करें।";
+        };
+
+
+    recognition.onend =
+        function() {
+
+            voiceMode = false;
+
+            voiceBtn.classList.remove(
+                "voice-active"
+            );
+
+            voiceBtn.innerText = "🎙️";
+
+            /*
+             * Vision/voice request के दौरान
+             * text status रहने दें।
+             */
+
+            if (
+                !modeText.innerText.includes("Vision") &&
+                !modeText.innerText.includes("Camera") &&
+                !modeText.innerText.includes("Connection")
+            ) {
+
+                modeText.innerText =
+                    "Text mode • 🎙️ दबाकर voice में बात करें";
+            }
+        };
+}
+
+
+/* =========================
+   WELCOME
+========================= */
+
+setTimeout(
+    function() {
+
+        /*
+         * Browser security के कारण
+         * microphone/camera बिना user action
+         * के automatically start नहीं होंगे।
+         */
+
+    },
+    500
+);
+
+</script>
 
 </body>
-</html>
+    </html>
