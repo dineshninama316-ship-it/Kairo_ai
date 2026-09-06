@@ -1230,11 +1230,495 @@ function startVoice() {
 
                             },
 
-                            body:
-                                JSON.stringify({
+                                                            body:
+                                    JSON.stringify({
 
-                                    message:
-                                        spokenText,
+                                        message:
+                                            spokenText,
 
-                                    image:
+                                        image:
+                                            image
+
+                                    })
+
+                            }
+
+                        );
+
+
+                const data =
+                    await response.json();
+
+
+                const reply =
+                    data.reply ||
+                    data.error ||
+                    "Kaira से जवाब नहीं मिला।";
+
+
+                /*
+                 * Voice query chat में दिखाई नहीं जाएगी
+                 */
+
+                speakKaira(reply);
+
+
+                modeText.innerText =
+                    "Voice mode • Kaira तैयार है";
+
+
+            } catch (error) {
+
+                console.error(
+                    "Voice Error:",
+                    error
+                );
+
+
+                speakKaira(
+                    "बॉस, Kaira से connection नहीं हो पाया।"
+                );
+
+
+                modeText.innerText =
+                    "Voice mode • Connection error";
+
+            }
+
+
+            /*
+             * Voice button reset
+             */
+
+            voiceBtn.classList.remove(
+                "voice-active"
+            );
+
+            voiceBtn.innerText =
+                "🎙️";
+
+            voiceMode =
+                false;
+
+        };
+
+
+    recognition.onerror =
+        function(error) {
+
+            console.error(
+                "Speech Recognition Error:",
+                error
+            );
+
+
+            voiceBtn.classList.remove(
+                "voice-active"
+            );
+
+            voiceBtn.innerText =
+                "🎙️";
+
+
+            voiceMode =
+                false;
+
+
+            modeText.innerText =
+                "Text mode • 🎙️ दबाकर voice में बात करें";
+
+        };
+
+
+    recognition.onend =
+        function() {
+
+            voiceBtn.classList.remove(
+                "voice-active"
+            );
+
+            voiceBtn.innerText =
+                "🎙️";
+
+
+            voiceMode =
+                false;
+
+        };
+
+}
+
+
+/* =====================================================
+   SCREEN VISION
+   ===================================================== */
+
+let screenStream = null;
+
+
+/*
+ * Screen से एक current frame capture करना
+ */
+
+async function captureScreenFrame() {
+
+    try {
+
+        if (
+            !navigator.mediaDevices ||
+            !navigator.mediaDevices.getDisplayMedia
+        ) {
+
+            throw new Error(
+                "Screen sharing supported नहीं है।"
+            );
+
+        }
+
+
+        modeText.innerText =
+            "🖥️ Kaira आपकी screen देख रही है...";
+
+
+        /*
+         * Browser screen-share permission
+         */
+
+        screenStream =
+            await navigator.mediaDevices
+                .getDisplayMedia({
+
+                    video: {
+
+                        frameRate: 5
+
+                    },
+
+                    audio: false
+
+                });
+
+
+        const video =
+            document.createElement(
+                "video"
+            );
+
+
+        video.srcObject =
+            screenStream;
+
+
+        video.muted =
+            true;
+
+
+        video.playsInline =
+            true;
+
+
+        await video.play();
+
+
+        /*
+         * Screen को render होने के लिए थोड़ा समय
+         */
+
+        await new Promise(
+            resolve =>
+                setTimeout(
+                    resolve,
+                    500
+                )
+        );
+
+
+        const canvas =
+            document.createElement(
+                "canvas"
+            );
+
+
+        canvas.width =
+            video.videoWidth;
+
+
+        canvas.height =
+            video.videoHeight;
+
+
+        const ctx =
+            canvas.getContext(
+                "2d"
+            );
+
+
+        ctx.drawImage(
+
+            video,
+
+            0,
+
+            0,
+
+            canvas.width,
+
+            canvas.height
+
+        );
+
+
+        const image =
+            canvas.toDataURL(
+
+                "image/jpeg",
+
+                0.65
+
+            );
+
+
+        /*
+         * Screen sharing बंद
+         */
+
+        screenStream
+            .getTracks()
+            .forEach(
+                track =>
+                    track.stop()
+            );
+
+
+        screenStream =
+            null;
+
+
+        return image;
+
+
+    } catch (error) {
+
+        console.error(
+            "Screen Vision Error:",
+            error
+        );
+
+
+        if (screenStream) {
+
+            screenStream
+                .getTracks()
+                .forEach(
+                    track =>
+                        track.stop()
+                );
+
+        }
+
+
+        screenStream =
+            null;
+
+
+        return null;
+
+    }
+
+}
+
+
+/*
+ * Screen को KAIRA के पास भेजना
+ */
+
+async function analyzeScreen() {
+
+    const image =
+        await captureScreenFrame();
+
+
+    if (!image) {
+
+        speakKaira(
+            "बॉस, screen share की permission नहीं मिली।"
+        );
+
+
+        modeText.innerText =
+            "Screen Vision • Permission चाहिए";
+
+        return;
+
+    }
+
+
+    /*
+     * Vision request count
+     */
+
+    countRequest(true);
+
+
+    try {
+
+        const response =
+            await fetch(
+                "/api/chat",
+                {
+
+                    method:
+                        "POST",
+
+                    headers: {
+
+                        "Content-Type":
+                            "application/json"
+
+                    },
+
+                    body:
+                        JSON.stringify({
+
+                            message:
+                                "बॉस ने अपनी screen share की है। इस स्क्रीन को ध्यान से देखकर बताओ कि इसमें क्या दिखाई दे रहा है। अगर TradingView या कोई trading chart दिखाई दे रहा है तो trend, support, resistance और दिखाई देने वाले technical observations सरल हिंदी में समझाओ। निश्चित profit या guaranteed prediction मत दो।",
+
+                            image:
+                                image
+
+                        })
+
+                }
+            );
+
+
+        const data =
+            await response.json();
+
+
+        const reply =
+            data.reply ||
+            data.error ||
+            "KAIRA screen को समझ नहीं पाई।";
+
+
+        /*
+         * Screen का result chat में दिखेगा
+         */
+
+        addMessage(
+            reply,
+            "kaira"
+        );
+
+
+        /*
+         * Voice में भी जवाब
+         */
+
+        speakKaira(reply);
+
+
+        modeText.innerText =
+            "Screen Vision • Analysis पूरा हुआ";
+
+
+    } catch (error) {
+
+        console.error(
+            "Screen Analysis Error:",
+            error
+        );
+
+
+        addMessage(
+            "बॉस, screen analysis नहीं हो पाया।",
+            "kaira"
+        );
+
+
+        speakKaira(
+            "बॉस, screen analysis नहीं हो पाया।"
+        );
+
+
+        modeText.innerText =
+            "Screen Vision • Error";
+
+    }
+
+}
+
+
+/* =====================================================
+   SCREEN VISION BUTTON
+   ===================================================== */
+
+function createScreenButton() {
+
+    /*
+     * अगर button पहले से मौजूद है
+     * तो दोबारा create नहीं होगा
+     */
+
+    if (
+        document.getElementById(
+            "screenVisionBtn"
+        )
+    ) {
+
+        return;
+
+    }
+
+
+    const button =
+        document.createElement(
+            "button"
+        );
+
+
+    button.id =
+        "screenVisionBtn";
+
+
+    button.className =
+        "icon-button";
+
+
+    button.innerText =
+        "🖥️";
+
+
+    button.title =
+        "Screen Vision";
+
+
+    button.onclick =
+        analyzeScreen;
+
+
+    /*
+     * Voice button के पहले button लगाना
+     */
+
+    voiceBtn.parentNode.insertBefore(
+        button,
+        voiceBtn
+    );
+
+}
+
+
+/* =====================================================
+   START
+   ===================================================== */
+
+createScreenButton();
+
+
+</script>
+
+</body>
+</html>
                            
