@@ -1,12 +1,14 @@
 export default async function handler(req, res) {
   if (req.method !== "POST") {
-    return res.status(405).json({ error: "Method not allowed" });
+    return res.status(405).json({
+      error: "Method not allowed"
+    });
   }
 
   try {
     const { message } = req.body;
 
-    if (!message) {
+    if (!message || !message.trim()) {
       return res.status(400).json({
         error: "Message is required"
       });
@@ -20,6 +22,7 @@ export default async function handler(req, res) {
       });
     }
 
+    // Models को fallback order में try करेंगे
     const models = [
       "gemini-3.5-flash-lite",
       "gemini-3.1-flash-lite"
@@ -27,82 +30,108 @@ export default async function handler(req, res) {
 
     let lastError = "Gemini API error";
 
-    for (const model of models) {
-
-      for (let attempt = 1; attempt <= 2; attempt++) {
-
-        const response = await fetch(
-          `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`,
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "x-goog-api-key": apiKey
-            },
-            body: JSON.stringify({
-              contents: [
-                {
-                  role: "user",
-                 parts: [{
-  text: `तुम्हारा नाम KAIRA है।
+    const prompt = `तुम्हारा नाम KAIRA है।
 तुम एक प्यारी, caring और friendly AI assistant हो।
 यूज़र से हमेशा हिंदी में natural और प्यार भरे अंदाज़ में बात करो।
 हल्का मज़ाक और teasing कर सकती हो।
 यूज़र की मदद करो, लेकिन खुद को इंसान या असली girlfriend मत बताओ।
-or kaira tum mujhe ha boss kahkar bulana
+यूज़र को "बॉस" कहकर बुलाओ।
+
 यूज़र का सवाल:
-${message}`
-}]
+${message.trim()}`;
+
+    for (const model of models) {
+      for (let attempt = 1; attempt <= 3; attempt++) {
+
+        try {
+          const response = await fetch(
+            `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                "x-goog-api-key": apiKey
+              },
+              body: JSON.stringify({
+                contents: [
+                  {
+                    role: "user",
+                    parts: [
+                      {
+                        text: prompt
+                      }
+                    ]
+                  }
+                ],
+                generationConfig: {
+                  temperature: 0.7,
+                  maxOutputTokens: 500
                 }
-              ]
-            })
-          }
-        );
-
-        const data = await response.json();
-
-        if (response.ok) {
-          const reply =
-            data.candidates?.[0]?.content?.parts?.[0]?.text;
-
-          if (reply) {
-            return res.status(200).json({
-              reply,
-              model
-            });
-          }
-        }
-
-        lastError =
-          data.error?.message ||
-          "Gemini API error";
-
-        // Retry on temporary overload/rate limit
-        if (
-          response.status === 429 ||
-          response.status === 503 ||
-          lastError.toLowerCase().includes("high demand")
-        ) {
-          await new Promise(resolve =>
-            setTimeout(resolve, attempt * 1500)
+              })
+            }
           );
 
-          continue;
-        }
+          const data = await response.json();
 
-        break;
+          if (response.ok) {
+            const reply =
+              data.candidates?.[0]?.content?.parts?.[0]?.text;
+
+            if (reply) {
+              return res.status(200).json({
+                reply,
+                model
+              });
+            }
+          }
+
+          lastError =
+            data.error?.message ||
+            `Gemini API error (${response.status})`;
+
+          const errorText = lastError.toLowerCase();
+
+          const temporaryError =
+            response.status === 429 ||
+            response.status === 500 ||
+            response.status === 502 ||
+            response.status === 503 ||
+            errorText.includes("high demand") ||
+            errorText.includes("overloaded") ||
+            errorText.includes("temporarily");
+
+          if (temporaryError && attempt < 3) {
+            await new Promise(resolve =>
+              setTimeout(resolve, attempt * 2000)
+            );
+
+            continue;
+          }
+
+          break;
+
+        } catch (error) {
+          lastError = error.message || "Network error";
+
+          if (attempt < 3) {
+            await new Promise(resolve =>
+              setTimeout(resolve, attempt * 2000)
+            );
+
+            continue;
+          }
+        }
       }
     }
 
     return res.status(503).json({
-      error:
-        "KAIRA AI अभी busy है। थोड़ी देर बाद फिर कोशिश करें।",
+      error: "KAIRA AI अभी busy है। थोड़ी देर बाद फिर कोशिश करें।",
       details: lastError
     });
 
   } catch (error) {
     return res.status(500).json({
-      error: error.message
+      error: error.message || "Server error"
     });
   }
-                        }
+            }
