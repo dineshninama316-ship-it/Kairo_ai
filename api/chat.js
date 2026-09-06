@@ -1,9 +1,5 @@
 export default async function handler(req, res) {
 
-    /* =========================
-       METHOD CHECK
-    ========================= */
-
     if (req.method !== "POST") {
         return res.status(405).json({
             error: "Method not allowed"
@@ -12,28 +8,27 @@ export default async function handler(req, res) {
 
     try {
 
-        /* =========================
-           REQUEST DATA
-        ========================= */
-
         const {
             message,
-            image
+            image,
+            weather
         } = req.body || {};
 
-        if (
-            (!message || !message.trim()) &&
-            !image
-        ) {
+        const text =
+            typeof message === "string"
+                ? message.trim()
+                : "";
+
+        if (!text) {
             return res.status(400).json({
-                error: "Message or image is required"
+                error: "Message is required"
             });
         }
 
 
-        /* =========================
+        /* =====================================================
            API KEYS
-        ========================= */
+        ===================================================== */
 
         const geminiKey =
             process.env.GEMINI_API_KEY;
@@ -41,35 +36,18 @@ export default async function handler(req, res) {
         const grounderKey =
             process.env.GROUNDER_API_KEY;
 
+
         if (!geminiKey) {
+
             return res.status(500).json({
-                error: "GEMINI_API_KEY is missing"
+                error: "GEMINI_API_KEY नहीं मिली।"
             });
         }
 
 
-        /* =========================
-           MODEL
-        ========================= */
-
-        const model =
-            "gemini-3.6-flash";
-
-
-        /* =========================
-           BASIC DATA
-        ========================= */
-
-        const text =
-            message?.trim() || "";
-
-        const visionMode =
-            !!image;
-
-
-        /* =========================
+        /* =====================================================
            LIVE SEARCH DETECTION
-        ========================= */
+        ===================================================== */
 
         const liveKeywords = [
 
@@ -90,9 +68,7 @@ export default async function handler(req, res) {
             "खबरें",
             "समाचार",
 
-            "मौसम",
             "weather",
-
             "today",
             "now",
             "current",
@@ -133,43 +109,83 @@ export default async function handler(req, res) {
 
             "election",
             "चुनाव"
-
         ];
 
 
+        const lowerText =
+            text.toLowerCase();
+
+
         const liveMode =
-            !visionMode &&
             liveKeywords.some(
                 keyword =>
-                    text
-                        .toLowerCase()
-                        .includes(
-                            keyword.toLowerCase()
-                        )
+                    lowerText.includes(
+                        keyword.toLowerCase()
+                    )
             );
 
 
-        /* =========================
-           GROUND SEARCH
-        ========================= */
+        /* =====================================================
+           WEATHER DATA
+        ===================================================== */
+
+        let weatherContext = "";
+
+
+        if (weather) {
+
+            weatherContext = `
+USER WEATHER DATA:
+
+Temperature:
+${weather.temperature ?? "N/A"} °C
+
+Feels like:
+${weather.apparent_temperature ?? "N/A"} °C
+
+Humidity:
+${weather.humidity ?? "N/A"} %
+
+Wind:
+${weather.wind_speed ?? "N/A"} km/h
+
+Precipitation:
+${weather.precipitation ?? "N/A"} mm
+
+Condition:
+${weather.description ?? "N/A"}
+
+Use this weather data as the primary source
+when answering the user's weather question.
+`;
+        }
+
+
+        /* =====================================================
+           GROUNDER LIVE SEARCH
+        ===================================================== */
 
         let searchContext = "";
         let sources = [];
 
+
         if (
             liveMode &&
-            grounderKey
+            grounderKey &&
+            !weather
         ) {
 
             try {
 
-                const searchResponse =
+                const grounderResponse =
                     await fetch(
                         "https://grounder.dev/v1/deep_search",
                         {
+
                             method: "POST",
 
                             headers: {
+
                                 "Authorization":
                                     `Bearer ${grounderKey}`,
 
@@ -177,569 +193,268 @@ export default async function handler(req, res) {
                                     "application/json"
                             },
 
-                            body: JSON.stringify({
+                            body:
+                                JSON.stringify({
 
-                                query:
-                                    text,
+                                    query: text,
 
-                                region:
-                                    "in",
+                                    source: "google",
 
-                                source:
-                                    "google",
+                                    max_fetches: 4,
 
-                                max_fetches:
-                                    4,
-
-                                max_tokens:
-                                    900
-                            })
+                                    max_tokens: 900
+                                })
                         }
                     );
 
 
-                const searchData =
-                    await searchResponse.json();
-
-
                 if (
-                    searchResponse.ok &&
-                    Array.isArray(
-                        searchData.passages
-                    ) &&
-                    searchData.passages.length
+                    grounderResponse.ok
                 ) {
 
+                    const grounderData =
+                        await grounderResponse.json();
+
+
+                    const passages =
+                        Array.isArray(
+                            grounderData.passages
+                        )
+                            ? grounderData.passages
+                            : [];
+
+
                     searchContext =
-                        searchData.passages
+                        passages
                             .map(
-                                (item, index) =>
-                                    `
+                                (item, index) => {
+
+                                    const url =
+                                        item.url || "";
+
+                                    if (url) {
+                                        sources.push(url);
+                                    }
+
+                                    return `
 SOURCE ${index + 1}
 
 URL:
-${item.url || ""}
+${url}
 
 EVIDENCE:
 ${item.text || ""}
-`
+`;
+                                }
                             )
                             .join("\n");
 
 
                     sources =
-                        searchData.passages
-                            .map(
-                                item =>
-                                    item.url
-                            )
-                            .filter(Boolean);
-
+                        [...new Set(sources)];
                 }
 
-            } catch (searchError) {
+            } catch (error) {
 
                 console.error(
-                    "Grounder Search Error:",
-                    searchError
+                    "Grounder Error:",
+                    error
                 );
-
-                searchContext = "";
-                sources = [];
             }
         }
 
 
-        /* =========================
-           SMART PROMPT
-        ========================= */
+        /* =====================================================
+           SYSTEM PROMPT
+        ===================================================== */
 
-        let prompt;
+        let systemPrompt = `
+
+You are KAIRA AI.
+
+You are a smart personal AI assistant.
+
+The user prefers simple Hindi.
+
+Answer naturally and clearly.
+
+Do not claim that you performed an action
+unless you actually received the required data.
+
+For trading questions:
+- Explain observations clearly.
+- Do not guarantee profit.
+- Do not claim guaranteed buy/sell signals.
+- Mention important uncertainty.
+
+For image or screen analysis:
+- Only describe what is actually visible.
+- Do not invent details.
+- If something is unclear, say that it is unclear.
+
+For live information:
+- Prefer the provided live-search evidence.
+- Do not invent current prices, news, weather or results.
+
+Keep answers useful and reasonably concise.
+
+`;
 
 
-        /* =========================
-           VISION PROMPT
-        ========================= */
+        /* =====================================================
+           WEATHER PROMPT
+        ===================================================== */
 
-        if (visionMode) {
+        if (weatherContext) {
 
-            prompt = `
-तुम्हारा नाम KAIRA है।
+            systemPrompt += `
 
-यूज़र तुम्हें camera या screen की वर्तमान
-तस्वीर दिखा रहा है।
+${weatherContext}
 
-यूज़र को "बॉस" कहकर बुलाओ।
+Answer the user's weather question
+using the supplied weather data.
 
-तस्वीर को ध्यान से देखो।
+`;
+        }
 
-सिर्फ वही बताओ जो वास्तव में दिखाई दे रहा है।
 
-बिना evidence के अनुमान मत लगाओ।
+        /* =====================================================
+           LIVE SEARCH PROMPT
+        ===================================================== */
 
-अगर object दिखाई दे तो पहचानने की कोशिश करो।
+        if (searchContext) {
 
-अगर text दिखाई दे तो उसे पढ़ो।
+            systemPrompt += `
 
-अगर document दिखाई दे तो visible information
-समझाओ।
+LIVE WEB EVIDENCE:
 
-अगर trading chart दिखाई दे तो:
+${searchContext}
+
+IMPORTANT:
+Use this evidence when answering.
+
+If the evidence is insufficient,
+clearly say that the information could not
+be verified.
+
+Do not invent missing information.
+
+`;
+
+        }
+
+
+        /* =====================================================
+           IMAGE PROMPT
+        ===================================================== */
+
+        if (image) {
+
+            systemPrompt += `
+
+An image has been attached.
+
+Analyze the image carefully.
+
+If it is a camera frame:
+describe what is visible.
+
+If it is a phone/computer screen:
+analyze the visible screen.
+
+If it contains a TradingView chart:
+you may discuss visible:
 
 - trend
 - support
 - resistance
-- visible indicators
-- technical observations
+- candles
+- market structure
+- indicators
 
-बताओ।
+But do not guarantee future price movement
+or guaranteed profit.
 
-Guaranteed profit या निश्चित भविष्यवाणी मत करो।
-
-जवाब छोटा और सरल हिंदी में दो।
-
-यूज़र का सवाल:
-
-${text ||
-"इस तस्वीर में क्या दिखाई दे रहा है?"}
 `;
 
         }
 
 
-        /* =========================
-           LIVE PROMPT
-        ========================= */
+        /* =====================================================
+           USER PROMPT
+        ===================================================== */
 
-        else if (
-            liveMode &&
-            searchContext
-        ) {
+        systemPrompt += `
 
-            prompt = `
-तुम्हारा नाम KAIRA है।
-
-यूज़र को "बॉस" कहकर बुलाओ।
-
-यूज़र ने current/live information पूछी है।
-
-नीचे Grounder Search से प्राप्त वर्तमान web
-evidence दिया गया है।
-
-IMPORTANT:
-
-सिर्फ दिए गए evidence के आधार पर जवाब दो।
-
-अपनी memory से current information मत बनाओ।
-
-अगर evidence पर्याप्त नहीं है तो साफ बताओ
-कि जानकारी verify नहीं हो सकी।
-
-अलग-अलग sources में अंतर हो तो बताओ।
-
-जवाब सरल और natural हिंदी में दो।
-
-जहाँ जरूरी हो वहाँ तारीख/समय स्पष्ट करो।
-
-Trading या market analysis में guaranteed
-profit या निश्चित भविष्यवाणी मत करो।
-
-SEARCH EVIDENCE:
-
-${searchContext}
-
-USER QUESTION:
+USER MESSAGE:
 
 ${text}
 
-जवाब देते समय source URLs को अंत में
-"Sources" के नीचे सूचीबद्ध करो।
+Now answer the user.
+
 `;
 
-        }
 
-
-        /* =========================
-           LIVE SEARCH FAILED
-           ========================= */
-
-        else if (liveMode) {
-
-            prompt = `
-तुम्हारा नाम KAIRA है।
-
-यूज़र को "बॉस" कहकर बुलाओ।
-
-यूज़र ने current/live information पूछी है,
-लेकिन web search इस समय उपलब्ध नहीं है।
-
-इसलिए current information को निश्चित तथ्य
-की तरह मत बताओ।
-
-अगर सामान्य जानकारी दे सकते हो तो स्पष्ट
-करो कि वह live verified information नहीं है।
-
-सरल हिंदी में जवाब दो।
-
-यूज़र का सवाल:
-
-${text}
-`;
-
-        }
-
-
-        /* =========================
-           NORMAL PROMPT
-        ========================= */
-
-        else {
-
-            prompt = `
-तुम्हारा नाम KAIRA है।
-
-तुम एक intelligent, caring और friendly
-AI assistant हो।
-
-यूज़र को "बॉस" कहकर बुलाओ।
-
-सरल और natural हिंदी में जवाब दो।
-
-अगर यूज़र English में पूछे तो भी संभव हो
-तो हिंदी में जवाब दो।
-
-जवाब सीधा, उपयोगी और natural रखो।
-
-अनावश्यक लंबा जवाब मत दो।
-
-अगर current information उपलब्ध नहीं है तो
-उसे निश्चित current fact की तरह मत बताओ।
-
-Trading में analysis में मदद करो लेकिन
-guaranteed profit का दावा मत करो।
-
-यूज़र का सवाल:
-
-${text}
-`;
-
-        }
-
-
-        /* =========================
-           GEMINI PARTS
-        ========================= */
-
-        const parts = [
-            {
-                text: prompt
-            }
-        ];
-
-
-        /* =========================
-           ADD IMAGE
-        ========================= */
-
-        if (image) {
-
-            let base64Data =
-                image;
-
-            let mimeType =
-                "image/jpeg";
-
-
-            if (
-                image.startsWith("data:")
-            ) {
-
-                const match =
-                    image.match(
-                        /^data:(image\/[^;]+);base64,(.+)$/
-                    );
-
-
-                if (!match) {
-
-                    return res.status(400).json({
-                        error:
-                            "Invalid image format"
-                    });
-
-                }
-
-
-                mimeType =
-                    match[1];
-
-                base64Data =
-                    match[2];
-            }
-
-
-            parts.push({
-
-                inlineData: {
-
-                    mimeType:
-                        mimeType,
-
-                    data:
-                        base64Data
-                }
-
-            });
-        }
-
-
-        /* =========================
-           GEMINI REQUEST BODY
-        ========================= */
-
-        const requestBody = {
-
-            contents: [
-
-                {
-
-                    role: "user",
-
-                    parts:
-                        parts
-                }
-
-            ],
-
-            generationConfig: {
-
-                maxOutputTokens:
-                    visionMode
-                        ? 450
-                        : liveMode
-                            ? 650
-                            : 500
-            }
-
-        };
-
-
-        /* =========================
-           GEMINI FUNCTION
-        ========================= */
-
-        async function callGemini() {
-
-            return await fetch(
-
-                `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`,
-
-                {
-
-                    method: "POST",
-
-                    headers: {
-
-                        "Content-Type":
-                            "application/json",
-
-                        "x-goog-api-key":
-                            geminiKey
-                    },
-
-                    body:
-                        JSON.stringify(
-                            requestBody
-                        )
-                }
-
-            );
-        }
-
-
-        /* =========================
-           GEMINI REQUEST
-        ========================= */
-
-        let response =
-            await callGemini();
-
-
-        /* =========================
-           429 RETRY
-        ========================= */
-
-        if (
-            response.status === 429
-        ) {
-
-            console.log(
-                "Gemini 429 detected. Retrying..."
+        /* =====================================================
+           GEMINI CALL
+        ===================================================== */
+
+        const result =
+            await callGemini(
+                geminiKey,
+                systemPrompt,
+                image
             );
 
 
-            await new Promise(
-                resolve =>
-                    setTimeout(
-                        resolve,
-                        3000
-                    )
-            );
-
-
-            response =
-                await callGemini();
-        }
-
-
-        /* =========================
-           RESPONSE DATA
-        ========================= */
-
-        const data =
-            await response.json();
-
-
-        /* =========================
-           ERROR HANDLING
-        ========================= */
-
-        if (!response.ok) {
-
-            console.error(
-                "Gemini Error:",
-                data
-            );
-
-
-            const errorMessage =
-                data.error?.message ||
-                "Gemini API error";
-
-
-            if (
-                response.status === 429
-            ) {
-
-                return res.status(429).json({
-
-                    error:
-                        "बॉस, Gemini अभी requests स्वीकार नहीं कर रहा है। थोड़ी देर बाद फिर कोशिश करें।",
-
-                    quotaExceeded:
-                        true,
-
-                    vision:
-                        visionMode,
-
-                    live:
-                        liveMode,
-
-                    status:
-                        "rate_limited"
-                });
-            }
-
-
-            if (
-                response.status === 503
-            ) {
-
-                return res.status(503).json({
-
-                    error:
-                        "बॉस, Gemini server अभी busy है। थोड़ी देर बाद फिर कोशिश करें।",
-
-                    vision:
-                        visionMode,
-
-                    live:
-                        liveMode,
-
-                    status:
-                        "server_busy"
-                });
-            }
-
+        if (!result.ok) {
 
             return res.status(
-                response.status
+                result.status || 500
             ).json({
 
                 error:
-                    errorMessage,
+                    result.error ||
+                    "AI response failed",
 
-                vision:
-                    visionMode,
-
-                live:
-                    liveMode,
-
-                status:
-                    "error"
+                retry:
+                    result.retry || false
             });
         }
 
 
-        /* =========================
-           GET GEMINI REPLY
-        ========================= */
-
-        const reply =
-            data
-                .candidates?.[0]
-                ?.content?.parts
-                ?.map(
-                    part =>
-                        part.text || ""
-                )
-                .join("")
-                .trim();
-
-
-        if (!reply) {
-
-            return res.status(500).json({
-
-                error:
-                    "बॉस, KAIRA को जवाब नहीं मिला।",
-
-                status:
-                    "empty_response"
-            });
-        }
-
-
-        /* =========================
-           SUCCESS
-        ========================= */
+        /* =====================================================
+           FINAL RESPONSE
+        ===================================================== */
 
         return res.status(200).json({
 
             reply:
-                reply,
+                result.reply,
 
             vision:
-                visionMode,
+                !!image,
 
             live:
-                liveMode,
+                !!searchContext,
 
-            sources:
-                sources,
+            weather:
+                !!weather,
+
+            sources,
 
             model:
-                model,
+                "gemini-3.6-flash",
 
             status:
-                "ok"
+                "success"
         });
 
 
     } catch (error) {
 
         console.error(
-            "Server Error:",
+            "KAIRA API Error:",
             error
         );
 
@@ -747,10 +462,364 @@ ${text}
         return res.status(500).json({
 
             error:
-                "बॉस, KAIRA server में समस्या आ गई। थोड़ी देर बाद फिर कोशिश करें।",
-
-            status:
-                "server_error"
+                "KAIRA server में समस्या आ गई।"
         });
     }
-                                    }
+            }
+/* =====================================================
+   GEMINI FUNCTION
+===================================================== */
+
+async function callGemini(
+    apiKey,
+    prompt,
+    image
+) {
+
+    const model =
+        "gemini-3.6-flash";
+
+
+    const url =
+        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+
+
+    /* =====================================================
+       REQUEST CONTENT
+    ===================================================== */
+
+    const parts = [
+        {
+            text: prompt
+        }
+    ];
+
+
+    /* =====================================================
+       IMAGE / CAMERA / SCREEN
+    ===================================================== */
+
+    if (image) {
+
+        let imageData =
+            image;
+
+
+        /*
+          data:image/jpeg;base64,XXXX
+          में से केवल base64 हिस्सा निकालना है
+        */
+
+        if (
+            imageData.startsWith(
+                "data:"
+            )
+        ) {
+
+            imageData =
+                imageData.split(
+                    ","
+                )[1];
+        }
+
+
+        parts.push({
+
+            inlineData: {
+
+                mimeType:
+                    "image/jpeg",
+
+                data:
+                    imageData
+            }
+        });
+    }
+
+
+    const requestBody = {
+
+        contents: [
+
+            {
+                role: "user",
+
+                parts:
+                    parts
+            }
+
+        ],
+
+        generationConfig: {
+
+            temperature: 0.7,
+
+            maxOutputTokens:
+                1000
+        }
+
+    };
+
+
+    /* =====================================================
+       FIRST REQUEST
+    ===================================================== */
+
+    let response;
+
+    try {
+
+        response =
+            await fetch(
+                url,
+                {
+
+                    method: "POST",
+
+                    headers: {
+
+                        "Content-Type":
+                            "application/json"
+                    },
+
+                    body:
+                        JSON.stringify(
+                            requestBody
+                        )
+                }
+            );
+
+    } catch (error) {
+
+        console.error(
+            "Gemini Network Error:",
+            error
+        );
+
+        return {
+
+            ok: false,
+
+            status: 500,
+
+            error:
+                "Gemini server से connection नहीं हो पाया।"
+        };
+    }
+
+
+    /* =====================================================
+       429 → WAIT → RETRY
+    ===================================================== */
+
+    if (
+        response.status === 429
+    ) {
+
+        console.log(
+            "Gemini 429 received. Retrying..."
+        );
+
+
+        await new Promise(
+            resolve =>
+                setTimeout(
+                    resolve,
+                    3000
+                )
+        );
+
+
+        try {
+
+            response =
+                await fetch(
+                    url,
+                    {
+
+                        method: "POST",
+
+                        headers: {
+
+                            "Content-Type":
+                                "application/json"
+                        },
+
+                        body:
+                            JSON.stringify(
+                                requestBody
+                            )
+                    }
+                );
+
+        } catch (error) {
+
+            console.error(
+                "Gemini Retry Error:",
+                error
+            );
+
+            return {
+
+                ok: false,
+
+                status: 500,
+
+                error:
+                    "Gemini retry के दौरान connection error आया।"
+            };
+        }
+    }
+
+
+    /* =====================================================
+       OTHER API ERRORS
+    ===================================================== */
+
+    if (
+        !response.ok
+    ) {
+
+        let errorData = null;
+
+        try {
+
+            errorData =
+                await response.json();
+
+        } catch (error) {
+
+            errorData = null;
+        }
+
+
+        console.error(
+            "Gemini API Error:",
+            response.status,
+            errorData
+        );
+
+
+        if (
+            response.status === 429
+        ) {
+
+            return {
+
+                ok: false,
+
+                status: 429,
+
+                retry: true,
+
+                error:
+                    "KAIRA की AI request limit अभी पूरी हो गई है। थोड़ी देर बाद फिर कोशिश करें।"
+            };
+        }
+
+
+        if (
+            response.status === 503
+        ) {
+
+            return {
+
+                ok: false,
+
+                status: 503,
+
+                error:
+                    "Gemini अभी busy है। थोड़ी देर बाद फिर कोशिश करें।"
+            };
+        }
+
+
+        return {
+
+            ok: false,
+
+            status:
+                response.status,
+
+            error:
+                "Gemini API error आया।"
+        };
+    }
+
+
+    /* =====================================================
+       READ RESPONSE
+    ===================================================== */
+
+    let data;
+
+    try {
+
+        data =
+            await response.json();
+
+    } catch (error) {
+
+        return {
+
+            ok: false,
+
+            status: 500,
+
+            error:
+                "Gemini का response समझ नहीं आया।"
+        };
+    }
+
+
+    /* =====================================================
+       EXTRACT TEXT
+    ===================================================== */
+
+    const reply =
+        data
+            ?.candidates
+            ?.map(
+                candidate =>
+                    candidate
+                        ?.content
+                        ?.parts
+                        ?.map(
+                            part =>
+                                part.text || ""
+                        )
+                        .join("")
+            )
+            .filter(Boolean)
+            .join("\n")
+            .trim();
+
+
+    if (!reply) {
+
+        console.error(
+            "Empty Gemini response:",
+            data
+        );
+
+
+        return {
+
+            ok: false,
+
+            status: 500,
+
+            error:
+                "Gemini ने कोई जवाब नहीं दिया।"
+        };
+    }
+
+
+    return {
+
+        ok: true,
+
+        reply:
+            reply
+    };
+}
