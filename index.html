@@ -316,7 +316,99 @@
 
     </section>
 
+async function analyzeCamera() {
 
+    const video =
+        document.getElementById("cameraVideo");
+
+    if (!cameraStream) {
+        alert("पहले Camera चालू करो।");
+        return;
+    }
+
+    if (!video.videoWidth || !video.videoHeight) {
+        alert("Camera अभी तैयार नहीं है। 1-2 सेकंड रुकें।");
+        return;
+    }
+
+    try {
+
+        modeText.innerText =
+            "👁️ Kaira camera देख रही है...";
+
+        const canvas =
+            document.createElement("canvas");
+
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+
+        const ctx =
+            canvas.getContext("2d");
+
+        ctx.drawImage(
+            video,
+            0,
+            0,
+            canvas.width,
+            canvas.height
+        );
+
+        const image =
+            canvas.toDataURL(
+                "image/jpeg",
+                0.8
+            );
+
+        const response =
+            await fetch("/api/chat", {
+
+                method: "POST",
+
+                headers: {
+                    "Content-Type":
+                        "application/json"
+                },
+
+                body: JSON.stringify({
+
+                    message:
+                        "इस तस्वीर को ध्यान से देखकर बताओ कि इसमें क्या दिखाई दे रहा है। अगर कोई वस्तु, व्यक्ति, टेक्स्ट या दूसरी जानकारी दिखाई दे रही है तो उसका सरल हिंदी में analysis करो।",
+
+                    image: image
+
+                })
+
+            });
+
+        const data =
+            await response.json();
+
+        const reply =
+            data.reply ||
+            data.error ||
+            "Kaira image को समझ नहीं पाई।";
+
+        addMessage(
+            reply,
+            "kaira"
+        );
+
+        modeText.innerText =
+            "📷 Camera चालू है";
+
+    } catch (error) {
+
+        console.error(error);
+
+        addMessage(
+            "माफ़ कीजिए बॉस, अभी camera analysis में समस्या आई।",
+            "kaira"
+        );
+
+        modeText.innerText =
+            "📷 Camera चालू है";
+    }
+}
     <!-- =========================
          BOTTOM INPUT
     ========================= -->
