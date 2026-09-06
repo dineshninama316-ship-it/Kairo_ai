@@ -63,10 +63,12 @@
             padding: 15px;
             display: flex;
             gap: 10px;
+            flex-wrap: wrap;
         }
 
         .chat-box input {
             flex: 1;
+            min-width: 180px;
             background: transparent;
             border: none;
             outline: none;
@@ -82,6 +84,10 @@
             border-radius: 12px;
             font-weight: bold;
             cursor: pointer;
+        }
+
+        .voice-button {
+            background: #55ff99 !important;
         }
 
         .features {
@@ -121,143 +127,235 @@
 <body>
 
     <header>
-        <div class="logo">KAIRO</div>
+        <div class="logo">KAIRA</div>
         <div class="status">● AI ONLINE</div>
     </header>
 
     <section class="hero">
-        <h1>KAIRO AI</h1>
+
+        <h1>KAIRA AI</h1>
+
         <p>आपका Personal AI Assistant</p>
 
         <div class="chat-box">
-            <input type="text" placeholder="KAIRO से कुछ पूछें...">
-            <button onclick="askKairo()">पूछें</button>
+
+            <input
+                id="messageInput"
+                type="text"
+                placeholder="KAIRA से कुछ पूछें..."
+            >
+
+            <button onclick="askKaira()">
+                पूछें
+            </button>
+
+            <button id="voiceBtn" class="voice-button">
+                🎙️ बोलकर पूछें
+            </button>
+
         </div>
+
     </section>
 
     <section class="features">
 
         <div class="card">
             <h2>🤖 AI Assistant</h2>
-            <p>KAIRO से सवाल पूछें और अपने काम में AI की मदद लें।</p>
+            <p>
+                KAIRA से सवाल पूछें और अपने काम में AI की मदद लें।
+            </p>
         </div>
 
         <div class="card">
             <h2>📊 Trading Analysis</h2>
-            <p>Market analysis और trading tools के लिए अलग सेक्शन।</p>
+            <p>
+                Market analysis और trading tools के लिए अलग सेक्शन।
+            </p>
         </div>
 
         <div class="card">
             <h2>🎤 Voice Assistant</h2>
-            <p>भविष्य में KAIRO से आवाज़ द्वारा बात करने की सुविधा।</p>
+            <p>
+                KAIRA से आवाज़ द्वारा बात करें और जवाब आवाज़ में सुनें।
+            </p>
         </div>
 
         <div class="card">
             <h2>⚡ Quick Actions</h2>
-            <p>आपके रोज़ के जरूरी काम जल्दी करने के लिए shortcuts।</p>
+            <p>
+                आपके रोज़ के जरूरी काम जल्दी करने के लिए shortcuts।
+            </p>
         </div>
 
     </section>
 
     <footer>
-        © 2026 KAIRO AI
-    </footer
-<script>
-async function askKairo() {
-  const input = document.querySelector("input");
-  const message = input.value.trim();
+        © 2026 KAIRA AI
+    </footer>
 
-  if (!message) return;
 
-  const response = await fetch("/api/chat", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({ message })
-  });
+    <script>
 
-  const data = await response.json();
+        // ==========================
+        // TEXT CHAT
+        // ==========================
 
-  alert(data.reply || data.error || "KAIRA से जवाब नहीं मिला");
+        async function askKaira() {
 
-  input.value = "";
-}
+            const input =
+                document.getElementById("messageInput");
 
-const voiceBtn = document.getElementById("voiceBtn");
+            const message =
+                input.value.trim();
 
-if (voiceBtn) {
-  voiceBtn.onclick = () => {
-    const SpeechRecognition =
-      window.SpeechRecognition ||
-      window.webkitSpeechRecognition;
+            if (!message) {
+                return;
+            }
 
-    if (!SpeechRecognition) {
-      alert("आपके browser में Voice Assistant support नहीं है।");
-      return;
-    }
+            try {
 
-    const recognition = new SpeechRecognition();
+                const response = await fetch("/api/chat", {
+                    method: "POST",
 
-    recognition.lang = "hi-IN";
-    recognition.interimResults = false;
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
 
-    recognition.start();
+                    body: JSON.stringify({
+                        message: message
+                    })
+                });
 
-    voiceBtn.innerText = "🎙️ सुन रही हूँ...";
+                const data =
+                    await response.json();
 
-    recognition.onresult = (event) => {
-      const input = document.querySelector("input");
+                const reply =
+                    data.reply ||
+                    data.error ||
+                    "KAIRA से जवाब नहीं मिला।";
 
-      input.value = event.results[0][0].transcript;
+                alert(reply);
 
-      voiceBtn.innerText = "🎙️ बोलकर पूछें";
 
-      askKairo();
-    };
+                // KAIRA का जवाब बोलना
+                if ("speechSynthesis" in window && data.reply) {
 
-    recognition.onerror = () => {
-      voiceBtn.innerText = "🎙️ बोलकर पूछें";
-    };
-  };
-}
-</script>
+                    window.speechSynthesis.cancel();
 
-if (voiceBtn) {
-  voiceBtn.onclick = () => {
-    const SpeechRecognition =
-      window.SpeechRecognition ||
-      window.webkitSpeechRecognition;
+                    const speech =
+                        new SpeechSynthesisUtterance(
+                            data.reply
+                        );
 
-    if (!SpeechRecognition) {
-      alert("आपके browser में Voice Assistant support नहीं है।");
-      return;
-    }
+                    speech.lang = "hi-IN";
+                    speech.rate = 1;
+                    speech.pitch = 1.1;
 
-    const recognition = new SpeechRecognition();
+                    window.speechSynthesis.speak(speech);
+                }
 
-    recognition.lang = "hi-IN";
-    recognition.interimResults = false;
+                input.value = "";
 
-    recognition.start();
+            } catch (error) {
 
-    voiceBtn.innerText = "🎙️ सुन रही हूँ...";
+                console.error(error);
 
-    recognition.onresult = (event) => {
-      const input = document.querySelector("input");
+                alert(
+                    "KAIRA से connection नहीं हो पाया।"
+                );
+            }
+        }
 
-      input.value = event.results[0][0].transcript;
 
-      voiceBtn.innerText = "🎙️ बोलकर पूछें";
+        // ==========================
+        // VOICE ASSISTANT
+        // ==========================
 
-      askKairo();
-    };
+        const voiceBtn =
+            document.getElementById("voiceBtn");
 
-    recognition.onerror = () => {
-      voiceBtn.innerText = "🎙️ बोलकर पूछें";
-    };
-  };
-}
-        </script>
+
+        voiceBtn.onclick = () => {
+
+            const SpeechRecognition =
+                window.SpeechRecognition ||
+                window.webkitSpeechRecognition;
+
+
+            if (!SpeechRecognition) {
+
+                alert(
+                    "आपके browser में Voice Assistant support नहीं है।"
+                );
+
+                return;
+            }
+
+
+            const recognition =
+                new SpeechRecognition();
+
+
+            recognition.lang = "hi-IN";
+
+            recognition.interimResults = false;
+
+            recognition.continuous = false;
+
+
+            voiceBtn.innerText =
+                "🎙️ सुन रही हूँ...";
+
+
+            recognition.start();
+
+
+            recognition.onresult = (event) => {
+
+                const input =
+                    document.getElementById(
+                        "messageInput"
+                    );
+
+
+                const spokenText =
+                    event.results[0][0].transcript;
+
+
+                input.value =
+                    spokenText;
+
+
+                voiceBtn.innerText =
+                    "🎙️ बोलकर पूछें";
+
+
+                // सवाल KAIRA को भेजना
+                askKaira();
+            };
+
+
+            recognition.onerror = () => {
+
+                voiceBtn.innerText =
+                    "🎙️ बोलकर पूछें";
+
+
+                alert(
+                    "Voice में समस्या आई। Microphone permission check करें।"
+                );
+            };
+
+
+            recognition.onend = () => {
+
+                voiceBtn.innerText =
+                    "🎙️ बोलकर पूछें";
+            };
+
+        };
+
+    </script>
+
 </body>
 </html>
