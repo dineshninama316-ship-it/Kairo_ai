@@ -418,31 +418,44 @@
 
         <div class="input-area">
 
-            <input
-                type="text"
-                id="messageInput"
-                placeholder="KAIRA से कुछ पूछें..."
-                autocomplete="off"
-            >
+    <input
+        type="text"
+        id="messageInput"
+        placeholder="KAIRA से कुछ पूछें..."
+        autocomplete="off"
+    >
 
+    <!-- SCREEN VISION BUTTON -->
+    <button
+        class="action-btn"
+        id="screenVisionBtn"
+        onclick="analyzeScreen()"
+        title="Screen Vision">
+        🖥️
+    </button>
 
-            <button
-                class="action-btn"
-                id="screenVisionBtn"
-                onclick="analyzeScreen()"
-                console.log("KAIRA SCREEN BUTTON CLICKED");
-                title="Screen Vision">
-                🖥️
-            </button>
+    <!-- VOICE BUTTON -->
+    <button
+        class="action-btn"
+        id="voiceBtn"
+        onclick="startVoice()"
+        title="Voice">
+        🎙️
+    </button>
 
+    <!-- SEND BUTTON -->
+    <button
+        class="action-btn send-btn"
+        onclick="askKaira()"
+        title="Send">
+        ➤
+    </button>
 
-            <button
-                class="action-btn"
-                id="voiceBtn"
-                onclick="startVoice()"
-                title="Voice">
-                🎙️
-            </button>
+</div>
+
+<div id="modeText">
+    Text mode • 🎙️ दबाकर voice में बात करें
+</div>
 
 
             <button
