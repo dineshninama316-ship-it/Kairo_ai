@@ -1586,15 +1586,13 @@ async function captureScreenFrame() {
 
     try {
 
-        screenStream =
-            await navigator.mediaDevices.getDisplayMedia({
+    screenStream =
+    await navigator.mediaDevices.getDisplayMedia({
 
-                video: {
-                    frameRate: 5
-                },
+        video: true,
 
-                audio: false
-            });
+        audio: false
+    });
 
 
         const video =
