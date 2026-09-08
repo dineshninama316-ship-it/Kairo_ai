@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+   <!DOCTYPE html>
 <html lang="hi">
 <head>
 <meta charset="UTF-8">
@@ -7,6 +7,7 @@
 <title>KAIRA AI</title>
 
 <style>
+
 *{
     margin:0;
     padding:0;
@@ -21,7 +22,10 @@ body{
     overflow:hidden;
 }
 
-/* Animated background */
+/* =========================
+   ANIMATED BACKGROUND
+========================= */
+
 body::before{
     content:"";
     position:fixed;
@@ -35,8 +39,13 @@ body::before{
 }
 
 @keyframes gridMove{
-    from{transform:translateY(0)}
-    to{transform:translateY(40px)}
+    from{
+        transform:translateY(0)
+    }
+
+    to{
+        transform:translateY(40px)
+    }
 }
 
 .glow{
@@ -61,15 +70,19 @@ body::before{
     bottom:-100px;
 }
 
-/* Header */
+/* =========================
+   HEADER
+========================= */
+
 header{
-    height:70px;
+    min-height:70px;
     display:flex;
     align-items:center;
     justify-content:space-between;
-    padding:0 18px;
+    gap:10px;
+    padding:8px 14px;
     border-bottom:1px solid rgba(0,150,255,.25);
-    background:rgba(2,8,20,.75);
+    background:rgba(2,8,20,.85);
     backdrop-filter:blur(12px);
 }
 
@@ -109,14 +122,51 @@ header{
     margin-top:3px;
 }
 
-/* Main */
+/* =========================
+   TOP SCREEN BUTTON
+========================= */
+
+.top-actions{
+    display:flex;
+    align-items:center;
+    gap:7px;
+}
+
+.top-tool{
+    height:38px;
+    padding:0 10px;
+    border-radius:11px;
+    background:#061a35;
+    border:1px solid rgba(0,160,255,.4);
+    color:#8fcaff;
+    font-size:12px;
+    cursor:pointer;
+    white-space:nowrap;
+}
+
+.top-tool:active{
+    transform:scale(.95);
+}
+
+.top-tool:hover{
+    background:#08366b;
+    box-shadow:0 0 15px rgba(0,160,255,.5);
+}
+
+/* =========================
+   MAIN
+========================= */
+
 .main{
     height:calc(100vh - 70px);
     display:flex;
     flex-direction:column;
 }
 
-/* AI area */
+/* =========================
+   AI AREA
+========================= */
+
 .ai-area{
     height:210px;
     display:flex;
@@ -141,15 +191,21 @@ header{
 }
 
 @keyframes orbPulse{
+
     0%,100%{
         transform:scale(1);
-        box-shadow:0 0 20px #008cff,
-        0 0 50px rgba(0,140,255,.6);
+
+        box-shadow:
+            0 0 20px #008cff,
+            0 0 50px rgba(0,140,255,.6);
     }
+
     50%{
         transform:scale(1.08);
-        box-shadow:0 0 30px #00c8ff,
-        0 0 80px rgba(0,140,255,.8);
+
+        box-shadow:
+            0 0 30px #00c8ff,
+            0 0 80px rgba(0,140,255,.8);
     }
 }
 
@@ -157,11 +213,21 @@ header{
     width:75px;
     height:75px;
     border-radius:50%;
-    background:radial-gradient(circle,#00d9ff,#005cff,#020611);
+    background:
+        radial-gradient(
+            circle,
+            #00d9ff,
+            #005cff,
+            #020611
+        );
+
     box-shadow:0 0 25px #00bfff;
 }
 
-/* Chat */
+/* =========================
+   CHAT
+========================= */
+
 .chat{
     flex:1;
     overflow-y:auto;
@@ -181,29 +247,52 @@ header{
 
 .message.user{
     margin-left:auto;
-    background:linear-gradient(135deg,#005bea,#003b9e);
+
+    background:
+        linear-gradient(
+            135deg,
+            #005bea,
+            #003b9e
+        );
+
     border-bottom-right-radius:4px;
-    box-shadow:0 0 15px rgba(0,110,255,.25);
+
+    box-shadow:
+        0 0 15px rgba(0,110,255,.25);
 }
 
 .message.kaira{
     margin-right:auto;
+
     background:rgba(5,25,55,.9);
-    border:1px solid rgba(0,150,255,.25);
+
+    border:
+        1px solid rgba(0,150,255,.25);
+
     border-bottom-left-radius:4px;
 }
 
 .message.error{
     margin-right:auto;
+
     background:rgba(100,0,20,.5);
-    border:1px solid #ff315c;
+
+    border:
+        1px solid #ff315c;
 }
 
-/* Bottom */
+/* =========================
+   BOTTOM
+========================= */
+
 .bottom{
     padding:10px 12px 14px;
+
     background:rgba(2,8,20,.9);
-    border-top:1px solid rgba(0,150,255,.25);
+
+    border-top:
+        1px solid rgba(0,150,255,.25);
+
     backdrop-filter:blur(15px);
 }
 
@@ -215,19 +304,30 @@ header{
 #messageInput{
     flex:1;
     min-width:0;
+
     height:48px;
-    border:1px solid rgba(0,160,255,.35);
+
+    border:
+        1px solid rgba(0,160,255,.35);
+
     outline:none;
+
     border-radius:14px;
+
     background:#061225;
+
     color:#fff;
+
     padding:0 14px;
+
     font-size:14px;
 }
 
 #messageInput:focus{
     border-color:#00aaff;
-    box-shadow:0 0 12px rgba(0,150,255,.25);
+
+    box-shadow:
+        0 0 12px rgba(0,150,255,.25);
 }
 
 button{
@@ -239,25 +339,43 @@ button{
 .action-btn{
     width:48px;
     height:48px;
+
     border-radius:14px;
+
     background:#061a35;
-    border:1px solid rgba(0,160,255,.4);
+
+    border:
+        1px solid rgba(0,160,255,.4);
+
     font-size:19px;
+
     transition:.2s;
 }
 
 .action-btn:hover{
     background:#08366b;
-    box-shadow:0 0 15px rgba(0,160,255,.5);
+
+    box-shadow:
+        0 0 15px rgba(0,160,255,.5);
 }
 
 .send-btn{
     width:55px;
     height:48px;
+
     border-radius:14px;
-    background:linear-gradient(135deg,#008cff,#0051d4);
+
+    background:
+        linear-gradient(
+            135deg,
+            #008cff,
+            #0051d4
+        );
+
     font-size:18px;
-    box-shadow:0 0 15px rgba(0,130,255,.35);
+
+    box-shadow:
+        0 0 15px rgba(0,130,255,.35);
 }
 
 .send-btn:active,
@@ -273,24 +391,42 @@ button{
 
 .tool-btn{
     flex:1;
+
     height:36px;
+
     border-radius:10px;
+
     background:#061225;
-    border:1px solid rgba(0,150,255,.25);
+
+    border:
+        1px solid rgba(0,150,255,.25);
+
     color:#8fcaff;
+
     font-size:12px;
 }
 
-/* Camera */
+/* =========================
+   CAMERA
+========================= */
+
 .camera-box{
     display:none;
+
     position:fixed;
+
     inset:0;
+
     background:rgba(0,0,0,.9);
+
     z-index:50;
+
     align-items:center;
+
     justify-content:center;
+
     flex-direction:column;
+
     gap:15px;
 }
 
@@ -301,9 +437,14 @@ button{
 #cameraVideo{
     width:90%;
     max-width:500px;
-    border:2px solid #00aaff;
+
+    border:
+        2px solid #00aaff;
+
     border-radius:16px;
-    box-shadow:0 0 30px #007cff;
+
+    box-shadow:
+        0 0 30px #007cff;
 }
 
 .camera-buttons{
@@ -313,13 +454,21 @@ button{
 
 .camera-buttons button{
     padding:12px 18px;
+
     border-radius:10px;
+
     background:#06346a;
-    border:1px solid #008cff;
+
+    border:
+        1px solid #008cff;
 }
 
-/* Responsive */
+/* =========================
+   RESPONSIVE
+========================= */
+
 @media(max-width:600px){
+
     .logo-text{
         font-size:18px;
     }
@@ -342,7 +491,17 @@ button{
         max-width:90%;
         font-size:13px;
     }
+
+    .top-tool{
+        padding:0 7px;
+        font-size:10px;
+    }
+
+    .usage{
+        display:none;
+    }
 }
+
 </style>
 </head>
 
@@ -352,32 +511,72 @@ button{
 <div class="glow two"></div>
 
 <header>
+
     <div class="logo">
-        <div class="logo-icon">K</div>
-        <div>
-            <div class="logo-text">KAIRA</div>
-            <div class="status">● ONLINE</div>
+
+        <div class="logo-icon">
+            K
         </div>
+
+        <div>
+
+            <div class="logo-text">
+                KAIRA
+            </div>
+
+            <div class="status">
+                ● ONLINE
+            </div>
+
+        </div>
+
     </div>
 
-    <div class="usage" id="usageText">
-        AI Usage: 0
+    <!-- SCREEN SHARE ऊपर दिखाई देगा -->
+
+    <div class="top-actions">
+
+        <button
+            class="top-tool"
+            id="topScreenBtn"
+        >
+            🖥 Screen Share
+        </button>
+
+        <div
+            class="usage"
+            id="usageText"
+        >
+            AI Usage: 0
+        </div>
+
     </div>
+
 </header>
 
 <div class="main">
 
     <div class="ai-area">
+
         <div class="ai-orb">
+
             <div class="orb-inner"></div>
+
         </div>
+
     </div>
 
-    <div class="chat" id="chat">
+    <div
+        class="chat"
+        id="chat"
+    >
 
         <div class="message kaira">
+
             नमस्ते 👋 मैं <b>KAIRA</b> हूँ।<br>
+
             आप मुझसे कुछ भी पूछ सकते हो।
+
         </div>
 
     </div>
@@ -432,8 +631,14 @@ button{
 
 </div>
 
-<!-- Camera -->
-<div class="camera-box" id="cameraBox">
+<!-- =========================
+     CAMERA
+========================= -->
+
+<div
+    class="camera-box"
+    id="cameraBox"
+>
 
     <video
         id="cameraVideo"
@@ -457,8 +662,13 @@ button{
 
 <script>
 
-/* =========================
+/* =====================================================
    KAIRA FRONTEND
+===================================================== */
+
+
+/* =========================
+   ELEMENTS
 ========================= */
 
 const chat =
@@ -479,6 +689,9 @@ const cameraBtn =
 const screenBtn =
     document.getElementById("screenBtn");
 
+const topScreenBtn =
+    document.getElementById("topScreenBtn");
+
 const usageText =
     document.getElementById("usageText");
 
@@ -496,12 +709,65 @@ const closeCameraBtn =
 
 
 /* =========================
+   KAIRA USER ID
+========================= */
+
+function getKairaUserId(){
+
+    let userId =
+        localStorage.getItem(
+            "kairaUserId"
+        );
+
+    if(!userId){
+
+        if(
+            window.crypto &&
+            crypto.randomUUID
+        ){
+
+            userId =
+                "kaira-" +
+                crypto.randomUUID();
+
+        }else{
+
+            userId =
+                "kaira-" +
+                Date.now() +
+                "-" +
+                Math.random()
+                    .toString(36)
+                    .substring(2);
+
+        }
+
+        localStorage.setItem(
+            "kairaUserId",
+            userId
+        );
+
+    }
+
+    return userId;
+}
+
+
+/* Create / load user ID */
+
+const kairaUserId =
+    getKairaUserId();
+
+
+/* =========================
    USAGE
 ========================= */
 
 let usage =
     Number(
-        localStorage.getItem("kairaNormalUsage") || 0
+        localStorage.getItem(
+            "kairaNormalUsage"
+        ) || 0
     );
 
 function updateUsage(){
@@ -521,19 +787,28 @@ updateUsage();
 function addMessage(text,type){
 
     const div =
-        document.createElement("div");
+        document.createElement(
+            "div"
+        );
 
     div.className =
         "message " + type;
 
+    div.textContent =
+        text;
+
     div.innerHTML =
-        text
-        .replace(/\n/g,"<br>");
+        div.innerHTML
+            .replace(
+                /\n/g,
+                "<br>"
+            );
 
     chat.appendChild(div);
 
     chat.scrollTop =
         chat.scrollHeight;
+
 }
 
 
@@ -546,21 +821,24 @@ async function getWeather(){
     try{
 
         if(!navigator.geolocation){
+
             return null;
+
         }
 
         const position =
             await new Promise(
                 (resolve,reject)=>{
 
-                    navigator.geolocation.getCurrentPosition(
-                        resolve,
-                        reject,
-                        {
-                            enableHighAccuracy:false,
-                            timeout:5000
-                        }
-                    );
+                    navigator.geolocation
+                        .getCurrentPosition(
+                            resolve,
+                            reject,
+                            {
+                                enableHighAccuracy:false,
+                                timeout:5000
+                            }
+                        );
 
                 }
             );
@@ -578,7 +856,9 @@ async function getWeather(){
             await fetch(url);
 
         if(!response.ok){
+
             return null;
+
         }
 
         return await response.json();
@@ -590,6 +870,7 @@ async function getWeather(){
         );
 
         return null;
+
     }
 
 }
@@ -599,19 +880,27 @@ async function getWeather(){
    ASK KAIRA
 ========================= */
 
-async function askKaira(message,image=null){
+async function askKaira(
+    message,
+    image=null
+){
 
     if(!message && !image){
+
         return;
+
     }
 
     addMessage(
-        message || "Image analyze karo",
+        message ||
+        "Image analyze karo",
         "user"
     );
 
     const thinking =
-        document.createElement("div");
+        document.createElement(
+            "div"
+        );
 
     thinking.className =
         "message kaira";
@@ -619,10 +908,12 @@ async function askKaira(message,image=null){
     thinking.id =
         "thinking";
 
-    thinking.innerHTML =
+    thinking.textContent =
         "KAIRA सोच रहा है... ⚡";
 
-    chat.appendChild(thinking);
+    chat.appendChild(
+        thinking
+    );
 
     chat.scrollTop =
         chat.scrollHeight;
@@ -643,18 +934,23 @@ async function askKaira(message,image=null){
                             "application/json"
                     },
 
-                    body:JSON.stringify({
+                    body:
+                        JSON.stringify({
 
-                        message:
-                            message || "",
+                            userId:
+                                kairaUserId,
 
-                        weather:
-                            weather,
+                            message:
+                                message || "",
 
-                        image:
-                            image
+                            weather:
+                                weather,
 
-                    })
+                            image:
+                                image
+
+                        })
+
                 }
             );
 
@@ -672,6 +968,7 @@ async function askKaira(message,image=null){
             );
 
             return;
+
         }
 
         usage++;
@@ -720,7 +1017,9 @@ function sendMessage(){
         input.value.trim();
 
     if(!text){
+
         return;
+
     }
 
     input.value = "";
@@ -729,19 +1028,19 @@ function sendMessage(){
 
 }
 
-
 sendBtn.addEventListener(
     "click",
     sendMessage
 );
-
 
 input.addEventListener(
     "keydown",
     function(event){
 
         if(event.key === "Enter"){
+
             sendMessage();
+
         }
 
     }
@@ -754,8 +1053,12 @@ input.addEventListener(
 
 function speak(text){
 
-    if(!("speechSynthesis" in window)){
+    if(
+        !("speechSynthesis" in window)
+    ){
+
         return;
+
     }
 
     try{
@@ -763,7 +1066,9 @@ function speak(text){
         window.speechSynthesis.cancel();
 
         const utterance =
-            new SpeechSynthesisUtterance(text);
+            new SpeechSynthesisUtterance(
+                text
+            );
 
         utterance.lang =
             "hi-IN";
@@ -787,17 +1092,20 @@ function speak(text){
     }
 
 }
-    /* =========================
+
+
+/* =========================
    VOICE COMMAND
 ========================= */
 
 let recognition = null;
+
 let isListening = false;
 
-if (
+if(
     "SpeechRecognition" in window ||
     "webkitSpeechRecognition" in window
-) {
+){
 
     const SpeechRecognition =
         window.SpeechRecognition ||
@@ -815,29 +1123,35 @@ if (
     recognition.interimResults =
         false;
 
-    recognition.onstart = function(){
+    recognition.onstart =
+        function(){
 
-        isListening = true;
+            isListening =
+                true;
 
-        voiceBtn.textContent =
-            "🔴";
+            voiceBtn.textContent =
+                "🔴";
 
-        addMessage(
-            "🎤 बोलिए, KAIRA सुन रहा है...",
-            "kaira"
-        );
+            addMessage(
+                "🎤 बोलिए, KAIRA सुन रहा है...",
+                "kaira"
+            );
 
-    };
+        };
 
     recognition.onresult =
         function(event){
 
             const text =
-                event.results[0][0].transcript;
+                event
+                    .results[0][0]
+                    .transcript;
 
-            input.value = text;
+            input.value =
+                text;
 
-            isListening = false;
+            isListening =
+                false;
 
             voiceBtn.textContent =
                 "🎤";
@@ -854,19 +1168,26 @@ if (
                 event.error
             );
 
-            isListening = false;
+            isListening =
+                false;
 
             voiceBtn.textContent =
                 "🎤";
 
-            if(event.error === "not-allowed"){
+            if(
+                event.error ===
+                "not-allowed"
+            ){
 
                 addMessage(
                     "🎤 Microphone permission allow करें।",
                     "error"
                 );
 
-            }else if(event.error === "no-speech"){
+            }else if(
+                event.error ===
+                "no-speech"
+            ){
 
                 addMessage(
                     "🎤 कोई आवाज़ नहीं मिली। फिर से कोशिश करें।",
@@ -880,7 +1201,8 @@ if (
     recognition.onend =
         function(){
 
-            isListening = false;
+            isListening =
+                false;
 
             voiceBtn.textContent =
                 "🎤";
@@ -902,15 +1224,19 @@ voiceBtn.addEventListener(
             );
 
             return;
+
         }
 
         if(isListening){
 
             try{
+
                 recognition.stop();
+
             }catch(error){}
 
             return;
+
         }
 
         try{
@@ -921,7 +1247,8 @@ voiceBtn.addEventListener(
 
             console.log(error);
 
-            isListening = false;
+            isListening =
+                false;
 
             voiceBtn.textContent =
                 "🎤";
@@ -948,15 +1275,18 @@ cameraBtn.addEventListener(
         try{
 
             cameraStream =
-                await navigator.mediaDevices.getUserMedia({
-                    video:true,
-                    audio:false
-                });
+                await navigator.mediaDevices
+                    .getUserMedia({
+
+                        video:true,
+
+                        audio:false
+
+                    });
 
             cameraVideo.srcObject =
-                cameraStream;
-
-            cameraBox.classList.add(
+                cameraStream  
+        cameraBox.classList.add(
                 "active"
             );
 
@@ -994,10 +1324,12 @@ function stopCamera(){
         cameraStream
             .getTracks()
             .forEach(
-                track => track.stop()
+                track =>
+                    track.stop()
             );
 
-        cameraStream = null;
+        cameraStream =
+            null;
 
     }
 
@@ -1017,7 +1349,9 @@ captureBtn.addEventListener(
     "click",
     function(){
 
-        if(!cameraVideo.videoWidth){
+        if(
+            !cameraVideo.videoWidth
+        ){
 
             addMessage(
                 "📷 Camera अभी तैयार नहीं है।",
@@ -1025,10 +1359,13 @@ captureBtn.addEventListener(
             );
 
             return;
+
         }
 
         const canvas =
-            document.createElement("canvas");
+            document.createElement(
+                "canvas"
+            );
 
         canvas.width =
             cameraVideo.videoWidth;
@@ -1037,7 +1374,9 @@ captureBtn.addEventListener(
             cameraVideo.videoHeight;
 
         const ctx =
-            canvas.getContext("2d");
+            canvas.getContext(
+                "2d"
+            );
 
         ctx.drawImage(
             cameraVideo,
@@ -1064,119 +1403,149 @@ captureBtn.addEventListener(
 );
 
 
-/* =========================
-   SCREEN VISION
-========================= */
+/* =====================================================
+   SCREEN VISION FUNCTION
+   ===================================================== */
 
-screenBtn.addEventListener(
-    "click",
-    async function(){
+async function startScreenVision(){
 
-        if(!navigator.mediaDevices ||
-           !navigator.mediaDevices.getDisplayMedia){
+    if(
+        !navigator.mediaDevices ||
+        !navigator.mediaDevices.getDisplayMedia
+    ){
 
-            addMessage(
-                "🖥 इस device/browser में Screen Vision supported नहीं है।",
-                "error"
-            );
+        addMessage(
+            "🖥 इस device/browser में Screen Share supported नहीं है।",
+            "error"
+        );
 
-            return;
-        }
+        return;
 
-        let screenStream = null;
+    }
 
-        try{
+    let screenStream =
+        null;
 
-            screenStream =
-                await navigator.mediaDevices.getDisplayMedia({
+    try{
+
+        screenStream =
+            await navigator.mediaDevices
+                .getDisplayMedia({
+
                     video:true,
+
                     audio:false
+
                 });
 
-            const video =
-                document.createElement("video");
-
-            video.srcObject =
-                screenStream;
-
-            video.muted =
-                true;
-
-            await video.play();
-
-            await new Promise(
-                resolve =>
-                    setTimeout(resolve,500)
+        const video =
+            document.createElement(
+                "video"
             );
 
-            const canvas =
-                document.createElement("canvas");
+        video.srcObject =
+            screenStream;
 
-            canvas.width =
-                video.videoWidth;
+        video.muted =
+            true;
 
-            canvas.height =
-                video.videoHeight;
+        await video.play();
 
-            const ctx =
-                canvas.getContext("2d");
+        await new Promise(
+            resolve =>
+                setTimeout(
+                    resolve,
+                    500
+                )
+        );
 
-            ctx.drawImage(
-                video,
-                0,
-                0,
-                canvas.width,
-                canvas.height
+        const canvas =
+            document.createElement(
+                "canvas"
             );
 
-            const image =
-                canvas.toDataURL(
-                    "image/jpeg",
-                    0.8
-                );
+        canvas.width =
+            video.videoWidth;
+
+        canvas.height =
+            video.videoHeight;
+
+        const ctx =
+            canvas.getContext(
+                "2d"
+            );
+
+        ctx.drawImage(
+            video,
+            0,
+            0,
+            canvas.width,
+            canvas.height
+        );
+
+        const image =
+            canvas.toDataURL(
+                "image/jpeg",
+                0.8
+            );
+
+        screenStream
+            .getTracks()
+            .forEach(
+                track =>
+                    track.stop()
+            );
+
+        askKaira(
+            "इस screen को ध्यान से देखकर बताओ कि इसमें क्या दिखाई दे रहा है और मुझे क्या करना चाहिए।",
+            image
+        );
+
+    }catch(error){
+
+        console.error(
+            "Screen Vision:",
+            error
+        );
+
+        if(screenStream){
 
             screenStream
                 .getTracks()
                 .forEach(
-                    track => track.stop()
+                    track =>
+                        track.stop()
                 );
-
-            askKaira(
-                "इस screen को ध्यान से देखकर बताओ कि इसमें क्या दिखाई दे रहा है और मुझे क्या करना चाहिए।",
-                image
-            );
-
-        }catch(error){
-
-            console.error(
-                "Screen Vision:",
-                error
-            );
-
-            if(screenStream){
-
-                screenStream
-                    .getTracks()
-                    .forEach(
-                        track => track.stop()
-                    );
-
-            }
-
-            addMessage(
-                "🖥 Screen Vision cancel या unavailable है।",
-                "error"
-            );
 
         }
 
+        addMessage(
+            "🖥 Screen Share cancel या unavailable है।",
+            "error"
+        );
+
     }
+
+}
+
+
+/* Bottom Screen button */
+
+screenBtn.addEventListener(
+    "click",
+    startScreenVision
 );
 
 
-/* =========================
+/* Top Screen button */
+
+topScreenBtn.addEventListener(
+    "click",
+    startScreenVision
+);
+/* =====================================================
    PAGE START
-========================= */
+===================================================== */
 
 window.addEventListener(
     "load",
@@ -1186,6 +1555,11 @@ window.addEventListener(
 
         console.log(
             "KAIRA AI Frontend Loaded"
+        );
+
+        console.log(
+            "KAIRA User ID:",
+            kairaUserId
         );
 
     }
