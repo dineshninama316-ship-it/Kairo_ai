@@ -2456,7 +2456,122 @@ async function analyzeScreen() {
 
 
 /* =====================================================
-   INITIALIZE
+   LOAD SAVED MEMORY FROM NEON
+===================================================== */
+
+async function loadMemory() {
+
+    try {
+
+        const response =
+            await fetch(
+                "/api/chat",
+                {
+                    method: "POST",
+
+                    headers: {
+                        "Content-Type":
+                            "application/json"
+                    },
+
+                    body: JSON.stringify({
+
+                        action: "history",
+
+                        userId: userId
+
+                    })
+                }
+            );
+
+
+        const data =
+            await response.json();
+
+
+        if (!response.ok) {
+
+            console.log(
+                "Memory load error:",
+                data.error
+            );
+
+            return;
+
+        }
+
+
+        if (
+            !data.history ||
+            !Array.isArray(data.history)
+        ) {
+
+            return;
+
+        }
+
+
+        /*
+         * Welcome screen हटाएँ
+         */
+
+        const welcome =
+            document.querySelector(
+                ".welcome"
+            );
+
+        if (
+            data.history.length > 0 &&
+            welcome
+        ) {
+
+            welcome.remove();
+
+        }
+
+
+        /*
+         * पुरानी conversations दिखाएँ
+         */
+
+        data.history.forEach(
+            item => {
+
+                if (
+                    item.role !== "user" &&
+                    item.role !== "assistant"
+                ) {
+
+                    return;
+
+                }
+
+
+                addMessage(
+                    item.message,
+                    item.role === "user"
+                        ? "user"
+                        : "ai"
+                );
+
+            }
+        );
+
+
+    } catch (error) {
+
+        console.log(
+            "Memory unavailable:",
+            error
+        );
+
+    }
+
+}
+
+
+/* =====================================================
+   PAGE LOAD
 ===================================================== */
 
 window.addEventListener(
@@ -2467,6 +2582,13 @@ window.addEventListener(
             "KAIRA initialized:",
             userId
         );
+
+
+        /*
+         * Neon से पुरानी memory लोड करें
+         */
+
+        loadMemory();
 
     }
 );
