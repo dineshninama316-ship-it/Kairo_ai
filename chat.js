@@ -1,11 +1,16 @@
 /**
  * =====================================================
- * KAIRA AI 3.0
- * Groq + Neon Conversations + Permanent Memory + Vision
+ * KAIRA AI 3.1
+ * Groq + Neon + Permanent Memory + Vision
  * =====================================================
  */
 
 import { neon } from "@neondatabase/serverless";
+
+
+/* =====================================================
+   CONFIG
+===================================================== */
 
 const GROQ_URL =
     "https://api.groq.com/openai/v1/chat/completions";
@@ -47,13 +52,13 @@ function cleanText(value) {
 
 
 /* =====================================================
-   INTENT
+   INTENT DETECTION
 ===================================================== */
 
 function detectIntent(message, hasImage) {
 
     const text =
-        (message || "").toLowerCase();
+        cleanText(message).toLowerCase();
 
 
     if (hasImage) {
@@ -100,6 +105,7 @@ function detectIntent(message, hasImage) {
     if (
         text.includes("मेरा नाम") ||
         text.includes("my name") ||
+        text.includes("what is my name") ||
         text.includes("मुझे क्या पसंद") ||
         text.includes("मैं कौन") ||
         text.includes("मेरे बारे में")
@@ -154,29 +160,24 @@ function extractMemory(message) {
     const text =
         cleanText(message);
 
-
     if (!text) {
         return null;
     }
 
 
-    /* -----------------------------------------------
+    /* =================================================
        NAME
-    ------------------------------------------------ */
+    ================================================= */
 
     const namePatterns = [
 
-        /मेरा नाम\s+(.+?)(?:\s+है)?$/i,
+        /मेरा\s+नाम\s+(.+?)\s+है(?:\s*,?\s*इसे\s+याद\s+रखो)?[।.!]?$/iu,
 
-        /मेरा नाम\s+(.+?)\s+है/i,
+        /मेरा\s+नाम\s+(.+?)(?:\s*,?\s*इसे\s+याद\s+रखो)[।.!]?$/iu,
 
-        /my name is\s+(.+)/i,
+        /my\s+name\s+is\s+(.+?)(?:\s*,?\s*remember\s+(?:it|this))?[.!]?$/i,
 
-        /i am\s+(.+)/i,
-
-        /मैं\s+(.+?)\s+हूँ/i,
-
-        /mai\s+(.+?)\s+hu/i
+        /i\s+am\s+(.+?)(?:\s*,?\s*remember\s+(?:it|this))?[.!]?$/i
 
     ];
 
@@ -198,17 +199,21 @@ function extractMemory(message) {
             name =
                 name
                     .replace(
-                        /याद रखो.*$/i,
+                        /इसे\s+याद\s+रखो/giu,
                         ""
                     )
                     .replace(
-                        /याद रखना.*$/i,
+                        /याद\s+रखो/giu,
+                        ""
+                    )
+                    .replace(
+                        /याद\s+रखना/giu,
                         ""
                     )
                     .trim();
 
 
-            if (name.length > 0) {
+            if (name) {
 
                 return {
                     key: "name",
@@ -222,25 +227,25 @@ function extractMemory(message) {
     }
 
 
-    /* -----------------------------------------------
-       LIKES
-    ------------------------------------------------ */
+    /* =================================================
+       PREFERENCE
+    ================================================= */
 
-    const likePatterns = [
+    const preferencePatterns = [
 
-        /मुझे\s+(.+?)\s+पसंद\s+है/i,
+        /मुझे\s+(.+?)\s+पसंद\s+है/iu,
 
-        /मुझे\s+(.+?)\s+पसंद\s+है.*याद/i,
+        /मुझे\s+(.+?)\s+अच्छा\s+लगता\s+है/iu,
 
-        /i like\s+(.+)/i,
+        /i\s+like\s+(.+)/i,
 
-        /my favorite\s+(.+)/i
+        /my\s+favorite\s+is\s+(.+)/i
 
     ];
 
 
     for (
-        const pattern of likePatterns
+        const pattern of preferencePatterns
     ) {
 
         const match =
@@ -250,8 +255,13 @@ function extractMemory(message) {
         if (match) {
 
             return {
-                key: "preference",
-                value: cleanText(match[1])
+
+                key:
+                    "preference",
+
+                value:
+                    cleanText(match[1])
+
             };
 
         }
@@ -259,19 +269,17 @@ function extractMemory(message) {
     }
 
 
-    /* -----------------------------------------------
+    /* =================================================
        GOAL
-    ------------------------------------------------ */
+    ================================================= */
 
     const goalPatterns = [
 
-        /मेरा goal\s+(.+)/i,
+        /मेरा\s+goal\s+(.+)/iu,
 
-        /मेरा लक्ष्य\s+(.+)/i,
+        /मेरा\s+लक्ष्य\s+(.+)/iu,
 
-        /मेरा उद्देश्य\s+(.+)/i,
-
-        /my goal is\s+(.+)/i
+        /my\s+goal\s+is\s+(.+)/i
 
     ];
 
@@ -287,8 +295,13 @@ function extractMemory(message) {
         if (match) {
 
             return {
-                key: "goal",
-                value: cleanText(match[1])
+
+                key:
+                    "goal",
+
+                value:
+                    cleanText(match[1])
+
             };
 
         }
@@ -311,13 +324,12 @@ async function saveMemory(
 ) {
 
     if (
-        !sql ||
         !memory ||
         !memory.key ||
         !memory.value
     ) {
 
-        return;
+        return false;
 
     }
 
@@ -349,6 +361,9 @@ async function saveMemory(
                 NOW()
     `;
 
+
+    return true;
+
 }
 
 
@@ -356,31 +371,30 @@ async function saveMemory(
    LOAD MEMORIES
 ===================================================== */
 
-async function loadMemories(userId) {
+async function loadMemories(
+    userId
+) {
 
-    if (!sql) {
-        return [];
-    }
-
-
-    const memories =
+    const rows =
         await sql`
             SELECT
                 memory_key,
                 memory_value
             FROM memories
-            WHERE user_id = ${userId}
-            ORDER BY updated_at DESC
+            WHERE user_id =
+                ${userId}
+            ORDER BY
+                updated_at DESC
         `;
 
 
-    return memories;
+    return rows;
 
 }
 
 
 /* =====================================================
-   MEMORY PROMPT
+   MEMORY CONTEXT
 ===================================================== */
 
 function buildMemoryContext(
@@ -393,22 +407,15 @@ function buildMemoryContext(
     ) {
 
         return `
-USER MEMORY
-
-No saved memories yet.
+USER MEMORY:
+No saved memory.
 `;
 
     }
 
 
-    let result = `
-USER MEMORY
-
-The following information has been explicitly
-saved for this user.
-
-Use it naturally when relevant.
-
+    let context = `
+USER MEMORY:
 `;
 
 
@@ -416,19 +423,19 @@ Use it naturally when relevant.
         const memory of memories
     ) {
 
-        result +=
+        context +=
             `- ${memory.memory_key}: ${memory.memory_value}\n`;
 
     }
 
 
-    return result;
+    return context;
 
 }
 
 
 /* =====================================================
-   WEATHER
+   WEATHER CONTEXT
 ===================================================== */
 
 function buildWeatherContext(
@@ -445,7 +452,7 @@ function buildWeatherContext(
 
 
     return `
-CURRENT WEATHER DATA
+CURRENT WEATHER:
 
 Temperature:
 ${current.temperature_2m ?? "unknown"} °C
@@ -461,8 +468,6 @@ ${current.wind_speed_10m ?? "unknown"} km/h
 
 Weather code:
 ${current.weather_code ?? "unknown"}
-
-Use this only when relevant.
 `;
 
 }
@@ -480,7 +485,7 @@ function buildSystemPrompt(
     return `
 You are KAIRA.
 
-You are the intelligent core of a personal AI assistant.
+You are a personal AI assistant.
 
 =====================================================
 IDENTITY
@@ -489,24 +494,22 @@ IDENTITY
 Name:
 KAIRA
 
-Role:
-Personal AI assistant.
-
 Personality:
 
-- intelligent
 - friendly
 - caring
+- intelligent
 - natural
 - confident
 - respectful
-- helpful
 - honest
 
 Never pretend to be human.
 
+Never invent information.
+
 Never claim an action was completed unless
-the system actually performed that action.
+the system actually performed it.
 
 =====================================================
 LANGUAGE
@@ -520,64 +523,46 @@ If the user speaks English:
 
 Reply in English.
 
-Do not unnecessarily translate.
-
 =====================================================
-PERMANENT MEMORY
+MEMORY
 =====================================================
 
 ${memoryContext}
 
-IMPORTANT:
+Use saved memory when relevant.
 
-The USER MEMORY section contains information
-explicitly saved for this user.
-
-Use it when relevant.
+If the user's name is saved,
+you may naturally call them by their name.
 
 If the user asks:
 
 "मेरा नाम क्या है?"
 
-or:
-
 "What is my name?"
 
-answer using saved memory.
+use the saved memory.
 
-Never invent a memory.
+If no name is saved,
+honestly say you don't know.
 
-If no memory exists, honestly say that you
-don't have that information.
-
-=====================================================
-MEMORY REQUESTS
-=====================================================
-
-If the user explicitly asks KAIRA to remember
-something, the server may save it to Neon.
-
-Do not claim something was permanently saved
-unless the server actually saved it.
+Never invent the user's name.
 
 =====================================================
 VISION
 =====================================================
 
-If an image is supplied:
+If an image is provided:
 
-- inspect it carefully
+- inspect carefully
 - describe visible information
-- do not hallucinate
+- don't hallucinate
 - separate observation from inference
 
 =====================================================
 TRADING
 =====================================================
 
-When analysing trading:
-
-You may discuss:
+You may analyse:
 
 - trend
 - market structure
@@ -591,20 +576,7 @@ You may discuss:
 
 Never guarantee profit.
 
-Never say a trade is certain.
-
-Never claim:
-
-"100% win"
-
-"guaranteed profit"
-
-or
-
-"certain trade".
-
-If chart information is insufficient,
-say what information is missing.
+Never claim a trade is 100% certain.
 
 =====================================================
 CURRENT INTENT
@@ -613,26 +585,24 @@ CURRENT INTENT
 ${intent}
 
 =====================================================
-RESPONSE STYLE
+STYLE
 =====================================================
 
-Be direct.
+Simple question:
+give a concise answer.
 
-For simple questions:
-keep the answer concise.
+Complex question:
+use sections and bullet points.
 
-For complex questions:
-use clear sections and bullets.
-
-Use the user's saved name naturally,
-but don't repeat it in every message.
+Be helpful without unnecessary repetition.
 
 `;
+
 }
 
 
 /* =====================================================
-   GROQ
+   GROQ REQUEST
 ===================================================== */
 
 async function askGroq({
@@ -646,7 +616,8 @@ async function askGroq({
             GROQ_URL,
             {
 
-                method: "POST",
+                method:
+                    "POST",
 
                 headers: {
 
@@ -687,7 +658,7 @@ async function askGroq({
     if (!response.ok) {
 
         console.error(
-            "Groq error:",
+            "GROQ ERROR:",
             data
         );
 
@@ -721,7 +692,7 @@ async function askGroq({
 
 
 /* =====================================================
-   MAIN HANDLER
+   MAIN API
 ===================================================== */
 
 export default async function handler(
@@ -729,9 +700,9 @@ export default async function handler(
     res
 ) {
 
-    /* -----------------------------------------------
+    /* =================================================
        CORS
-    ------------------------------------------------ */
+    ================================================= */
 
     res.setHeader(
         "Access-Control-Allow-Origin",
@@ -776,9 +747,9 @@ export default async function handler(
     }
 
 
-    /* -----------------------------------------------
+    /* =================================================
        API KEY
-    ------------------------------------------------ */
+    ================================================= */
 
     const apiKey =
         process.env.GROQ_API_KEY;
@@ -798,9 +769,9 @@ export default async function handler(
     }
 
 
-    /* -----------------------------------------------
-       DATABASE
-    ------------------------------------------------ */
+    /* =================================================
+       DATABASE CHECK
+    ================================================= */
 
     if (!sql) {
 
@@ -822,6 +793,10 @@ export default async function handler(
             req.body || {};
 
 
+        /* =================================================
+           USER ID
+        ================================================= */
+
         const userId =
             cleanText(
                 body.userId
@@ -829,9 +804,9 @@ export default async function handler(
             "default-user";
 
 
-        /* -------------------------------------------
-           ENSURE USER
-        ------------------------------------------- */
+        /* =================================================
+           USER CREATE
+        ================================================= */
 
         await sql`
             INSERT INTO users
@@ -847,7 +822,7 @@ export default async function handler(
 
 
         /* =================================================
-           HISTORY
+           HISTORY ACTION
         ================================================= */
 
         if (
@@ -878,26 +853,10 @@ export default async function handler(
                 .status(200)
                 .json({
 
-                    ok: true,
+                    ok:
+                        true,
 
-                    history:
-                        history.map(
-                            item => ({
-
-                                id:
-                                    item.id,
-
-                                role:
-                                    item.role,
-
-                                message:
-                                    item.message,
-
-                                created_at:
-                                    item.created_at
-
-                            })
-                        )
+                    history
 
                 });
 
@@ -905,7 +864,7 @@ export default async function handler(
 
 
         /* =================================================
-           MEMORIES
+           MEMORIES ACTION
         ================================================= */
 
         if (
@@ -922,7 +881,8 @@ export default async function handler(
                 .status(200)
                 .json({
 
-                    ok: true,
+                    ok:
+                        true,
 
                     memories
 
@@ -931,9 +891,9 @@ export default async function handler(
         }
 
 
-        /* -----------------------------------------------
+        /* =================================================
            MESSAGE
-        ------------------------------------------------ */
+        ================================================= */
 
         const message =
             cleanText(
@@ -941,9 +901,9 @@ export default async function handler(
             );
 
 
-        /* -----------------------------------------------
+        /* =================================================
            IMAGE
-        ------------------------------------------------ */
+        ================================================= */
 
         const image =
             typeof body.image === "string" &&
@@ -954,9 +914,9 @@ export default async function handler(
                 : null;
 
 
-        /* -----------------------------------------------
+        /* =================================================
            WEATHER
-        ------------------------------------------------ */
+        ================================================= */
 
         const weather =
             body.weather || null;
@@ -979,9 +939,9 @@ export default async function handler(
         }
 
 
-        /* -----------------------------------------------
+        /* =================================================
            INTENT
-        ------------------------------------------------ */
+        ================================================= */
 
         const intent =
             detectIntent(
@@ -991,7 +951,7 @@ export default async function handler(
 
 
         /* =================================================
-           EXPLICIT MEMORY SAVE
+           EXTRACT MEMORY
         ================================================= */
 
         const extractedMemory =
@@ -1008,20 +968,17 @@ export default async function handler(
             extractedMemory
         ) {
 
-            await saveMemory(
-                userId,
-                extractedMemory
-            );
-
-
             memorySaved =
-                true;
+                await saveMemory(
+                    userId,
+                    extractedMemory
+                );
 
         }
 
 
         /* =================================================
-           USER MESSAGE SAVE
+           SAVE USER MESSAGE
         ================================================= */
 
         if (message) {
@@ -1045,7 +1002,7 @@ export default async function handler(
 
 
         /* =================================================
-           LOAD MEMORY
+           LOAD MEMORIES
         ================================================= */
 
         const memories =
@@ -1061,7 +1018,7 @@ export default async function handler(
 
 
         /* =================================================
-           LOAD CHAT HISTORY
+           LOAD HISTORY
         ================================================= */
 
         const history =
@@ -1082,7 +1039,7 @@ export default async function handler(
             `;
 
 
-        const memoryMessages =
+        const historyMessages =
             history
                 .reverse()
                 .map(
@@ -1160,18 +1117,18 @@ export default async function handler(
 
 
         /* =================================================
-           REMOVE CURRENT USER MESSAGE
+           CURRENT MESSAGE REMOVE
         ================================================= */
 
         const previousMessages =
-            memoryMessages.slice(
+            historyMessages.slice(
                 0,
                 -1
             );
 
 
         /* =================================================
-           FINAL MESSAGES
+           FINAL MESSAGE ARRAY
         ================================================= */
 
         const messages = [
@@ -1221,7 +1178,7 @@ export default async function handler(
 
 
         /* =================================================
-           AI RESPONSE
+           AI
         ================================================= */
 
         const reply =
@@ -1237,7 +1194,7 @@ export default async function handler(
 
 
         /* =================================================
-           SAVE AI RESPONSE
+           SAVE AI MESSAGE
         ================================================= */
 
         await sql`
@@ -1264,7 +1221,8 @@ export default async function handler(
             .status(200)
             .json({
 
-                ok: true,
+                ok:
+                    true,
 
                 reply,
 
@@ -1311,4 +1269,4 @@ export default async function handler(
 
     }
 
-        }
+                          }
