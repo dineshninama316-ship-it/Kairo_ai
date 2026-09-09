@@ -12,7 +12,6 @@
 
 <title>KAIRA AI</title>
 
-
 <style>
 
 /* =====================================================
@@ -352,6 +351,8 @@ body{
 
     overflow-x:auto;
 
+    background:#050812;
+
 }
 
 
@@ -405,6 +406,8 @@ body{
     max-width:1100px;
 
     margin:auto;
+
+    z-index:20;
 
     background:
         linear-gradient(
@@ -531,7 +534,7 @@ body{
 
 
 /* =====================================================
-   CAMERA OVERLAY
+   CAMERA
 ===================================================== */
 
 .cameraBox{
@@ -767,8 +770,14 @@ body{
 
     }
 
-}
 
+    .tools{
+
+        padding-bottom:6px;
+
+    }
+
+}
 
 </style>
 
@@ -787,28 +796,19 @@ body{
 
 <header class="header">
 
-
     <div class="logo">
-
 
         <div class="logoIcon"></div>
 
-
         <div class="logoText">
-
 
             <h1>KAIRA</h1>
 
-
             <div class="online">
-
                 ● ONLINE
-
             </div>
 
-
         </div>
-
 
     </div>
 
@@ -818,19 +818,16 @@ body{
         AI Usage:
 
         <span id="usage">
-
             0
-
         </span>
 
     </div>
-
 
 </header>
 
 
 <!-- =====================================================
-     CHAT AREA
+     CHAT
 ===================================================== -->
 
 <main
@@ -838,29 +835,19 @@ body{
     id="chat"
 >
 
-
     <div class="welcome">
-
 
         <div class="orb"></div>
 
-
         <h2>
-
             नमस्ते 👋 मैं KAIRA हूँ।
-
         </h2>
 
-
         <p>
-
             आप मुझसे कुछ भी पूछ सकते हो।
-
         </p>
 
-
     </div>
-
 
 </main>
 
@@ -871,14 +858,11 @@ body{
 
 <div class="tools">
 
-
     <button
         class="tool"
         onclick="openCamera()"
     >
-
         📷 Camera
-
     </button>
 
 
@@ -886,9 +870,7 @@ body{
         class="tool"
         onclick="analyzeScreen()"
     >
-
         🖥️ Screen Vision
-
     </button>
 
 
@@ -896,11 +878,8 @@ body{
         class="tool"
         onclick="startVoice()"
     >
-
         🎤 Voice Command
-
     </button>
-
 
 </div>
 
@@ -911,9 +890,7 @@ body{
 
 <div class="bottom">
 
-
     <div class="inputBox">
-
 
         <textarea
             id="messageInput"
@@ -929,9 +906,7 @@ body{
             onclick="startVoice()"
             title="Voice"
         >
-
             🎤
-
         </button>
 
 
@@ -940,14 +915,10 @@ body{
             onclick="sendMessage()"
             title="Send"
         >
-
             ➤
-
         </button>
 
-
     </div>
-
 
 </div>
 
@@ -961,9 +932,7 @@ body{
     id="cameraBox"
 >
 
-
     <div class="cameraPanel">
-
 
         <video
             id="cameraVideo"
@@ -974,14 +943,11 @@ body{
 
         <div class="cameraButtons">
 
-
             <button
                 class="analyze"
                 onclick="analyzeCamera()"
             >
-
                 🔍 Analyze
-
             </button>
 
 
@@ -989,57 +955,70 @@ body{
                 class="close"
                 onclick="closeCamera()"
             >
-
                 ✕ Close
-
             </button>
-
 
         </div>
 
-
     </div>
 
-
 </div>
 
 
 </div>
 
 
-<!-- =====================================================
-     PART 2 यहीं से शुरू होगा
-===================================================== -->
+<script>
 
-<script> 
-   /* =====================================================
-   KAIRA USER ID / MEMORY ID
+/* =====================================================
+   KAIRA USER ID
 ===================================================== */
 
-let userId = localStorage.getItem("kairaUserId");
+/*
+ * IMPORTANT:
+ *
+ * Neon में अभी Ajay की memory:
+ *
+ * user_id = test-user
+ *
+ * इसलिए फिलहाल website भी उसी user ID
+ * का उपयोग करेगी।
+ *
+ * इससे:
+ *
+ * test-user
+ *      ↓
+ * name
+ *      ↓
+ * Ajay
+ *
+ * सीधे match होगा।
+ *
+ * बाद में जब proper login/account system
+ * बनाएँगे तब इसे dynamic किया जा सकता है।
+ */
 
-if (!userId) {
+const userId = "test-user";
 
-    if (window.crypto && crypto.randomUUID) {
 
-        userId = crypto.randomUUID();
+/*
+ * पुराने random userId को हटाकर
+ * सही userId save कर दें।
+ */
 
-    } else {
-
-        userId =
-            "kaira-" +
-            Date.now() +
-            "-" +
-            Math.random()
-                .toString(36)
-                .substring(2);
-
-    }
+try {
 
     localStorage.setItem(
         "kairaUserId",
         userId
     );
+
+} catch(error) {
+
+    console.log(
+        "LocalStorage unavailable"
+    );
+
 }
 
 
@@ -1054,7 +1033,10 @@ let usage =
         )
     ) || 0;
 
-document.getElementById("usage").textContent =
+
+document.getElementById(
+    "usage"
+).textContent =
     usage;
 
 
@@ -1062,36 +1044,67 @@ document.getElementById("usage").textContent =
    ADD MESSAGE
 ===================================================== */
 
-function addMessage(text, type) {
+function addMessage(
+    text,
+    type
+) {
 
     const chat =
-        document.getElementById("chat");
+        document.getElementById(
+            "chat"
+        );
+
 
     const row =
-        document.createElement("div");
+        document.createElement(
+            "div"
+        );
+
 
     row.className =
         "messageRow " +
-        (type === "user" ? "user" : "");
+        (
+            type === "user"
+                ? "user"
+                : ""
+        );
+
 
     const bubble =
-        document.createElement("div");
+        document.createElement(
+            "div"
+        );
+
 
     bubble.className =
         "message " +
-        (type === "user" ? "user" : "ai");
+        (
+            type === "user"
+                ? "user"
+                : "ai"
+        );
+
 
     bubble.textContent =
         text;
 
-    row.appendChild(bubble);
 
-    chat.appendChild(row);
+    row.appendChild(
+        bubble
+    );
+
+
+    chat.appendChild(
+        row
+    );
+
 
     chat.scrollTop =
         chat.scrollHeight;
 
+
     return row;
+
 }
 
 
@@ -1102,16 +1115,24 @@ function addMessage(text, type) {
 function showTyping() {
 
     const chat =
-        document.getElementById("chat");
+        document.getElementById(
+            "chat"
+        );
+
 
     const row =
-        document.createElement("div");
+        document.createElement(
+            "div"
+        );
+
 
     row.className =
         "messageRow";
 
+
     row.id =
         "typingRow";
+
 
     row.innerHTML = `
         <div class="message ai">
@@ -1123,10 +1144,15 @@ function showTyping() {
         </div>
     `;
 
-    chat.appendChild(row);
+
+    chat.appendChild(
+        row
+    );
+
 
     chat.scrollTop =
         chat.scrollHeight;
+
 }
 
 
@@ -1137,11 +1163,13 @@ function hideTyping() {
             "typingRow"
         );
 
+
     if (typing) {
 
         typing.remove();
 
     }
+
 }
 
 
@@ -1153,50 +1181,74 @@ async function getWeather() {
 
     try {
 
-        if (!navigator.geolocation) {
+        if (
+            !navigator.geolocation
+        ) {
 
             return null;
 
         }
 
+
         const position =
             await new Promise(
-                (resolve, reject) => {
+                (
+                    resolve,
+                    reject
+                ) => {
 
-                    navigator.geolocation.getCurrentPosition(
-                        resolve,
-                        reject,
-                        {
-                            enableHighAccuracy: false,
-                            timeout: 5000,
-                            maximumAge: 600000
-                        }
-                    );
+                    navigator.geolocation
+                        .getCurrentPosition(
+                            resolve,
+                            reject,
+                            {
+
+                                enableHighAccuracy:
+                                    false,
+
+                                timeout:
+                                    5000,
+
+                                maximumAge:
+                                    600000
+
+                            }
+                        );
 
                 }
             );
 
+
         const lat =
             position.coords.latitude;
+
 
         const lon =
             position.coords.longitude;
 
+
         const url =
             `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,wind_speed_10m,weather_code`;
 
-        const response =
-            await fetch(url);
 
-        if (!response.ok) {
+        const response =
+            await fetch(
+                url
+            );
+
+
+        if (
+            !response.ok
+        ) {
 
             return null;
 
         }
 
+
         return await response.json();
 
-    } catch (error) {
+    } catch(error) {
 
         console.log(
             "Weather unavailable"
@@ -1205,6 +1257,7 @@ async function getWeather() {
         return null;
 
     }
+
 }
 
 
@@ -1219,8 +1272,10 @@ async function sendMessage() {
             "messageInput"
         );
 
+
     const message =
         input.value.trim();
+
 
     if (!message) {
 
@@ -1228,28 +1283,34 @@ async function sendMessage() {
 
     }
 
+
     input.value = "";
 
 
-    /* -----------------------------------------------
-       VOICE / OPEN COMMAND
-    ------------------------------------------------ */
+    /* =================================================
+       WEBSITE COMMAND
+    ================================================= */
 
-    if (handleVoiceCommand(message)) {
+    if (
+        handleVoiceCommand(
+            message
+        )
+    ) {
 
         return;
 
     }
 
 
-    /* -----------------------------------------------
+    /* =================================================
        USER MESSAGE
-    ------------------------------------------------ */
+    ================================================= */
 
     addMessage(
         message,
         "user"
     );
+
 
     showTyping();
 
@@ -1264,25 +1325,31 @@ async function sendMessage() {
             await fetch(
                 "/api/chat",
                 {
-                    method: "POST",
+
+                    method:
+                        "POST",
 
                     headers: {
+
                         "Content-Type":
                             "application/json"
+
                     },
 
-                    body: JSON.stringify({
+                    body:
+                        JSON.stringify({
 
-                        message:
-                            message,
+                            message:
+                                message,
 
-                        userId:
-                            userId,
+                            userId:
+                                userId,
 
-                        weather:
-                            weather
+                            weather:
+                                weather
 
-                    })
+                        })
+
                 }
             );
 
@@ -1294,7 +1361,9 @@ async function sendMessage() {
         hideTyping();
 
 
-        if (!response.ok) {
+        if (
+            !response.ok
+        ) {
 
             throw new Error(
                 data.error ||
@@ -1330,12 +1399,15 @@ async function sendMessage() {
         );
 
 
-        speak(reply);
+        speak(
+            reply
+        );
 
 
-    } catch (error) {
+    } catch(error) {
 
         hideTyping();
+
 
         console.error(
             "KAIRA ERROR:",
@@ -1363,10 +1435,12 @@ async function sendMessage() {
 
 
 /* =====================================================
-   ENTER KEY
+   ENTER
 ===================================================== */
 
-function handleEnter(event) {
+function handleEnter(
+    event
+) {
 
     if (
         event.key === "Enter" &&
@@ -1398,7 +1472,9 @@ function startVoice() {
         window.webkitSpeechRecognition;
 
 
-    if (!SpeechRecognition) {
+    if (
+        !SpeechRecognition
+    ) {
 
         alert(
             "इस Browser में Voice Recognition उपलब्ध नहीं है। Chrome इस्तेमाल करें।"
@@ -1429,20 +1505,24 @@ function startVoice() {
     recognition.lang =
         "hi-IN";
 
+
     recognition.continuous =
         false;
 
+
     recognition.interimResults =
         false;
+
 
     recognition.maxAlternatives =
         1;
 
 
     recognition.onstart =
-        function () {
+        function() {
 
-            listening = true;
+            listening =
+                true;
 
 
             document
@@ -1457,7 +1537,7 @@ function startVoice() {
 
 
     recognition.onresult =
-        function (event) {
+        function(event) {
 
             const text =
                 event.results[0][0]
@@ -1473,12 +1553,10 @@ function startVoice() {
                 text;
 
 
-            /*
-             * पहले command check होगी।
-             */
-
             if (
-                handleVoiceCommand(text)
+                handleVoiceCommand(
+                    text
+                )
             ) {
 
                 document
@@ -1492,17 +1570,13 @@ function startVoice() {
             }
 
 
-            /*
-             * Normal सवाल AI को भेजें।
-             */
-
             sendMessage();
 
         };
 
 
     recognition.onerror =
-        function (event) {
+        function(event) {
 
             console.log(
                 "Voice error:",
@@ -1510,7 +1584,8 @@ function startVoice() {
             );
 
 
-            listening = false;
+            listening =
+                false;
 
 
             document
@@ -1525,9 +1600,10 @@ function startVoice() {
 
 
     recognition.onend =
-        function () {
+        function() {
 
-            listening = false;
+            listening =
+                false;
 
 
             document
@@ -1541,7 +1617,18 @@ function startVoice() {
         };
 
 
-    recognition.start();
+    try {
+
+        recognition.start();
+
+    } catch(error) {
+
+        console.log(
+            "Voice start error:",
+            error
+        );
+
+    }
 
 }
 
@@ -1550,7 +1637,9 @@ function startVoice() {
    VOICE COMMAND ROUTER
 ===================================================== */
 
-function handleVoiceCommand(text) {
+function handleVoiceCommand(
+    text
+) {
 
     if (!text) {
 
@@ -1564,10 +1653,6 @@ function handleVoiceCommand(text) {
             .toLowerCase()
             .trim();
 
-
-    /*
-     * ये शब्द command को पहचानेंगे।
-     */
 
     const openWords = [
 
@@ -1591,20 +1676,20 @@ function handleVoiceCommand(text) {
     const hasOpenCommand =
         openWords.some(
             word =>
-                command.includes(word)
+                command.includes(
+                    word
+                )
         );
 
 
-    if (!hasOpenCommand) {
+    if (
+        !hasOpenCommand
+    ) {
 
         return false;
 
     }
 
-
-    /*
-     * Supported websites
-     */
 
     const sites = [
 
@@ -1735,16 +1820,8 @@ function handleVoiceCommand(text) {
         {
             names: [
                 "twitter",
-                "ट्विटर"
-            ],
-
-            url:
-                "https://x.com/"
-        },
-
-        {
-            names: [
-                "x खोलो"
+                "ट्विटर",
+                "x"
             ],
 
             url:
@@ -1754,10 +1831,6 @@ function handleVoiceCommand(text) {
     ];
 
 
-    /*
-     * Website खोजें
-     */
-
     for (
         const site of sites
     ) {
@@ -1765,7 +1838,9 @@ function handleVoiceCommand(text) {
         const found =
             site.names.some(
                 name =>
-                    command.includes(name)
+                    command.includes(
+                        name
+                    )
             );
 
 
@@ -1776,6 +1851,7 @@ function handleVoiceCommand(text) {
                 site.names[0]
             );
 
+
             return true;
 
         }
@@ -1783,12 +1859,8 @@ function handleVoiceCommand(text) {
     }
 
 
-    /*
-     * Command समझ नहीं आई
-     */
-
     const message =
-        "मैं अभी इस command को नहीं पहचान पाई। आप बोल सकते हैं: YouTube खोलो, Google खोलो, Instagram खोलो या TradingView खोलो।";
+        "मैं अभी इस command को नहीं पहचान पाई। आप YouTube खोलो, Google खोलो, Instagram खोलो या TradingView खोलो बोल सकते हैं।";
 
 
     addMessage(
@@ -1831,10 +1903,6 @@ function openWebsite(
     );
 
 
-    /*
-     * नई tab खोलने की कोशिश
-     */
-
     const newTab =
         window.open(
             url,
@@ -1843,15 +1911,10 @@ function openWebsite(
         );
 
 
-    /*
-     * Popup block होने पर
-     * उसी tab में खोलें।
-     */
-
     if (!newTab) {
 
         setTimeout(
-            function () {
+            function() {
 
                 window.location.href =
                     url;
@@ -1869,10 +1932,15 @@ function openWebsite(
    TEXT TO SPEECH
 ===================================================== */
 
-function speak(text) {
+function speak(
+    text
+) {
 
     if (
-        !("speechSynthesis" in window)
+        !(
+            "speechSynthesis"
+            in window
+        )
     ) {
 
         return;
@@ -1912,7 +1980,8 @@ function speak(text) {
    CAMERA
 ===================================================== */
 
-let cameraStream = null;
+let cameraStream =
+    null;
 
 
 async function openCamera() {
@@ -1930,7 +1999,8 @@ async function openCamera() {
 
                     },
 
-                    audio: false
+                    audio:
+                        false
 
                 });
 
@@ -1951,7 +2021,7 @@ async function openCamera() {
             "flex";
 
 
-    } catch (error) {
+    } catch(error) {
 
         console.error(
             "Camera error:",
@@ -1983,7 +2053,9 @@ function closeCamera() {
                     track.stop()
             );
 
-        cameraStream = null;
+
+        cameraStream =
+            null;
 
     }
 
@@ -2041,11 +2113,14 @@ function captureCurrentFrame() {
     let width =
         video.videoWidth;
 
+
     let height =
         video.videoHeight;
 
 
-    if (width > maxWidth) {
+    if (
+        width > maxWidth
+    ) {
 
         height =
             Math.round(
@@ -2053,6 +2128,7 @@ function captureCurrentFrame() {
                 maxWidth /
                 width
             );
+
 
         width =
             maxWidth;
@@ -2062,6 +2138,7 @@ function captureCurrentFrame() {
 
     canvas.width =
         width;
+
 
     canvas.height =
         height;
@@ -2134,25 +2211,29 @@ async function analyzeCamera() {
                 "/api/chat",
                 {
 
-                    method: "POST",
+                    method:
+                        "POST",
 
                     headers: {
+
                         "Content-Type":
                             "application/json"
+
                     },
 
-                    body: JSON.stringify({
+                    body:
+                        JSON.stringify({
 
-                        message:
-                            question,
+                            message:
+                                question,
 
-                        image:
-                            image,
+                            image:
+                                image,
 
-                        userId:
-                            userId
+                            userId:
+                                userId
 
-                    })
+                        })
 
                 }
             );
@@ -2165,7 +2246,9 @@ async function analyzeCamera() {
         hideTyping();
 
 
-        if (!response.ok) {
+        if (
+            !response.ok
+        ) {
 
             throw new Error(
                 data.error ||
@@ -2191,9 +2274,10 @@ async function analyzeCamera() {
         );
 
 
-    } catch (error) {
+    } catch(error) {
 
         hideTyping();
+
 
         console.error(
             "Camera analysis:",
@@ -2228,7 +2312,8 @@ async function analyzeScreen() {
 
     if (
         !navigator.mediaDevices ||
-        !navigator.mediaDevices.getDisplayMedia
+        !navigator.mediaDevices
+            .getDisplayMedia
     ) {
 
         alert(
@@ -2246,9 +2331,11 @@ async function analyzeScreen() {
             await navigator.mediaDevices
                 .getDisplayMedia({
 
-                    video: true,
+                    video:
+                        true,
 
-                    audio: false
+                    audio:
+                        false
 
                 });
 
@@ -2265,6 +2352,7 @@ async function analyzeScreen() {
 
         video.muted =
             true;
+
 
         video.playsInline =
             true;
@@ -2291,14 +2379,18 @@ async function analyzeScreen() {
         const maxWidth =
             1600;
 
+
         let width =
             video.videoWidth;
+
 
         let height =
             video.videoHeight;
 
 
-        if (width > maxWidth) {
+        if (
+            width > maxWidth
+        ) {
 
             height =
                 Math.round(
@@ -2306,6 +2398,7 @@ async function analyzeScreen() {
                     maxWidth /
                     width
                 );
+
 
             width =
                 maxWidth;
@@ -2315,6 +2408,7 @@ async function analyzeScreen() {
 
         canvas.width =
             width;
+
 
         canvas.height =
             height;
@@ -2368,25 +2462,29 @@ async function analyzeScreen() {
                 "/api/chat",
                 {
 
-                    method: "POST",
+                    method:
+                        "POST",
 
                     headers: {
+
                         "Content-Type":
                             "application/json"
+
                     },
 
-                    body: JSON.stringify({
+                    body:
+                        JSON.stringify({
 
-                        message:
-                            question,
+                            message:
+                                question,
 
-                        image:
-                            image,
+                            image:
+                                image,
 
-                        userId:
-                            userId
+                            userId:
+                                userId
 
-                    })
+                        })
 
                 }
             );
@@ -2399,7 +2497,9 @@ async function analyzeScreen() {
         hideTyping();
 
 
-        if (!response.ok) {
+        if (
+            !response.ok
+        ) {
 
             throw new Error(
                 data.error ||
@@ -2425,15 +2525,15 @@ async function analyzeScreen() {
         );
 
 
-    } catch (error) {
+    } catch(error) {
+
+        hideTyping();
+
 
         console.error(
             "Screen vision:",
             error
         );
-
-
-        hideTyping();
 
 
         const msg =
@@ -2456,7 +2556,7 @@ async function analyzeScreen() {
 
 
 /* =====================================================
-   LOAD SAVED MEMORY FROM NEON
+   LOAD HISTORY
 ===================================================== */
 
 async function loadMemory() {
@@ -2467,20 +2567,28 @@ async function loadMemory() {
             await fetch(
                 "/api/chat",
                 {
-                    method: "POST",
+
+                    method:
+                        "POST",
 
                     headers: {
+
                         "Content-Type":
                             "application/json"
+
                     },
 
-                    body: JSON.stringify({
+                    body:
+                        JSON.stringify({
 
-                        action: "history",
+                            action:
+                                "history",
 
-                        userId: userId
+                            userId:
+                                userId
 
-                    })
+                        })
+
                 }
             );
 
@@ -2489,10 +2597,12 @@ async function loadMemory() {
             await response.json();
 
 
-        if (!response.ok) {
+        if (
+            !response.ok
+        ) {
 
             console.log(
-                "Memory load error:",
+                "History load error:",
                 data.error
             );
 
@@ -2503,7 +2613,9 @@ async function loadMemory() {
 
         if (
             !data.history ||
-            !Array.isArray(data.history)
+            !Array.isArray(
+                data.history
+            )
         ) {
 
             return;
@@ -2511,14 +2623,11 @@ async function loadMemory() {
         }
 
 
-        /*
-         * Welcome screen हटाएँ
-         */
-
         const welcome =
             document.querySelector(
                 ".welcome"
             );
+
 
         if (
             data.history.length > 0 &&
@@ -2529,10 +2638,6 @@ async function loadMemory() {
 
         }
 
-
-        /*
-         * पुरानी conversations दिखाएँ
-         */
 
         data.history.forEach(
             item => {
@@ -2549,19 +2654,81 @@ async function loadMemory() {
 
                 addMessage(
                     item.message,
+
                     item.role === "user"
                         ? "user"
                         : "ai"
+
                 );
 
             }
         );
 
 
-    } catch (error) {
+    } catch(error) {
 
         console.log(
-            "Memory unavailable:",
+            "History unavailable:",
+            error
+        );
+
+    }
+
+}
+
+
+/* =====================================================
+   CHECK MEMORY
+===================================================== */
+
+async function checkMemory() {
+
+    try {
+
+        const response =
+            await fetch(
+                "/api/chat",
+                {
+
+                    method:
+                        "POST",
+
+                    headers: {
+
+                        "Content-Type":
+                            "application/json"
+
+                    },
+
+                    body:
+                        JSON.stringify({
+
+                            action:
+                                "memories",
+
+                            userId:
+                                userId
+
+                        })
+
+                }
+            );
+
+
+        const data =
+            await response.json();
+
+
+        console.log(
+            "KAIRA MEMORY:",
+            data
+        );
+
+
+    } catch(error) {
+
+        console.log(
+            "Memory check failed:",
             error
         );
 
@@ -2576,19 +2743,31 @@ async function loadMemory() {
 
 window.addEventListener(
     "load",
-    function () {
+    function() {
 
         console.log(
-            "KAIRA initialized:",
+            "KAIRA initialized"
+        );
+
+
+        console.log(
+            "User ID:",
             userId
         );
 
 
         /*
-         * Neon से पुरानी memory लोड करें
+         * History
          */
 
         loadMemory();
+
+
+        /*
+         * Neon memory check
+         */
+
+        checkMemory();
 
     }
 );
@@ -2597,4 +2776,4 @@ window.addEventListener(
 
 </body>
 
-</html>
+    </html>
