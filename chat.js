@@ -1,16 +1,31 @@
- /**
- * =====================================================
- * KAIRA AI 4.1
- * Groq + Neon + Permanent Memory + Vision
- * =====================================================
+/**
+ * =========================================================
+ * KAIRA AI — FINAL BACKEND
+ * Part 1 / 3
+ * =========================================================
+ *
+ * Features:
+ * - Groq AI
+ * - Neon PostgreSQL
+ * - Permanent Memory
+ * - Multiple Preferences
+ * - Chat History
+ * - Weather Context
+ * - Vision Support
+ * - Trading Support
+ * - Hindi Friendly Assistant
+ *
+ * File:
+ * api/chat.js
+ * =========================================================
  */
 
 import { neon } from "@neondatabase/serverless";
 
 
-/* =====================================================
+/* =========================================================
    CONFIG
-===================================================== */
+========================================================= */
 
 const GROQ_URL =
     "https://api.groq.com/openai/v1/chat/completions";
@@ -22,185 +37,153 @@ const VISION_MODEL =
     "qwen/qwen3.6-27b";
 
 
-/* =====================================================
+/* =========================================================
    DATABASE
-===================================================== */
+========================================================= */
 
-const databaseUrl =
-    process.env.POSTGRES_PRISMA_URL ||
+const DATABASE_URL =
+    process.env.DATABASE_URL ||
     process.env.POSTGRES_URL ||
-    process.env.DATABASE_URL;
+    process.env.POSTGRES_PRISMA_URL;
 
-const sql =
-    databaseUrl
-        ? neon(databaseUrl)
-        : null;
+if (!DATABASE_URL) {
+    throw new Error("DATABASE_URL is not configured.");
+}
+
+const sql = neon(DATABASE_URL);
 
 
-/* =====================================================
-   HELPER
-===================================================== */
+/* =========================================================
+   BASIC HELPERS
+========================================================= */
 
 function cleanText(value) {
 
-    if (typeof value !== "string") {
+    if (value === undefined || value === null) {
         return "";
     }
 
-    return value.trim();
+    return String(value).trim();
 }
 
-
-/* =====================================================
-   USER ID
-   IMPORTANT:
-   Existing Neon memory is under test-user
-===================================================== */
 
 function getUserId(body) {
 
-    const id =
-        cleanText(body?.userId);
+    const id = cleanText(body?.userId);
 
-    if (id) {
-        return id;
-    }
-
-    return "test-user";
+    // Temporary single-user mode.
+    // Frontend also uses test-user.
+    return id || "test-user";
 }
 
 
-/* =====================================================
-   INTENT
-===================================================== */
+function normalizeText(text) {
 
-function detectIntent(message, hasImage) {
+    return cleanText(text)
+        .toLowerCase()
+        .replace(/[।!??,]/g, " ")
+        .replace(/\s+/g, " ")
+        .trim();
+}
 
-    const text =
-        cleanText(message).toLowerCase();
+
+function safeJsonParse(text) {
+
+    try {
+        return JSON.parse(text);
+    } catch {
+        return null;
+    }
+}
 
 
-    /* ==============================
-       IMAGE / VISION
-    ============================== */
+/* =========================================================
+   INTENT DETECTION
+========================================================= */
+
+function detectIntent(message, hasImage = false) {
+
+    const text = normalizeText(message);
 
     if (hasImage) {
-
-        if (
-            text.includes("chart") ||
-            text.includes("trading") ||
-            text.includes("trade") ||
-            text.includes("buy") ||
-            text.includes("sell") ||
-            text.includes("support") ||
-            text.includes("resistance") ||
-            text.includes("fibonacci") ||
-            text.includes("candlestick") ||
-            text.includes("volume") ||
-            text.includes("चार्ट") ||
-            text.includes("ट्रेडिंग") ||
-            text.includes("सपोर्ट") ||
-            text.includes("रेजिस्टेंस") ||
-            text.includes("फिबोनाची") ||
-            text.includes("कैंडल")
-        ) {
-
-            return "trading_vision";
-
-        }
-
         return "vision";
     }
 
 
-    /* ==============================
-       MEMORY QUERY
-    ============================== */
+    /* MEMORY QUERY — CHECK FIRST */
 
     if (
-        text.includes("मेरा नाम क्या है") ||
         text.includes("मेरा नाम क्या") ||
-        text.includes("my name") ||
-        text.includes("what is my name") ||
-        text.includes("what's my name") ||
-
-        text.includes("मुझे क्या पसंद") ||
+        text.includes("मेरा नाम") && text.includes("क्या है") ||
         text.includes("मेरे को क्या पसंद") ||
+        text.includes("मुझे क्या पसंद") ||
         text.includes("मेरी पसंद") ||
-        text.includes("what do i like") ||
-
+        text.includes("मैं क्या पसंद") ||
         text.includes("मेरा goal") ||
-        text.includes("मेरा लक्ष्य") ||
-        text.includes("what is my goal") ||
-
+        text.includes("मेरा गोल") ||
+        text.includes("मेरे बारे में क्या जानते") ||
         text.includes("मेरे बारे में") ||
-        text.includes("मैं कौन हूं") ||
-        text.includes("मैं कौन हूँ") ||
+        text.includes("what is my name") ||
+        text.includes("what do i like") ||
+        text.includes("what are my preferences") ||
+        text.includes("what is my goal") ||
         text.includes("what do you know about me")
     ) {
-
         return "memory_query";
-
     }
 
 
-    /* ==============================
-       MEMORY SAVE
-    ============================== */
+    /* MEMORY SAVE */
 
     if (
-        text.includes("याद रखो") ||
         text.includes("याद रखना") ||
+        text.includes("याद रखो") ||
+        text.includes("याद रखना है") ||
         text.includes("याद रख") ||
-        text.includes("remember") ||
-        text.includes("don't forget") ||
-        text.includes("dont forget") ||
-        text.includes("मत भूलना")
+        text.includes("remember this") ||
+        text.includes("remember it") ||
+        text.includes("save this") ||
+        text.includes("don't forget")
     ) {
-
         return "memory";
-
     }
 
 
-    /* ==============================
-       WEATHER
-    ============================== */
+    /* WEATHER */
 
     if (
         text.includes("मौसम") ||
         text.includes("weather") ||
-        text.includes("temperature") ||
-        text.includes("तापमान")
+        text.includes("बारिश") ||
+        text.includes("तापमान") ||
+        text.includes("temperature")
     ) {
-
         return "weather";
-
     }
 
 
-    /* ==============================
-       TRADING
-    ============================== */
+    /* TRADING */
 
     if (
         text.includes("trading") ||
         text.includes("trade") ||
-        text.includes("stock") ||
-        text.includes("crypto") ||
         text.includes("forex") ||
+        text.includes("crypto") ||
+        text.includes("bitcoin") ||
+        text.includes("btc") ||
         text.includes("nifty") ||
         text.includes("banknifty") ||
-        text.includes("bitcoin") ||
-        text.includes("ethereum") ||
-        text.includes("share") ||
-        text.includes("शेयर") ||
-        text.includes("ट्रेडिंग") ||
-        text.includes("बिटकॉइन")
+        text.includes("support") ||
+        text.includes("resistance") ||
+        text.includes("fibonacci") ||
+        text.includes("chart") ||
+        text.includes("candlestick") ||
+        text.includes("buy") ||
+        text.includes("sell") ||
+        text.includes("long") ||
+        text.includes("short")
     ) {
-
         return "trading";
-
     }
 
 
@@ -208,243 +191,187 @@ function detectIntent(message, hasImage) {
 }
 
 
-/* =====================================================
+/* =========================================================
    MEMORY EXTRACTION
-===================================================== */
+========================================================= */
 
 function extractMemory(message) {
 
-    let text =
-        cleanText(message);
+    const original = cleanText(message);
 
-    if (!text) {
+    if (!original) {
         return null;
     }
 
+    let text = original
+        .replace(/इसे याद रखना/gi, "")
+        .replace(/इसे याद रखो/gi, "")
+        .replace(/इसे याद रख/gi, "")
+        .replace(/याद रखना है/gi, "")
+        .replace(/याद रखना/gi, "")
+        .replace(/याद रखो/gi, "")
+        .replace(/याद रख/gi, "")
+        .replace(/remember this/gi, "")
+        .replace(/remember it/gi, "")
+        .replace(/save this/gi, "")
+        .replace(/don't forget/gi, "")
+        .trim();
 
-    /* =================================================
-       REMOVE MEMORY COMMAND
-    ================================================= */
 
-    text =
-        text
-            .replace(
-                /[,،]?\s*इसे\s+याद\s+रखो/giu,
-                ""
-            )
-            .replace(
-                /[,،]?\s*इसे\s+याद\s+रखना/giu,
-                ""
-            )
-            .replace(
-                /[,،]?\s*याद\s+रखो/giu,
-                ""
-            )
-            .replace(
-                /[,،]?\s*याद\s+रखना/giu,
-                ""
-            )
-            .replace(
-                /[,،]?\s*याद\s+रख/giu,
-                ""
-            )
-            .replace(
-                /[,،]?\s*remember\s+(it|this)/giu,
-                ""
-            )
-            .replace(
-                /[,،]?\s*don't\s+forget/giu,
-                ""
-            )
-            .replace(
-                /[,،]?\s*dont\s+forget/giu,
-                ""
-            )
+    /* =====================================================
+       NAME
+    ===================================================== */
+
+    let match = text.match(
+        /(?:मेरा नाम|मेरा नाम है|my name is)\s*[:\-]?\s*([a-zA-Zअ-ह\u0900-\u097F][a-zA-Zअ-ह\u0900-\u097F0-9 _-]{0,30})/i
+    );
+
+    if (match) {
+
+        let value = cleanText(match[1])
+            .replace(/\s+है$/i, "")
             .trim();
 
+        if (value) {
 
-    /* =================================================
-       NAME
-    ================================================= */
-
-    const namePatterns = [
-
-        /^मेरा\s+नाम\s+(.+?)\s+है[।.!?]?$/iu,
-
-        /^मेरा\s+नाम\s+(.+?)[।.!?]?$/iu,
-
-        /^my\s+name\s+is\s+(.+?)[.!?]?$/iu,
-
-        /^i\s+am\s+(.+?)[.!?]?$/iu
-
-    ];
-
-
-    for (
-        const pattern of namePatterns
-    ) {
-
-        const match =
-            text.match(pattern);
-
-        if (match) {
-
-            let name =
-                cleanText(match[1]);
-
-            name =
-                name
-                    .replace(
-                        /है$/iu,
-                        ""
-                    )
-                    .replace(
-                        /[।.!?]+$/u,
-                        ""
-                    )
-                    .trim();
-
-            if (
-                name &&
-                name.length <= 100
-            ) {
-
-                return {
-
-                    key: "name",
-
-                    value: name
-
-                };
-
-            }
-
+            return {
+                key: "name",
+                value
+            };
         }
-
     }
 
 
-    /* =================================================
+    /* =====================================================
+       "I AM AJAY" / "मैं AJAY हूँ"
+    ===================================================== */
+
+    match = text.match(
+        /^(?:i am|i'm|मैं)\s+([a-zA-Zअ-ह\u0900-\u097F][a-zA-Zअ-ह\u0900-\u097F0-9 _-]{0,30})(?:\s+हूँ|\s+हू|\s+है)?$/i
+    );
+
+    if (match) {
+
+        const value = cleanText(match[1])
+            .replace(/\s+(हूँ|हू|है)$/i, "")
+            .trim();
+
+        if (value) {
+
+            return {
+                key: "name",
+                value
+            };
+        }
+    }
+
+
+    /* =====================================================
        PREFERENCE
-    ================================================= */
+    ===================================================== */
 
     const preferencePatterns = [
 
-        /^मुझे\s+(.+?)\s+पसंद\s+है[।.!?]?$/iu,
+        /मुझे\s+(.+?)\s+पसंद\s+है/i,
 
-        /^मुझे\s+(.+?)\s+पसंद\s+है\s+इसे\s+याद\s+रखना[।.!?]?$/iu,
+        /मुझे\s+(.+?)\s+पसंद\s+है/i,
 
-        /^मुझे\s+(.+?)\s+अच्छा\s+लगता\s+है[।.!?]?$/iu,
+        /मेरे को\s+(.+?)\s+पसंद\s+है/i,
 
-        /^i\s+like\s+(.+?)[.!?]?$/iu,
+        /मेरी\s+पसंद\s+(.+)/i,
 
-        /^my\s+favorite\s+is\s+(.+?)[.!?]?$/iu
+        /मैं\s+(.+?)\s+पसंद\s+करता\s+हूँ/i,
 
+        /मैं\s+(.+?)\s+पसंद\s+करता\s+हूं/i,
+
+        /i like\s+(.+)/i,
+
+        /i love\s+(.+)/i,
+
+        /my favorite is\s+(.+)/i
     ];
 
 
-    for (
-        const pattern of preferencePatterns
-    ) {
+    for (const pattern of preferencePatterns) {
 
-        const match =
-            text.match(pattern);
+        const found = text.match(pattern);
 
-        if (match) {
-
-            let value =
-                cleanText(match[1]);
-
-            value =
-                value
-                    .replace(
-                        /इसे\s+याद\s+रखना/giu,
-                        ""
-                    )
-                    .replace(
-                        /इसे\s+याद\s+रखो/giu,
-                        ""
-                    )
-                    .replace(
-                        /याद\s+रखना/giu,
-                        ""
-                    )
-                    .replace(
-                        /याद\s+रखो/giu,
-                        ""
-                    )
-                    .replace(
-                        /[।.!?]+$/u,
-                        ""
-                    )
-                    .trim();
-
-            if (value) {
-
-                return {
-
-                    key: "preference",
-
-                    value
-
-                };
-
-            }
-
+        if (!found) {
+            continue;
         }
 
+        let value = cleanText(found[1])
+            .replace(/[।.!?]+$/g, "")
+            .trim();
+
+        if (!value) {
+            continue;
+        }
+
+        /*
+         * Multiple preferences को support करने के लिए
+         * value से एक stable key बनाया जाएगा।
+         *
+         * Example:
+         * preference_trading
+         * preference_free_fire
+         * preference_cricket
+         */
+
+        const normalizedValue = value
+            .toLowerCase()
+            .replace(/[^a-z0-9\u0900-\u097F]+/gi, "_")
+            .replace(/^_+|_+$/g, "")
+            .slice(0, 40);
+
+        return {
+            key: `preference_${normalizedValue || "general"}`,
+            value
+        };
     }
 
 
-    /* =================================================
+    /* =====================================================
        GOAL
-    ================================================= */
+    ===================================================== */
 
     const goalPatterns = [
 
-        /^मेरा\s+goal\s+(.+?)[।.!?]?$/iu,
+        /मेरा goal\s+(.+)/i,
 
-        /^मेरा\s+लक्ष्य\s+(.+?)[।.!?]?$/iu,
+        /मेरा गोल\s+(.+)/i,
 
-        /^my\s+goal\s+is\s+(.+?)[.!?]?$/iu
+        /मेरा लक्ष्य\s+(.+)/i,
 
+        /मैं\s+(.+?)\s+करना चाहता\s+हूँ/i,
+
+        /मैं\s+(.+?)\s+बनना चाहता\s+हूँ/i,
+
+        /my goal is\s+(.+)/i,
+
+        /i want to\s+(.+)/i
     ];
 
 
-    for (
-        const pattern of goalPatterns
-    ) {
+    for (const pattern of goalPatterns) {
 
-        const match =
-            text.match(pattern);
+        const found = text.match(pattern);
 
-        if (match) {
-
-            let value =
-                cleanText(match[1]);
-
-            value =
-                value
-                    .replace(
-                        /[।.!?]+$/u,
-                        ""
-                    )
-                    .trim();
-
-            if (value) {
-
-                return {
-
-                    key: "goal",
-
-                    value
-
-                };
-
-            }
-
+        if (!found) {
+            continue;
         }
 
+        const value = cleanText(found[1])
+            .replace(/[।.!?]+$/g, "")
+            .trim();
+
+        if (value) {
+
+            return {
+                key: "goal",
+                value
+            };
+        }
     }
 
 
@@ -452,432 +379,271 @@ function extractMemory(message) {
 }
 
 
-/* =====================================================
+/* =========================================================
    SAVE MEMORY
-===================================================== */
+========================================================= */
 
-async function saveMemory(
-    userId,
-    memory
-) {
+async function saveMemory(userId, memory) {
 
-    if (
-        !sql ||
-        !userId ||
-        !memory ||
-        !memory.key ||
-        !memory.value
-    ) {
-
+    if (!memory?.key || !memory?.value) {
         return false;
-
     }
 
-
     await sql`
-
         INSERT INTO memories
-        (
-            user_id,
-            memory_key,
-            memory_value
-        )
-
+            (user_id, memory_key, memory_value)
         VALUES
-        (
-            ${userId},
-            ${memory.key},
-            ${memory.value}
-        )
-
-        ON CONFLICT
-        (
-            user_id,
-            memory_key
-        )
-
+            (${userId}, ${memory.key}, ${memory.value})
+        ON CONFLICT (user_id, memory_key)
         DO UPDATE SET
-
-            memory_value =
-                EXCLUDED.memory_value,
-
-            updated_at =
-                NOW()
-
+            memory_value = EXCLUDED.memory_value,
+            updated_at = NOW()
     `;
-
 
     return true;
 }
 
 
-/* =====================================================
-   LOAD MEMORY
-===================================================== */
+/* =========================================================
+   LOAD ALL MEMORIES
+========================================================= */
 
-async function loadMemories(
-    userId
-) {
+async function loadMemories(userId) {
 
-    if (!sql) {
-        return [];
-    }
+    const rows = await sql`
+        SELECT
+            memory_key,
+            memory_value,
+            created_at,
+            updated_at
+        FROM memories
+        WHERE user_id = ${userId}
+        ORDER BY updated_at DESC
+    `;
 
-
-    const rows =
-        await sql`
-
-            SELECT
-                id,
-                memory_key,
-                memory_value,
-                created_at,
-                updated_at
-
-            FROM memories
-
-            WHERE user_id =
-                ${userId}
-
-            ORDER BY
-                updated_at DESC
-
-        `;
-
-
-    return rows;
+    return rows || [];
 }
 
 
-/* =====================================================
+/* =========================================================
    MEMORY CONTEXT
-===================================================== */
+========================================================= */
 
-function buildMemoryContext(
-    memories
-) {
+function buildMemoryContext(memories) {
 
-    if (
-        !memories ||
-        memories.length === 0
-    ) {
-
-        return `
-USER MEMORY:
-
-No saved memory.
-`;
-
+    if (!Array.isArray(memories) || memories.length === 0) {
+        return "अभी कोई permanent memory उपलब्ध नहीं है।";
     }
 
+    const lines = [];
 
-    let context = `
-USER MEMORY:
+    for (const memory of memories) {
 
-`;
+        if (!memory?.memory_key || !memory?.memory_value) {
+            continue;
+        }
 
-
-    for (
-        const memory of memories
-    ) {
-
-        context +=
-            `- ${memory.memory_key}: ${memory.memory_value}\n`;
-
+        lines.push(
+            `${memory.memory_key}: ${memory.memory_value}`
+        );
     }
 
-
-    return context;
+    return lines.length
+        ? lines.join("\n")
+        : "अभी कोई permanent memory उपलब्ध नहीं है।";
 }
 
 
-/* =====================================================
-   WEATHER
-===================================================== */
+/* =========================================================
+   PART 1 END
+=========================================================
 
-function buildWeatherContext(
-    weather
-) {
+   आगे Part 2 में आएगा:
+
+   - Weather context
+   - System prompt
+   - Groq API
+   - Conversation save
+   - Direct memory answer
+   - Vision handling
+
+========================================================= */ 
+/* =========================================================
+   WEATHER CONTEXT
+========================================================= */
+
+function buildWeatherContext(weather) {
 
     if (!weather) {
         return "";
     }
 
+    if (typeof weather === "string") {
+        return weather;
+    }
 
-    const current =
-        weather.current || {};
+    const temperature =
+        weather.temperature ??
+        weather.temp ??
+        "unknown";
 
+    const weatherCode =
+        weather.weatherCode ??
+        weather.weathercode ??
+        "";
+
+    const location =
+        weather.location ??
+        weather.city ??
+        "";
 
     return `
-
-=====================================================
-CURRENT WEATHER
-=====================================================
-
-Temperature:
-${current.temperature_2m ?? "unknown"} °C
-
-Feels like:
-${current.apparent_temperature ?? "unknown"} °C
-
-Humidity:
-${current.relative_humidity_2m ?? "unknown"} %
-
-Wind:
-${current.wind_speed_10m ?? "unknown"} km/h
-
-Weather code:
-${current.weather_code ?? "unknown"}
-
+Current weather information:
+Location: ${location || "Unknown"}
+Temperature: ${temperature}°C
+Weather code: ${weatherCode || "Unknown"}
 `;
 }
 
 
-/* =====================================================
-   SYSTEM PROMPT
-===================================================== */
+/* =========================================================
+   KAIRA SYSTEM PROMPT
+========================================================= */
 
-function buildSystemPrompt(
-    intent,
-    memoryContext
-) {
+function buildSystemPrompt({
+    memoryContext = "",
+    weatherContext = "",
+    intent = "chat"
+}) {
 
     return `
+You are KAIRA AI.
 
-You are KAIRA.
+You are a personal AI assistant and digital partner.
 
-You are the user's personal AI assistant.
+IMPORTANT IDENTITY:
+- Your name is KAIRA.
+- You are an AI assistant, not a human.
+- Talk naturally in Hindi/Hinglish when the user uses Hindi/Hinglish.
+- Be friendly, caring, helpful and slightly playful.
+- Do not repeatedly say that you are an AI unless it is relevant.
+- Do not invent personal information about the user.
 
-=====================================================
-IDENTITY
-=====================================================
-
-Name:
-KAIRA
-
-Personality:
-
-- friendly
-- caring
-- intelligent
-- natural
-- confident
-- respectful
-- honest
-- helpful
-
-Never pretend to be human.
-
-Never invent information.
-
-Never claim an action was completed unless
-the system actually performed it.
-
-=====================================================
-LANGUAGE
-=====================================================
-
-If the user speaks Hindi:
-
-Reply naturally in Hindi.
-
-If the user speaks Hinglish:
-
-Reply naturally in Hinglish/Hindi.
-
-If the user speaks English:
-
-Reply in English.
-
-Do not unnecessarily switch languages.
-
-=====================================================
-PERMANENT MEMORY
-=====================================================
+USER MEMORY:
+The following information comes from the user's permanent Neon memory.
 
 ${memoryContext}
 
-The USER MEMORY section comes from
-the Neon database.
+MEMORY RULES:
+- Treat the memory above as trusted user-provided information.
+- Never claim you remember something if it is not present.
+- Never invent a name, preference, goal or personal fact.
+- If memory is empty, honestly say that you don't have that information.
+- If a preference exists, use it naturally when relevant.
 
-Use saved memory when relevant.
+WEATHER:
+${weatherContext || "No live weather information was provided."}
 
-Never invent memory.
+GENERAL BEHAVIOR:
+- Answer directly and clearly.
+- Prefer Hindi for Hindi users.
+- For technical questions, give practical steps.
+- For coding questions, provide complete working code when requested.
+- Don't unnecessarily repeat the user's question.
+- Don't pretend that an action was completed when it wasn't.
 
-If information is not saved,
-honestly say that it is not saved.
+TRADING:
+- You can explain charts, support, resistance, Fibonacci, trend, risk/reward and technical concepts.
+- For an image/chart, describe what is actually visible.
+- Never guarantee profit or claim a strategy has a 100% win rate.
+- Clearly distinguish analysis from certainty.
+- Risk management is important.
 
-=====================================================
-VISION
-=====================================================
+VISION:
+- When an image is provided, analyze only what is actually visible.
+- Do not invent details that cannot be seen.
+- If the image is unclear, say so.
 
-If an image is provided:
-
-- inspect it carefully
-- describe visible information
-- read visible text carefully
-- don't hallucinate
-- separate observation from inference
-- mention uncertainty when necessary
-
-=====================================================
-TRADING
-=====================================================
-
-You may analyse:
-
-- trend
-- market structure
-- support
-- resistance
-- Fibonacci
-- candlestick patterns
-- volume
-- entry zones
-- stop-loss concepts
-- target zones
-- risk/reward
-- bullish scenarios
-- bearish scenarios
-
-Never guarantee profit.
-
-Never say a trade is 100% certain.
-
-=====================================================
-CURRENT INTENT
-=====================================================
-
+CURRENT INTENT:
 ${intent}
-
-=====================================================
-STYLE
-=====================================================
-
-Simple question:
-give a concise answer.
-
-Complex question:
-use headings and bullet points.
-
-Be friendly.
-
-Don't repeat yourself unnecessarily.
-
-=====================================================
-MEMORY RULE
-=====================================================
-
-If server data contains a saved memory,
-trust that database memory.
-
-Never contradict saved memory.
-
 `;
 }
 
 
-/* =====================================================
-   GROQ
-===================================================== */
+/* =========================================================
+   GROQ REQUEST
+========================================================= */
 
 async function askGroq({
-    apiKey,
-    model,
-    messages
+    messages,
+    model = TEXT_MODEL,
+    temperature = 0.7,
+    maxTokens = 1200
 }) {
 
-    const response =
-        await fetch(
-            GROQ_URL,
-            {
+    const apiKey = process.env.GROQ_API_KEY;
 
-                method: "POST",
-
-                headers: {
-
-                    "Content-Type":
-                        "application/json",
-
-                    "Authorization":
-                        `Bearer ${apiKey}`
-
-                },
-
-                body:
-                    JSON.stringify({
-
-                        model,
-
-                        messages,
-
-                        temperature: 0.7,
-
-                        max_completion_tokens:
-                            3000,
-
-                        stream: false
-
-                    })
-
-            }
-        );
-
-
-    let data;
-
-    try {
-
-        data =
-            await response.json();
-
-    } catch {
-
-        throw new Error(
-            "Groq से invalid response मिला।"
-        );
-
+    if (!apiKey) {
+        throw new Error("GROQ_API_KEY is not configured.");
     }
+
+
+    const response = await fetch(GROQ_URL, {
+
+        method: "POST",
+
+        headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${apiKey}`
+        },
+
+        body: JSON.stringify({
+
+            model,
+
+            messages,
+
+            temperature,
+
+            max_tokens: maxTokens
+
+        })
+
+    });
+
+
+    const rawText = await response.text();
+
+    let data = safeJsonParse(rawText);
 
 
     if (!response.ok) {
 
-        console.error(
-            "GROQ ERROR:",
-            data
-        );
-
-
-        throw new Error(
+        let errorMessage =
             data?.error?.message ||
-            "Groq API request failed."
-        );
+            data?.message ||
+            rawText ||
+            `Groq request failed with status ${response.status}`;
 
+        throw new Error(errorMessage);
     }
 
 
-    const reply =
-        data?.choices?.[0]
-            ?.message
-            ?.content;
+    const answer =
+        data?.choices?.[0]?.message?.content;
 
-
-    if (!reply) {
-
-        throw new Error(
-            "AI ने कोई जवाब नहीं दिया।"
-        );
-
+    if (!answer) {
+        throw new Error("Groq returned an empty response.");
     }
 
 
-    return reply;
+    return cleanText(answer);
 }
 
 
-/* =====================================================
-   SAVE CONVERSATION
-===================================================== */
+/* =========================================================
+   CONVERSATION SAVE
+========================================================= */
 
 async function saveConversation(
     userId,
@@ -885,235 +651,289 @@ async function saveConversation(
     message
 ) {
 
-    if (
-        !sql ||
-        !message
-    ) {
+    const text = cleanText(message);
 
+    if (!text) {
         return;
-
     }
 
-
     await sql`
-
         INSERT INTO conversations
-        (
-            user_id,
-            role,
-            message
-        )
-
+            (user_id, role, message)
         VALUES
-        (
-            ${userId},
-            ${role},
-            ${message}
-        )
-
+            (${userId}, ${role}, ${text})
     `;
 }
 
 
-/* =====================================================
-   DIRECT MEMORY RESPONSE
-===================================================== */
+/* =========================================================
+   LOAD CONVERSATION HISTORY
+========================================================= */
 
-function getDirectMemoryReply(
-    memories,
-    message
+async function loadHistory(
+    userId,
+    limit = 20
 ) {
 
-    const text =
-        cleanText(message)
-            .toLowerCase();
+    const safeLimit = Math.min(
+        Math.max(Number(limit) || 20, 1),
+        50
+    );
 
 
-    /* =================================================
-       NAME
-    ================================================= */
-
-    if (
-        text.includes("मेरा नाम") ||
-        text.includes("my name") ||
-        text.includes("what is my name") ||
-        text.includes("what's my name")
-    ) {
-
-        const name =
-            memories.find(
-                memory =>
-                    memory.memory_key === "name"
-            );
+    const rows = await sql`
+        SELECT
+            id,
+            role,
+            message,
+            created_at
+        FROM conversations
+        WHERE user_id = ${userId}
+        ORDER BY created_at DESC
+        LIMIT ${safeLimit}
+    `;
 
 
-        if (name) {
-
-            return (
-                `आपका नाम ${name.memory_value} है। 😊`
-            );
-
-        }
+    return (rows || []).reverse();
+}
 
 
-        return (
-            "मुझे अभी आपका नाम याद नहीं है।"
-        );
+/* =========================================================
+   CONVERT HISTORY TO GROQ MESSAGES
+========================================================= */
 
+function buildHistoryMessages(history) {
+
+    if (!Array.isArray(history)) {
+        return [];
     }
 
 
-    /* =================================================
-       PREFERENCE
-    ================================================= */
+    const messages = [];
+
+    for (const item of history) {
+
+        if (
+            !item?.message ||
+            !item?.role
+        ) {
+            continue;
+        }
+
+
+        let role = item.role;
+
+        if (role !== "user" && role !== "assistant") {
+            continue;
+        }
+
+
+        messages.push({
+
+            role,
+
+            content: cleanText(item.message)
+
+        });
+    }
+
+
+    return messages;
+}
+
+
+/* =========================================================
+   DIRECT MEMORY RESPONSE
+========================================================= */
+
+function getDirectMemoryReply(
+    message,
+    memories
+) {
+
+    const text = normalizeText(message);
+
+    const rows =
+        Array.isArray(memories)
+            ? memories
+            : [];
+
+
+    /* =====================================================
+       NAME
+    ===================================================== */
 
     if (
-        text.includes("मुझे क्या पसंद") ||
+        text.includes("मेरा नाम क्या") ||
+        text.includes("what is my name") ||
+        (
+            text.includes("मेरा नाम") &&
+            text.includes("क्या है")
+        )
+    ) {
+
+        const nameMemory =
+            rows.find(
+                item =>
+                    item.memory_key === "name"
+            );
+
+
+        if (nameMemory?.memory_value) {
+
+            return `आपका नाम ${nameMemory.memory_value} है 😊`;
+        }
+
+
+        return "अभी मेरी permanent memory में आपका नाम सेव नहीं है।";
+    }
+
+
+    /* =====================================================
+       PREFERENCES
+    ===================================================== */
+
+    if (
         text.includes("मेरे को क्या पसंद") ||
+        text.includes("मुझे क्या पसंद") ||
         text.includes("मेरी पसंद") ||
-        text.includes("what do i like")
+        text.includes("मैं क्या पसंद") ||
+        text.includes("what do i like") ||
+        text.includes("what are my preferences")
     ) {
 
         const preferences =
-            memories.filter(
-                memory =>
-                    memory.memory_key ===
-                    "preference"
+            rows.filter(item =>
+                item?.memory_key === "preference" ||
+                item?.memory_key?.startsWith("preference_")
             );
 
 
-        if (
-            preferences.length === 0
-        ) {
+        if (preferences.length > 0) {
 
-            return (
-                "मुझे अभी आपकी पसंद के बारे में कोई memory नहीं मिली।"
-            );
+            const values = preferences
+                .map(item => cleanText(item.memory_value))
+                .filter(Boolean);
 
+
+            const uniqueValues = [
+                ...new Set(values)
+            ];
+
+
+            if (uniqueValues.length === 1) {
+
+                return `आपको ${uniqueValues[0]} पसंद है 😊`;
+            }
+
+
+            return `मुझे याद है कि आपको ${uniqueValues.join(
+                ", "
+            )} पसंद है 😊`;
         }
 
 
-        const values =
-            preferences
-                .map(
-                    memory =>
-                        memory.memory_value
-                )
-                .join(", ");
-
-
-        return (
-            `आपको ${values} पसंद है। 😊`
-        );
-
+        return "अभी मेरी permanent memory में आपकी कोई पसंद सेव नहीं है।";
     }
 
 
-    /* =================================================
+    /* =====================================================
        GOAL
-    ================================================= */
+    ===================================================== */
 
     if (
         text.includes("मेरा goal") ||
+        text.includes("मेरा गोल") ||
         text.includes("मेरा लक्ष्य") ||
-        text.includes("what is my goal") ||
-        text.includes("what's my goal")
+        text.includes("what is my goal")
     ) {
 
-        const goal =
-            memories.find(
-                memory =>
-                    memory.memory_key === "goal"
+        const goalMemory =
+            rows.find(
+                item =>
+                    item.memory_key === "goal"
             );
 
 
-        if (!goal) {
+        if (goalMemory?.memory_value) {
 
-            return (
-                "मुझे अभी आपका goal याद नहीं है।"
-            );
-
+            return `आपका goal है: ${goalMemory.memory_value} 🎯`;
         }
 
 
-        return (
-            `आपका goal है: ${goal.memory_value} 🎯`
-        );
-
+        return "अभी मेरी permanent memory में आपका goal सेव नहीं है।";
     }
 
 
-    /* =================================================
+    /* =====================================================
        ABOUT USER
-    ================================================= */
+    ===================================================== */
 
     if (
         text.includes("मेरे बारे में") ||
-        text.includes("मैं कौन हूं") ||
-        text.includes("मैं कौन हूँ") ||
         text.includes("what do you know about me")
     ) {
 
-        if (
-            !memories ||
-            memories.length === 0
-        ) {
+        if (!rows.length) {
 
-            return (
-                "अभी मेरी memory में आपके बारे में कोई जानकारी saved नहीं है।"
+            return "अभी मेरी permanent memory में आपके बारे में कोई जानकारी सेव नहीं है।";
+        }
+
+
+        const name =
+            rows.find(
+                item => item.memory_key === "name"
+            )?.memory_value;
+
+
+        const preferences =
+            rows
+                .filter(item =>
+                    item?.memory_key === "preference" ||
+                    item?.memory_key?.startsWith("preference_")
+                )
+                .map(item => cleanText(item.memory_value))
+                .filter(Boolean);
+
+
+        const goal =
+            rows.find(
+                item => item.memory_key === "goal"
+            )?.memory_value;
+
+
+        const parts = [];
+
+
+        if (name) {
+            parts.push(`नाम: ${name}`);
+        }
+
+
+        if (preferences.length) {
+
+            parts.push(
+                `पसंद: ${[
+                    ...new Set(preferences)
+                ].join(", ")}`
             );
-
         }
 
 
-        let reply =
-            "मेरी memory में आपके बारे में यह जानकारी है:\n\n";
-
-
-        for (
-            const memory of memories
-        ) {
-
-            if (
-                memory.memory_key === "name"
-            ) {
-
-                reply +=
-                    `• नाम: ${memory.memory_value}\n`;
-
-            }
-
-            else if (
-                memory.memory_key ===
-                "preference"
-            ) {
-
-                reply +=
-                    `• पसंद: ${memory.memory_value}\n`;
-
-            }
-
-            else if (
-                memory.memory_key === "goal"
-            ) {
-
-                reply +=
-                    `• Goal: ${memory.memory_value}\n`;
-
-            }
-
-            else {
-
-                reply +=
-                    `• ${memory.memory_key}: ${memory.memory_value}\n`;
-
-            }
-
+        if (goal) {
+            parts.push(`Goal: ${goal}`);
         }
 
 
-        return reply;
+        if (!parts.length) {
 
+            return "मेरी memory में अभी कुछ personal information उपलब्ध नहीं है।";
+        }
+
+
+        return `मुझे आपके बारे में यह याद है:\n\n${parts.join(
+            "\n"
+        )}`;
     }
 
 
@@ -1121,120 +941,189 @@ function getDirectMemoryReply(
 }
 
 
-/* =====================================================
-   MAIN API
-===================================================== */
+/* =========================================================
+   VISION MESSAGE BUILDER
+========================================================= */
 
-export default async function handler(
-    req,
-    res
+function buildVisionMessage(
+    userMessage,
+    image
 ) {
 
-    /* =================================================
-       CORS
-    ================================================= */
+    return {
 
-    res.setHeader(
-        "Access-Control-Allow-Origin",
-        "*"
-    );
+        role: "user",
 
-    res.setHeader(
-        "Access-Control-Allow-Methods",
-        "POST, OPTIONS"
-    );
+        content: [
 
-    res.setHeader(
-        "Access-Control-Allow-Headers",
-        "Content-Type"
-    );
+            {
+                type: "text",
+                text:
+                    userMessage ||
+                    "इस image को ध्यान से analyze करके बताओ कि इसमें क्या दिखाई दे रहा है।"
+            },
+
+            {
+                type: "image_url",
+
+                image_url: {
+                    url: image
+                }
+
+            }
+
+        ]
+
+    };
+}
 
 
-    /* =================================================
-       OPTIONS
-    ================================================= */
+/* =========================================================
+   IMAGE VALIDATION
+========================================================= */
 
-    if (
-        req.method === "OPTIONS"
-    ) {
+function isValidImage(image) {
 
-        return res
-            .status(200)
-            .end();
-
+    if (!image || typeof image !== "string") {
+        return false;
     }
 
 
-    /* =================================================
-       METHOD
-    ================================================= */
+    /*
+     * Browser camera normally sends:
+     * data:image/jpeg;base64,...
+     *
+     * Also allow normal https image URLs.
+     */
 
-    if (
-        req.method !== "POST"
-    ) {
+    return (
+        image.startsWith("data:image/") ||
+        image.startsWith("https://") ||
+        image.startsWith("http://")
+    );
+}
 
-        return res
-            .status(405)
-            .json({
 
-                ok: false,
+/* =========================================================
+   HTTP RESPONSE HELPERS
+========================================================= */
 
-                error:
-                    "Only POST requests are allowed."
+function jsonResponse(
+    body,
+    status = 200
+) {
 
-            });
+    return new Response(
+        JSON.stringify(body),
+        {
 
+            status,
+
+            headers: {
+                "Content-Type": "application/json",
+                "Cache-Control": "no-store"
+            }
+
+        }
+    );
+}
+
+
+/* =========================================================
+   CORS
+========================================================= */
+
+function corsHeaders() {
+
+    return {
+
+        "Access-Control-Allow-Origin": "*",
+
+        "Access-Control-Allow-Methods":
+            "POST, OPTIONS",
+
+        "Access-Control-Allow-Headers":
+            "Content-Type"
+
+    };
+}
+
+
+/* =========================================================
+   PART 2 END
+=========================================================
+
+   Part 3 में आएगा:
+
+   - Main API handler
+   - OPTIONS handling
+   - Memory save
+   - Memory query
+   - Chat history
+   - Vision
+   - Weather
+   - Trading
+   - Groq response
+   - Error handling
+
+========================================================= */
+/* =========================================================
+   MAIN API HANDLER
+========================================================= */
+
+export default async function handler(req) {
+
+    /* =====================================================
+       CORS / OPTIONS
+    ===================================================== */
+
+    if (req.method === "OPTIONS") {
+
+        return new Response(null, {
+            status: 204,
+            headers: corsHeaders()
+        });
     }
 
 
-    /* =================================================
-       API KEY
-    ================================================= */
+    /* =====================================================
+       ONLY POST
+    ===================================================== */
 
-    const apiKey =
-        process.env.GROQ_API_KEY;
+    if (req.method !== "POST") {
 
-
-    if (!apiKey) {
-
-        return res
-            .status(500)
-            .json({
-
-                ok: false,
-
-                error:
-                    "GROQ_API_KEY नहीं मिली।"
-
-            });
-
-    }
-
-
-    /* =================================================
-       DATABASE
-    ================================================= */
-
-    if (!sql) {
-
-        return res
-            .status(500)
-            .json({
-
-                ok: false,
-
-                error:
-                    "Neon database connection नहीं मिली।"
-
-            });
-
+        return jsonResponse(
+            {
+                success: false,
+                error: "Only POST requests are allowed."
+            },
+            405
+        );
     }
 
 
     try {
 
+        /* =================================================
+           READ REQUEST
+        ================================================= */
+
         const body =
-            req.body || {};
+            typeof req.body === "string"
+                ? safeJsonParse(req.body)
+                : req.body;
+
+
+        if (!body || typeof body !== "object") {
+
+            return jsonResponse(
+                {
+                    success: false,
+                    error: "Invalid request body."
+                },
+                400
+            );
+        }
 
 
         /* =================================================
@@ -1246,102 +1135,53 @@ export default async function handler(
 
 
         /* =================================================
-           CREATE USER
+           ACTION
         ================================================= */
 
-        await sql`
-
-            INSERT INTO users
-            (
-                user_id
-            )
-
-            VALUES
-            (
-                ${userId}
-            )
-
-            ON CONFLICT
-            (
-                user_id
-            )
-
-            DO NOTHING
-
-        `;
+        const action =
+            cleanText(body.action)
+                .toLowerCase();
 
 
         /* =================================================
-           HISTORY
+           HISTORY ACTION
         ================================================= */
 
-        if (
-            body.action === "history"
-        ) {
+        if (action === "history") {
 
             const history =
-                await sql`
-
-                    SELECT
-                        id,
-                        role,
-                        message,
-                        created_at
-
-                    FROM conversations
-
-                    WHERE user_id =
-                        ${userId}
-
-                    ORDER BY
-                        created_at ASC
-
-                    LIMIT 100
-
-                `;
+                await loadHistory(
+                    userId,
+                    body.limit || 30
+                );
 
 
-            return res
-                .status(200)
-                .json({
-
-                    ok: true,
-
-                    history,
-
-                    userId
-
-                });
-
+            return jsonResponse({
+                success: true,
+                userId,
+                history
+            });
         }
 
 
         /* =================================================
-           MEMORIES
+           MEMORIES ACTION
         ================================================= */
 
         if (
-            body.action === "memories"
+            action === "memories" ||
+            action === "memory"
         ) {
 
             const memories =
-                await loadMemories(
-                    userId
-                );
+                await loadMemories(userId);
 
 
-            return res
-                .status(200)
-                .json({
-
-                    ok: true,
-
-                    memories,
-
-                    userId
-
-                });
-
+            return jsonResponse({
+                success: true,
+                userId,
+                memories
+            });
         }
 
 
@@ -1350,9 +1190,7 @@ export default async function handler(
         ================================================= */
 
         const message =
-            cleanText(
-                body.message
-            );
+            cleanText(body.message);
 
 
         /* =================================================
@@ -1360,77 +1198,60 @@ export default async function handler(
         ================================================= */
 
         const image =
-            typeof body.image === "string" &&
-            body.image.startsWith(
-                "data:image/"
-            )
-                ? body.image
-                : null;
+            cleanText(body.image);
+
+
+        const hasImage =
+            isValidImage(image);
 
 
         /* =================================================
-           WEATHER
+           BASIC VALIDATION
         ================================================= */
 
-        const weather =
-            body.weather || null;
+        if (!message && !hasImage) {
 
-
-        /* =================================================
-           VALIDATION
-        ================================================= */
-
-        if (
-            !message &&
-            !image
-        ) {
-
-            return res
-                .status(400)
-                .json({
-
-                    ok: false,
-
-                    error:
-                        "Message या image जरूरी है।"
-
-                });
-
+            return jsonResponse(
+                {
+                    success: false,
+                    error: "Message or image is required."
+                },
+                400
+            );
         }
 
 
         /* =================================================
-           INTENT
+           LOAD EXISTING MEMORY
+        ================================================= */
+
+        let memories =
+            await loadMemories(userId);
+
+
+        /* =================================================
+           DETECT INTENT
         ================================================= */
 
         const intent =
             detectIntent(
                 message,
-                Boolean(image)
+                hasImage
             );
 
 
         /* =================================================
-           EXTRACT MEMORY
+           MEMORY SAVE
         ================================================= */
 
         const extractedMemory =
-            extractMemory(
-                message
-            );
+            extractMemory(message);
 
 
-        let memorySaved =
-            false;
+        let memorySaved = false;
 
 
-        /* =================================================
-           SAVE MEMORY
-        ================================================= */
-
-        if (
-            extractedMemory
-        ) {
+        if (extractedMemory) {
 
             memorySaved =
                 await saveMemory(
@@ -1438,6 +1259,14 @@ export default async function handler(
                     extractedMemory
                 );
 
+
+            /*
+             * Reload immediately so the AI can use
+             * the newly saved memory in the same request.
+             */
+
+            memories =
+                await loadMemories(userId);
         }
 
 
@@ -1452,33 +1281,20 @@ export default async function handler(
                 "user",
                 message
             );
-
         }
 
 
         /* =================================================
-           LOAD LATEST MEMORY
+           MEMORY QUERY
+           DIRECT ANSWER FROM NEON
         ================================================= */
 
-        const memories =
-            await loadMemories(
-                userId
-            );
-
-
-        /* =================================================
-           DIRECT MEMORY
-           NO GROQ
-        ================================================= */
-
-        if (
-            intent === "memory_query"
-        ) {
+        if (intent === "memory_query") {
 
             const directReply =
                 getDirectMemoryReply(
-                    memories,
-                    message
+                    message,
+                    memories
                 );
 
 
@@ -1491,39 +1307,54 @@ export default async function handler(
                 );
 
 
-                return res
-                    .status(200)
-                    .json({
-
-                        ok: true,
-
-                        reply:
-                            directReply,
-
-                        intent:
-                            "memory_query",
-
-                        model:
-                            "neon-memory",
-
-                        vision:
-                            false,
-
-                        memory:
-                            true,
-
-                        memorySaved:
-                            false,
-
-                        savedMemory:
-                            null,
-
-                        userId
-
-                    });
-
+                return jsonResponse({
+                    success: true,
+                    reply: directReply,
+                    userId,
+                    intent,
+                    memories,
+                    memorySaved
+                });
             }
+        }
 
+
+        /* =================================================
+           MEMORY SAVE CONFIRMATION
+        ================================================= */
+
+        if (
+            intent === "memory" &&
+            extractedMemory
+        ) {
+
+            const reply =
+                extractedMemory.key === "name"
+
+                    ? `ठीक है 😊 अब मुझे याद रहेगा कि आपका नाम ${extractedMemory.value} है।`
+
+                    : extractedMemory.key === "goal"
+
+                    ? `ठीक है 🎯 मैंने आपका goal याद रख लिया: ${extractedMemory.value}`
+
+                    : `ठीक है 😊 मैंने याद रख लिया कि आपको ${extractedMemory.value} पसंद है।`;
+
+
+            await saveConversation(
+                userId,
+                "assistant",
+                reply
+            );
+
+
+            return jsonResponse({
+                success: true,
+                reply,
+                userId,
+                intent,
+                memorySaved,
+                savedMemory: extractedMemory
+            });
         }
 
 
@@ -1538,43 +1369,34 @@ export default async function handler(
 
 
         /* =================================================
-           HISTORY
+           WEATHER
+        ================================================= */
+
+        const weather =
+            body.weather || null;
+
+
+        const weatherContext =
+            buildWeatherContext(
+                weather
+            );
+
+
+        /* =================================================
+           LOAD RECENT HISTORY
         ================================================= */
 
         const history =
-            await sql`
-
-                SELECT
-                    role,
-                    message
-
-                FROM conversations
-
-                WHERE user_id =
-                    ${userId}
-
-                ORDER BY
-                    created_at DESC
-
-                LIMIT 40
-
-            `;
+            await loadHistory(
+                userId,
+                20
+            );
 
 
         const historyMessages =
-            history
-                .reverse()
-                .map(
-                    item => ({
-
-                        role:
-                            item.role,
-
-                        content:
-                            item.message
-
-                    })
-                );
+            buildHistoryMessages(
+                history
+            );
 
 
         /* =================================================
@@ -1582,134 +1404,141 @@ export default async function handler(
         ================================================= */
 
         const systemPrompt =
-            buildSystemPrompt(
-                intent,
-                memoryContext
-            ) +
-            buildWeatherContext(
-                weather
-            );
+            buildSystemPrompt({
+
+                memoryContext,
+
+                weatherContext,
+
+                intent
+
+            });
 
 
         /* =================================================
-           USER CONTENT
+           BUILD GROQ MESSAGES
         ================================================= */
 
-        let userContent;
-
-
-        if (image) {
-
-            userContent = [
-
-                {
-
-                    type: "text",
-
-                    text:
-                        message ||
-                        "इस image को ध्यान से analyse करो।"
-
-                },
-
-                {
-
-                    type: "image_url",
-
-                    image_url: {
-
-                        url:
-                            image
-
-                    }
-
-                }
-
-            ];
-
-        }
-
-        else {
-
-            userContent =
-                message;
-
-        }
-
-
-        /* =================================================
-           REMOVE CURRENT USER MESSAGE FROM HISTORY
-        ================================================= */
-
-        const previousMessages =
-            historyMessages.slice(
-                0,
-                -1
-            );
-
-
-        /* =================================================
-           FINAL MESSAGES
-        ================================================= */
-
-        const messages = [
+        let groqMessages = [
 
             {
-
-                role:
-                    "system",
-
-                content:
-                    systemPrompt
-
-            },
-
-            ...previousMessages,
-
-            {
-
-                role:
-                    "user",
-
-                content:
-                    userContent
-
+                role: "system",
+                content: systemPrompt
             }
 
         ];
 
 
-        /* =================================================
-           MODEL
-        ================================================= */
+        /*
+         * History में अभी current user message भी save हो चुका है।
+         * इसलिए उसे history से भेजेंगे।
+         */
 
-        let model =
-            TEXT_MODEL;
+        if (historyMessages.length) {
 
-
-        if (
-            intent === "vision" ||
-            intent === "trading_vision"
-        ) {
-
-            model =
-                VISION_MODEL;
-
+            groqMessages.push(
+                ...historyMessages
+            );
         }
 
 
         /* =================================================
-           GROQ
+           VISION
+        ================================================= */
+
+        if (hasImage) {
+
+            /*
+             * Vision request में current message को
+             * image के साथ भेजना जरूरी है।
+             */
+
+            /*
+             * Current user message history में मौजूद है,
+             * इसलिए duplicate text avoid करने के लिए
+             * history से last user message हटाते हैं।
+             */
+
+            if (
+                groqMessages.length > 1
+            ) {
+
+                const lastIndex =
+                    groqMessages.length - 1;
+
+
+                if (
+                    groqMessages[lastIndex]?.role === "user"
+                ) {
+
+                    groqMessages.pop();
+                }
+            }
+
+
+            groqMessages.push(
+                buildVisionMessage(
+                    message,
+                    image
+                )
+            );
+
+
+            const reply =
+                await askGroq({
+
+                    messages:
+                        groqMessages,
+
+                    model:
+                        VISION_MODEL,
+
+                    temperature:
+                        0.4,
+
+                    maxTokens:
+                        1400
+
+                });
+
+
+            await saveConversation(
+                userId,
+                "assistant",
+                reply
+            );
+
+
+            return jsonResponse({
+                success: true,
+                reply,
+                userId,
+                intent: "vision",
+                memorySaved
+            });
+        }
+
+
+        /* =================================================
+           NORMAL TEXT / WEATHER / TRADING CHAT
         ================================================= */
 
         const reply =
             await askGroq({
 
-                apiKey,
+                messages:
+                    groqMessages,
 
-                model,
+                model:
+                    TEXT_MODEL,
 
-                messages
+                temperature:
+                    intent === "trading"
+                        ? 0.35
+                        : 0.7,
+
+                maxTokens:
+                    1400
 
             });
 
@@ -1729,57 +1558,50 @@ export default async function handler(
            FINAL RESPONSE
         ================================================= */
 
-        return res
-            .status(200)
-            .json({
+        return jsonResponse({
 
-                ok: true,
+            success: true,
 
-                reply,
+            reply,
 
-                intent,
+            userId,
 
-                model,
+            intent,
 
-                vision:
-                    Boolean(image),
+            memorySaved,
 
-                memory:
-                    true,
+            memories
 
-                memorySaved,
-
-                savedMemory:
-                    extractedMemory || null,
-
-                userId
-
-            });
-
+        });
 
     } catch (error) {
 
         console.error(
-            "KAIRA SERVER ERROR:",
+            "KAIRA API ERROR:",
             error
         );
 
 
-        return res
-            .status(500)
-            .json({
+        const message =
+            error?.message ||
+            "Unknown server error";
 
-                ok: false,
+
+        return jsonResponse(
+
+            {
+                success: false,
 
                 error:
-                    "KAIRA server error: " +
-                    (
-                        error?.message ||
-                        "Unknown error"
-                    )
+                    "KAIRA server में समस्या आ गई।",
 
-            });
+                details:
+                    process.env.NODE_ENV === "development"
+                        ? message
+                        : undefined
+            },
 
+            500
+        );
     }
-
-}                      
+    }
