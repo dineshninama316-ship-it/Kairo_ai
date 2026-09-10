@@ -1,21 +1,24 @@
 /**
  * =========================================================
- * KAIRA AI — STABLE BACKEND v6
+ * KAIRA AI — POWER BACKEND v7
  * =========================================================
  *
- * Groq + Neon
+ * Groq + Neon PostgreSQL
+ *
  * ✅ Permanent Memory
  * ✅ Name Memory
  * ✅ Multiple Preferences
- * ✅ Goals
+ * ✅ Goal Memory
  * ✅ About User
- * ✅ Chat History
+ * ✅ Permanent Chat History
  * ✅ Weather Context
  * ✅ Trading Context
- * ✅ Vision
- * ✅ Single User ID Protection
+ * ✅ Camera Vision
+ * ✅ Single User Protection
  * ✅ Fresh Memory Reload
- * ✅ Memory Diagnostics
+ * ✅ Diagnostics
+ * ✅ Strong Error Handling
+ * ✅ Frontend Compatible
  * =========================================================
  */
 
@@ -38,12 +41,9 @@ const VISION_MODEL =
  * अभी KAIRA single-user mode में है।
  *
  * Frontend चाहे कोई भी userId भेजे,
- * backend हमेशा इसी user की memory इस्तेमाल करेगा।
- *
- * इससे userId mismatch की समस्या खत्म होगी।
+ * backend हमेशा test-user इस्तेमाल करेगा।
  */
 const KAIRA_USER_ID = "test-user";
-
 
 /* =========================================================
    DATABASE
@@ -54,21 +54,14 @@ const DATABASE_URL =
     process.env.POSTGRES_URL ||
     process.env.POSTGRES_PRISMA_URL;
 
-if (!DATABASE_URL) {
-    throw new Error(
-        "DATABASE_URL is not configured."
-    );
-}
-
-const sql = neon(DATABASE_URL);
-
+const GROQ_API_KEY =
+    process.env.GROQ_API_KEY;
 
 /* =========================================================
-   BASIC HELPERS
+   BASIC VALIDATION
 ========================================================= */
 
 function cleanText(value) {
-
     if (
         value === undefined ||
         value === null
@@ -79,9 +72,7 @@ function cleanText(value) {
     return String(value).trim();
 }
 
-
 function normalizeText(text) {
-
     return cleanText(text)
         .toLowerCase()
         .replace(/[।!?,"'`]/g, " ")
@@ -89,9 +80,7 @@ function normalizeText(text) {
         .trim();
 }
 
-
 function safeJsonParse(text) {
-
     try {
         return JSON.parse(text);
     } catch {
@@ -99,33 +88,40 @@ function safeJsonParse(text) {
     }
 }
 
+/* =========================================================
+   DATABASE INITIALIZATION
+========================================================= */
+
+let sql = null;
+
+function getDatabase() {
+    if (!DATABASE_URL) {
+        throw new Error(
+            "DATABASE_URL / POSTGRES_URL / POSTGRES_PRISMA_URL is not configured."
+        );
+    }
+
+    if (!sql) {
+        sql = neon(DATABASE_URL);
+    }
+
+    return sql;
+}
 
 /* =========================================================
-   USER ID
+   USER ID PROTECTION
 ========================================================= */
 
 function getUserId() {
-
-    /*
-     * IMPORTANT:
-     * अभी single-user system है।
-     *
-     * Frontend से आने वाले userId को ignore करके
-     * हमेशा test-user इस्तेमाल करेंगे।
-     */
-
     return KAIRA_USER_ID;
 }
-
 
 /* =========================================================
    CORS
 ========================================================= */
 
 function corsHeaders() {
-
     return {
-
         "Access-Control-Allow-Origin": "*",
 
         "Access-Control-Allow-Methods":
@@ -139,16 +135,14 @@ function corsHeaders() {
     };
 }
 
-
 /* =========================================================
-   RESPONSE
+   JSON RESPONSE
 ========================================================= */
 
 function jsonResponse(
     body,
     status = 200
 ) {
-
     return new Response(
         JSON.stringify(body),
         {
@@ -156,10 +150,10 @@ function jsonResponse(
 
             headers: {
                 "Content-Type":
-                    "application/json",
+                    "application/json; charset=utf-8",
 
                 "Cache-Control":
-                    "no-store",
+                    "no-store, no-cache, must-revalidate",
 
                 ...corsHeaders()
             }
@@ -167,6 +161,53 @@ function jsonResponse(
     );
 }
 
+/* =========================================================
+   REQUEST BODY
+========================================================= */
+
+async function getRequestBody(req) {
+
+    if (!req) {
+        return null;
+    }
+
+    /*
+     * Vercel कभी-कभी parsed body देता है।
+     */
+    if (
+        req.body &&
+        typeof req.body === "object" &&
+        !Array.isArray(req.body)
+    ) {
+        return req.body;
+    }
+
+    /*
+     * अगर body string है।
+     */
+    if (
+        typeof req.body === "string"
+    ) {
+        return safeJsonParse(
+            req.body
+        );
+    }
+
+    /*
+     * Standard Web Request body।
+     */
+    if (
+        typeof req.json === "function"
+    ) {
+        try {
+            return await req.json();
+        } catch {
+            return null;
+        }
+    }
+
+    return null;
+}
 
 /* =========================================================
    INTENT DETECTION
@@ -180,7 +221,6 @@ function detectIntent(
     const text =
         normalizeText(message);
 
-
     /* =========================
        VISION
     ========================= */
@@ -188,7 +228,6 @@ function detectIntent(
     if (hasImage) {
         return "vision";
     }
-
 
     /* =========================
        MEMORY QUERY
@@ -236,10 +275,8 @@ function detectIntent(
         text.includes("what do you know about me")
 
     ) {
-
         return "memory_query";
     }
-
 
     /* =========================
        MEMORY SAVE
@@ -253,13 +290,7 @@ function detectIntent(
 
         text.includes("याद रख") ||
 
-        text.includes("याद रखना है") ||
-
         text.includes("इसे याद") ||
-
-        text.includes("इसे याद रखना") ||
-
-        text.includes("इसे याद रखो") ||
 
         text.includes("remember this") ||
 
@@ -272,10 +303,8 @@ function detectIntent(
         text.includes("dont forget")
 
     ) {
-
         return "memory";
     }
-
 
     /* =========================
        WEATHER
@@ -294,10 +323,8 @@ function detectIntent(
         text.includes("temperature")
 
     ) {
-
         return "weather";
     }
-
 
     /* =========================
        TRADING
@@ -329,17 +356,14 @@ function detectIntent(
         text.includes("macd")
 
     ) {
-
         return "trading";
     }
-
 
     return "chat";
 }
 
-
 /* =========================================================
-   REMOVE MEMORY COMMAND
+   REMOVE MEMORY COMMAND WORDS
 ========================================================= */
 
 function removeRememberWords(text) {
@@ -419,7 +443,6 @@ function removeRememberWords(text) {
         .trim();
 }
 
-
 /* =========================================================
    NORMALIZE MEMORY VALUE
 ========================================================= */
@@ -441,7 +464,6 @@ function normalizeMemoryValue(value) {
         .trim();
 }
 
-
 /* =========================================================
    MEMORY EXTRACTION
 ========================================================= */
@@ -455,14 +477,14 @@ function extractMemory(message) {
         return null;
     }
 
-
     const text =
-        removeRememberWords(original);
+        removeRememberWords(
+            original
+        );
 
     if (!text) {
         return null;
     }
-
 
     /* =====================================================
        NAME — HINDI
@@ -487,14 +509,12 @@ function extractMemory(message) {
             ).trim();
 
         if (value) {
-
             return {
                 key: "name",
                 value
             };
         }
     }
-
 
     /* =====================================================
        NAME — ENGLISH
@@ -513,7 +533,6 @@ function extractMemory(message) {
             );
 
         if (value) {
-
             return {
                 key: "name",
                 value
@@ -521,9 +540,8 @@ function extractMemory(message) {
         }
     }
 
-
     /* =====================================================
-       "I AM AJAY"
+       I AM
     ===================================================== */
 
     match =
@@ -538,8 +556,13 @@ function extractMemory(message) {
                 match[1]
             );
 
-        if (value) {
-
+        /*
+         * केवल short/simple नाम को name मानें।
+         */
+        if (
+            value &&
+            value.split(/\s+/).length <= 4
+        ) {
             return {
                 key: "name",
                 value
@@ -547,9 +570,8 @@ function extractMemory(message) {
         }
     }
 
-
     /* =====================================================
-       PREFERENCE PATTERNS
+       PREFERENCES
     ===================================================== */
 
     const preferencePatterns = [
@@ -575,7 +597,6 @@ function extractMemory(message) {
         /^my\s+favourite\s+is\s+(.+)$/i
     ];
 
-
     for (
         const pattern
         of preferencePatterns
@@ -588,7 +609,6 @@ function extractMemory(message) {
             continue;
         }
 
-
         const value =
             normalizeMemoryValue(
                 found[1]
@@ -597,11 +617,6 @@ function extractMemory(message) {
         if (!value) {
             continue;
         }
-
-
-        /*
-         * Preference key सुरक्षित तरीके से बनाना।
-         */
 
         const normalizedValue =
             value
@@ -616,7 +631,6 @@ function extractMemory(message) {
                 )
                 .slice(0, 60);
 
-
         return {
 
             key:
@@ -625,7 +639,6 @@ function extractMemory(message) {
             value
         };
     }
-
 
     /* =====================================================
        GOAL
@@ -644,7 +657,6 @@ function extractMemory(message) {
         /^i\s+want\s+to\s+(.+)$/i
     ];
 
-
     for (
         const pattern
         of goalPatterns
@@ -657,7 +669,6 @@ function extractMemory(message) {
             continue;
         }
 
-
         const value =
             normalizeMemoryValue(
                 found[1]
@@ -666,18 +677,14 @@ function extractMemory(message) {
         if (value) {
 
             return {
-
                 key: "goal",
-
                 value
             };
         }
     }
 
-
     return null;
 }
-
 
 /* =========================================================
    SAVE MEMORY
@@ -692,12 +699,13 @@ async function saveMemory(
         !memory?.key ||
         !memory?.value
     ) {
-
         return false;
     }
 
+    const db =
+        getDatabase();
 
-    await sql`
+    await db`
 
         INSERT INTO memories
         (
@@ -729,10 +737,8 @@ async function saveMemory(
 
     `;
 
-
     return true;
 }
-
 
 /* =========================================================
    LOAD MEMORY
@@ -742,8 +748,11 @@ async function loadMemories(
     userId
 ) {
 
+    const db =
+        getDatabase();
+
     const rows =
-        await sql`
+        await db`
 
             SELECT
                 id,
@@ -768,7 +777,6 @@ async function loadMemories(
         : [];
 }
 
-
 /* =========================================================
    MEMORY CONTEXT
 ========================================================= */
@@ -781,12 +789,10 @@ function buildMemoryContext(
         !Array.isArray(memories) ||
         memories.length === 0
     ) {
-
         return (
             "कोई permanent memory उपलब्ध नहीं है।"
         );
     }
-
 
     return memories
 
@@ -804,9 +810,8 @@ function buildMemoryContext(
         .join("\n");
 }
 
-
 /* =========================================================
-   MEMORY DEBUG SUMMARY
+   MEMORY DEBUG
 ========================================================= */
 
 function buildMemoryDebug(
@@ -818,13 +823,11 @@ function buildMemoryDebug(
             ? memories
             : [];
 
-
     const name =
         rows.find(
             item =>
                 item.memory_key === "name"
         )?.memory_value || null;
-
 
     const preferences =
         rows
@@ -846,17 +849,16 @@ function buildMemoryDebug(
 
             .filter(Boolean);
 
-
     const goal =
         rows.find(
             item =>
                 item.memory_key === "goal"
         )?.memory_value || null;
 
-
     return {
 
-        userId: KAIRA_USER_ID,
+        userId:
+            KAIRA_USER_ID,
 
         memoryCount:
             rows.length,
@@ -864,15 +866,18 @@ function buildMemoryDebug(
         name,
 
         preferences:
-            [...new Set(preferences)],
+            [
+                ...new Set(
+                    preferences
+                )
+            ],
 
         goal
     };
 }
 
-
 /* =========================================================
-   DIRECT MEMORY ANSWER
+   DIRECT MEMORY ANSWERS
 ========================================================= */
 
 function getDirectMemoryReply(
@@ -883,12 +888,10 @@ function getDirectMemoryReply(
     const text =
         normalizeText(message);
 
-
     const rows =
         Array.isArray(memories)
             ? memories
             : [];
-
 
     /* =====================================================
        NAME
@@ -907,7 +910,6 @@ function getDirectMemoryReply(
             text.includes("क्या है")
         );
 
-
     if (askingName) {
 
         const name =
@@ -915,7 +917,6 @@ function getDirectMemoryReply(
                 item =>
                     item.memory_key === "name"
             );
-
 
         if (
             name &&
@@ -929,12 +930,10 @@ function getDirectMemoryReply(
             );
         }
 
-
         return (
             "अभी मेरी permanent memory में आपका नाम सेव नहीं है।"
         );
     }
-
 
     /* =====================================================
        PREFERENCE
@@ -951,7 +950,6 @@ function getDirectMemoryReply(
         text.includes("what do i like") ||
 
         text.includes("what are my preferences");
-
 
     if (askingPreference) {
 
@@ -975,12 +973,12 @@ function getDirectMemoryReply(
 
                 .filter(Boolean);
 
-
         const uniquePreferences =
             [
-                ...new Set(preferences)
+                ...new Set(
+                    preferences
+                )
             ];
-
 
         if (
             uniquePreferences.length === 0
@@ -991,12 +989,10 @@ function getDirectMemoryReply(
             );
         }
 
-
         return (
             `मुझे याद है कि आपको ${uniquePreferences.join(", ")} पसंद है 😊`
         );
     }
-
 
     /* =====================================================
        GOAL
@@ -1012,7 +1008,6 @@ function getDirectMemoryReply(
 
         text.includes("what is my goal");
 
-
     if (askingGoal) {
 
         const goal =
@@ -1020,7 +1015,6 @@ function getDirectMemoryReply(
                 item =>
                     item.memory_key === "goal"
             );
-
 
         if (
             goal &&
@@ -1034,12 +1028,10 @@ function getDirectMemoryReply(
             );
         }
 
-
         return (
             "अभी मेरी permanent memory में आपका goal सेव नहीं है।"
         );
     }
-
 
     /* =====================================================
        ABOUT
@@ -1055,7 +1047,6 @@ function getDirectMemoryReply(
 
         text.includes("what do you know about me");
 
-
     if (askingAbout) {
 
         if (!rows.length) {
@@ -1065,13 +1056,11 @@ function getDirectMemoryReply(
             );
         }
 
-
         const name =
             rows.find(
                 item =>
                     item.memory_key === "name"
             )?.memory_value;
-
 
         const preferences =
             rows
@@ -1093,42 +1082,37 @@ function getDirectMemoryReply(
 
                 .filter(Boolean);
 
-
         const goal =
             rows.find(
                 item =>
                     item.memory_key === "goal"
             )?.memory_value;
 
-
         const parts = [];
 
-
         if (name) {
-
             parts.push(
                 `नाम: ${name}`
             );
         }
 
-
         if (preferences.length) {
-
             parts.push(
-                `पसंद: ${[
-                    ...new Set(preferences)
-                ].join(", ")}`
+                `पसंद: ${
+                    [
+                        ...new Set(
+                            preferences
+                        )
+                    ].join(", ")
+                }`
             );
         }
 
-
         if (goal) {
-
             parts.push(
                 `Goal: ${goal}`
             );
         }
-
 
         if (!parts.length) {
 
@@ -1137,20 +1121,17 @@ function getDirectMemoryReply(
             );
         }
 
-
         return (
             "मुझे आपके बारे में यह याद है:\n\n" +
             parts.join("\n")
         );
     }
 
-
     return null;
 }
 
-
 /* =========================================================
-   WEATHER
+   WEATHER CONTEXT
 ========================================================= */
 
 function buildWeatherContext(
@@ -1161,50 +1142,46 @@ function buildWeatherContext(
         return "";
     }
 
-
     if (
         typeof weather === "string"
     ) {
-
         return weather;
     }
 
-
     return `
 
-Live Weather:
+LIVE WEATHER
 
 Location:
 ${weather.location ||
-    weather.city ||
-    "Unknown"}
+weather.city ||
+"Unknown"}
 
 Temperature:
 ${weather.temperature ??
-    weather.temp ??
-    "Unknown"}°C
+weather.temp ??
+"Unknown"}°C
 
 Feels Like:
 ${weather.feelsLike ??
-    "Unknown"}°C
+"Unknown"}°C
 
 Humidity:
 ${weather.humidity ??
-    "Unknown"}%
+"Unknown"}%
 
 Wind:
 ${weather.wind ??
-    "Unknown"}
+"Unknown"}
 
 Weather Code:
 ${weather.code ??
-    weather.weatherCode ??
-    weather.weathercode ??
-    "Unknown"}
+weather.weatherCode ??
+weather.weathercode ??
+"Unknown"}
 
 `;
 }
-
 
 /* =========================================================
    SYSTEM PROMPT
@@ -1224,49 +1201,96 @@ You are the user's personal AI assistant and digital partner.
 
 IDENTITY:
 
-- Your name is KAIRA.
-- You are an AI assistant.
-- Be friendly, natural and helpful.
-- Use Hindi/Hinglish when the user does.
-- You may call the user "बॉस" naturally, but do not overuse it.
+Your name is KAIRA.
+
+You are an AI assistant.
+
+Be friendly, natural and helpful.
+
+Use Hindi/Hinglish when the user does.
+
+You may call the user "बॉस" naturally,
+but do not overuse it.
+
 
 PERMANENT USER MEMORY:
 
 ${memoryContext}
 
+
 MEMORY RULES:
 
-1. The memory above comes from the user's Neon permanent memory.
-2. Treat it as trusted user-provided information.
+1. The memory above comes from the user's permanent Neon database.
+
+2. Treat stored memory as trusted user-provided information.
+
 3. Never invent personal information.
-4. Never say you forgot information that is present in memory.
-5. If information exists in memory, use it.
+
+4. Never say you forgot something that is present in memory.
+
+5. If information exists in memory, use it naturally.
+
 6. If information does not exist, honestly say it is not stored.
+
 7. Do not contradict stored memory.
-8. Multiple preferences may exist.
+
+8. Multiple preferences can exist.
+
+9. Do not expose internal database IDs or implementation details unless specifically asked.
+
 
 WEATHER:
 
-${weatherContext || "No live weather information."}
+${weatherContext || "No live weather information available."}
+
 
 GENERAL:
 
-- Answer clearly.
-- Prefer Hindi/Hinglish for Hindi users.
-- Do not unnecessarily repeat questions.
-- Never claim an action happened if it did not happen.
+Answer clearly.
+
+Prefer Hindi/Hinglish for Hindi users.
+
+Keep answers useful and natural.
+
+Do not unnecessarily repeat questions.
+
+Never claim an action happened if it did not happen.
+
 
 TRADING:
 
-- Explain trend, support, resistance, Fibonacci, indicators and risk/reward.
-- Never guarantee profit.
-- Never claim 100% accuracy.
-- Clearly separate analysis from certainty.
+You can explain:
+
+- Trend
+- Support
+- Resistance
+- Fibonacci
+- RSI
+- MACD
+- Candlesticks
+- Entry
+- Stop loss
+- Take profit
+- Risk/reward
+- Market structure
+
+Never guarantee profit.
+
+Never claim 100% accuracy.
+
+Never present uncertain analysis as certainty.
+
+For trading decisions, clearly explain risk.
+
 
 VISION:
 
-- Describe only what is actually visible.
-- If the image is unclear, say so.
+Describe only what is actually visible.
+
+Do not invent objects, text or details.
+
+If the image is unclear, say so.
+
 
 CURRENT INTENT:
 
@@ -1275,9 +1299,8 @@ ${intent}
 `;
 }
 
-
 /* =========================================================
-   GROQ
+   GROQ REQUEST
 ========================================================= */
 
 async function askGroq({
@@ -1287,57 +1310,42 @@ async function askGroq({
     maxTokens = 1400
 }) {
 
-    const apiKey =
-        process.env.GROQ_API_KEY;
-
-
-    if (!apiKey) {
-
+    if (!GROQ_API_KEY) {
         throw new Error(
             "GROQ_API_KEY is not configured."
         );
     }
 
-
     const response =
         await fetch(
             GROQ_URL,
             {
-
                 method: "POST",
 
                 headers: {
-
                     "Content-Type":
                         "application/json",
 
                     "Authorization":
-                        `Bearer ${apiKey}`
+                        `Bearer ${GROQ_API_KEY}`
                 },
 
                 body:
                     JSON.stringify({
-
                         model,
-
                         messages,
-
                         temperature,
-
                         max_tokens:
                             maxTokens
                     })
             }
         );
 
-
     const raw =
         await response.text();
 
-
     const data =
         safeJsonParse(raw);
-
 
     if (!response.ok) {
 
@@ -1345,29 +1353,25 @@ async function askGroq({
             data?.error?.message ||
             data?.message ||
             raw ||
-            `Groq error ${response.status}`
+            `Groq HTTP ${response.status}`
         );
     }
-
 
     const answer =
         data?.choices?.[0]?.message?.content;
 
-
     if (!answer) {
 
         throw new Error(
-            "Groq returned empty response."
+            "Groq returned an empty response."
         );
     }
-
 
     return cleanText(answer);
 }
 
-
 /* =========================================================
-   CONVERSATION SAVE
+   SAVE CONVERSATION
 ========================================================= */
 
 async function saveConversation(
@@ -1379,13 +1383,23 @@ async function saveConversation(
     const text =
         cleanText(message);
 
-
     if (!text) {
-        return;
+        return false;
     }
 
+    if (
+        role !== "user" &&
+        role !== "assistant"
+    ) {
+        throw new Error(
+            "Invalid conversation role."
+        );
+    }
 
-    await sql`
+    const db =
+        getDatabase();
+
+    await db`
 
         INSERT INTO conversations
         (
@@ -1402,11 +1416,12 @@ async function saveConversation(
         )
 
     `;
+
+    return true;
 }
 
-
 /* =========================================================
-   HISTORY
+   LOAD HISTORY
 ========================================================= */
 
 async function loadHistory(
@@ -1423,9 +1438,11 @@ async function loadHistory(
             50
         );
 
+    const db =
+        getDatabase();
 
     const rows =
-        await sql`
+        await db`
 
             SELECT
                 id,
@@ -1445,14 +1462,14 @@ async function loadHistory(
 
         `;
 
-
-    return (
-        Array.isArray(rows)
-            ? rows.reverse()
-            : []
-    );
+    return Array.isArray(rows)
+        ? rows.reverse()
+        : [];
 }
 
+/* =========================================================
+   HISTORY → GROQ FORMAT
+========================================================= */
 
 function buildHistoryMessages(
     history
@@ -1461,10 +1478,8 @@ function buildHistoryMessages(
     if (
         !Array.isArray(history)
     ) {
-
         return [];
     }
-
 
     return history
 
@@ -1479,7 +1494,6 @@ function buildHistoryMessages(
 
         .map(
             item => ({
-
                 role:
                     item.role,
 
@@ -1491,9 +1505,8 @@ function buildHistoryMessages(
         );
 }
 
-
 /* =========================================================
-   VISION
+   IMAGE VALIDATION
 ========================================================= */
 
 function isValidImage(
@@ -1504,10 +1517,8 @@ function isValidImage(
         !image ||
         typeof image !== "string"
     ) {
-
         return false;
     }
-
 
     return (
 
@@ -1525,6 +1536,9 @@ function isValidImage(
     );
 }
 
+/* =========================================================
+   VISION MESSAGE
+========================================================= */
 
 function buildVisionMessage(
     message,
@@ -1538,7 +1552,6 @@ function buildVisionMessage(
         content: [
 
             {
-
                 type: "text",
 
                 text:
@@ -1547,18 +1560,32 @@ function buildVisionMessage(
             },
 
             {
-
                 type: "image_url",
 
                 image_url: {
-
                     url: image
                 }
             }
+
         ]
     };
 }
 
+/* =========================================================
+   DATABASE HEALTH CHECK
+========================================================= */
+
+async function databaseHealthCheck() {
+
+    const db =
+        getDatabase();
+
+    await db`
+        SELECT 1 AS ok
+    `;
+
+    return true;
+}
 
 /* =========================================================
    MAIN HANDLER
@@ -1579,15 +1606,12 @@ export default async function handler(
         return new Response(
             null,
             {
-
                 status: 204,
-
                 headers:
                     corsHeaders()
             }
         );
     }
-
 
     /* =====================================================
        POST ONLY
@@ -1599,56 +1623,90 @@ export default async function handler(
 
         return jsonResponse(
             {
-
                 success: false,
 
                 error:
-                    "Only POST requests are allowed."
+                    "Only POST requests are allowed.",
+
+                method:
+                    req.method || "unknown"
             },
 
             405
         );
     }
 
-
     try {
+
+        /* =================================================
+           ENVIRONMENT CHECK
+        ================================================= */
+
+        if (!DATABASE_URL) {
+
+            return jsonResponse(
+                {
+                    success: false,
+
+                    error:
+                        "Database environment variable is missing.",
+
+                    details:
+                        "Set DATABASE_URL or POSTGRES_URL or POSTGRES_PRISMA_URL in Vercel Environment Variables."
+                },
+
+                500
+            );
+        }
+
+        if (!GROQ_API_KEY) {
+
+            return jsonResponse(
+                {
+                    success: false,
+
+                    error:
+                        "Groq environment variable is missing.",
+
+                    details:
+                        "Set GROQ_API_KEY in Vercel Environment Variables."
+                },
+
+                500
+            );
+        }
 
         /* =================================================
            BODY
         ================================================= */
 
         const body =
-            typeof req.body === "string"
-                ? safeJsonParse(req.body)
-                : req.body;
-
+            await getRequestBody(req);
 
         if (
             !body ||
-            typeof body !== "object"
+            typeof body !== "object" ||
+            Array.isArray(body)
         ) {
 
             return jsonResponse(
                 {
-
                     success: false,
 
                     error:
-                        "Invalid request body."
+                        "Invalid JSON request body."
                 },
 
                 400
             );
         }
 
-
         /* =================================================
-           FORCE SINGLE USER
+           FORCE USER
         ================================================= */
 
         const userId =
             getUserId();
-
 
         /* =================================================
            ACTION
@@ -1659,6 +1717,31 @@ export default async function handler(
                 body.action
             ).toLowerCase();
 
+        /* =================================================
+           HEALTH CHECK
+        ================================================= */
+
+        if (
+            action === "health"
+        ) {
+
+            await databaseHealthCheck();
+
+            return jsonResponse({
+                success: true,
+
+                status: "online",
+
+                userId,
+
+                database: "connected",
+
+                groq:
+                    GROQ_API_KEY
+                        ? "configured"
+                        : "missing"
+            });
+        }
 
         /* =================================================
            HISTORY ACTION
@@ -1674,18 +1757,19 @@ export default async function handler(
                     body.limit || 30
                 );
 
-
             return jsonResponse({
 
                 success: true,
 
                 userId,
 
-                history
+                history,
+
+                count:
+                    history.length
 
             });
         }
-
 
         /* =================================================
            MEMORY ACTION
@@ -1704,7 +1788,6 @@ export default async function handler(
                     userId
                 );
 
-
             return jsonResponse({
 
                 success: true,
@@ -1713,6 +1796,9 @@ export default async function handler(
 
                 memories,
 
+                count:
+                    memories.length,
+
                 debug:
                     buildMemoryDebug(
                         memories
@@ -1720,7 +1806,6 @@ export default async function handler(
 
             });
         }
-
 
         /* =================================================
            MESSAGE
@@ -1731,18 +1816,15 @@ export default async function handler(
                 body.message
             );
 
-
         const image =
             cleanText(
                 body.image
             );
 
-
         const hasImage =
             isValidImage(
                 image
             );
-
 
         if (
             !message &&
@@ -1751,7 +1833,6 @@ export default async function handler(
 
             return jsonResponse(
                 {
-
                     success: false,
 
                     error:
@@ -1762,16 +1843,14 @@ export default async function handler(
             );
         }
 
-
         /* =================================================
-           LOAD CURRENT MEMORY
+           MEMORY LOAD
         ================================================= */
 
         let memories =
             await loadMemories(
                 userId
             );
-
 
         /* =================================================
            INTENT
@@ -1783,9 +1862,8 @@ export default async function handler(
                 hasImage
             );
 
-
         /* =================================================
-           EXTRACT MEMORY
+           MEMORY EXTRACTION
         ================================================= */
 
         const extractedMemory =
@@ -1793,10 +1871,8 @@ export default async function handler(
                 message
             );
 
-
         let memorySaved =
             false;
-
 
         /* =================================================
            SAVE MEMORY
@@ -1812,10 +1888,8 @@ export default async function handler(
                     extractedMemory
                 );
 
-
             /*
-             * Save के तुरंत बाद database से
-             * fresh memory reload।
+             * Save के तुरंत बाद fresh reload।
              */
 
             memories =
@@ -1823,7 +1897,6 @@ export default async function handler(
                     userId
                 );
         }
-
 
         /* =================================================
            SAVE USER MESSAGE
@@ -1838,7 +1911,6 @@ export default async function handler(
             );
         }
 
-
         /* =================================================
            MEMORY QUERY
         ================================================= */
@@ -1847,22 +1919,16 @@ export default async function handler(
             intent === "memory_query"
         ) {
 
-            /*
-             * हमेशा fresh Neon data।
-             */
-
             memories =
                 await loadMemories(
                     userId
                 );
-
 
             const directReply =
                 getDirectMemoryReply(
                     message,
                     memories
                 );
-
 
             if (
                 directReply
@@ -1873,7 +1939,6 @@ export default async function handler(
                     "assistant",
                     directReply
                 );
-
 
                 return jsonResponse({
 
@@ -1899,7 +1964,6 @@ export default async function handler(
             }
         }
 
-
         /* =================================================
            MEMORY SAVE RESPONSE
         ================================================= */
@@ -1911,7 +1975,6 @@ export default async function handler(
 
             let reply;
 
-
             if (
                 extractedMemory.key === "name"
             ) {
@@ -1919,30 +1982,24 @@ export default async function handler(
                 reply =
                     `ठीक है 😊 मैंने याद रख लिया कि आपका नाम ${extractedMemory.value} है।`;
 
-            }
-
-            else if (
+            } else if (
                 extractedMemory.key === "goal"
             ) {
 
                 reply =
                     `ठीक है 🎯 मैंने आपका goal याद रख लिया: ${extractedMemory.value}`;
 
-            }
-
-            else {
+            } else {
 
                 reply =
                     `ठीक है 😊 मैंने याद रख लिया कि आपको ${extractedMemory.value} पसंद है।`;
             }
-
 
             await saveConversation(
                 userId,
                 "assistant",
                 reply
             );
-
 
             return jsonResponse({
 
@@ -1969,7 +2026,6 @@ export default async function handler(
             });
         }
 
-
         /* =================================================
            MEMORY CONTEXT
         ================================================= */
@@ -1979,7 +2035,6 @@ export default async function handler(
                 memories
             );
 
-
         /* =================================================
            WEATHER
         ================================================= */
@@ -1987,12 +2042,10 @@ export default async function handler(
         const weather =
             body.weather || null;
 
-
         const weatherContext =
             buildWeatherContext(
                 weather
             );
-
 
         /* =================================================
            HISTORY
@@ -2004,12 +2057,10 @@ export default async function handler(
                 20
             );
 
-
         const historyMessages =
             buildHistoryMessages(
                 history
             );
-
 
         /* =================================================
            SYSTEM PROMPT
@@ -2026,11 +2077,9 @@ export default async function handler(
 
             });
 
-
         const groqMessages = [
 
             {
-
                 role: "system",
 
                 content:
@@ -2041,7 +2090,6 @@ export default async function handler(
 
         ];
 
-
         /* =================================================
            VISION
         ================================================= */
@@ -2051,8 +2099,9 @@ export default async function handler(
         ) {
 
             /*
-             * History में अभी जो current user message save हुआ है
-             * उसे vision message से duplicate नहीं करेंगे।
+             * Current text message history में पहले ही save हो चुका है।
+             *
+             * Vision request में उसे duplicate नहीं करेंगे।
              */
 
             if (
@@ -2064,7 +2113,6 @@ export default async function handler(
                         groqMessages.length - 1
                     ];
 
-
                 if (
                     last?.role === "user"
                 ) {
@@ -2073,7 +2121,6 @@ export default async function handler(
                 }
             }
 
-
             groqMessages.push(
 
                 buildVisionMessage(
@@ -2081,7 +2128,6 @@ export default async function handler(
                     image
                 )
             );
-
 
             const reply =
                 await askGroq({
@@ -2099,13 +2145,11 @@ export default async function handler(
                         1400
                 });
 
-
             await saveConversation(
                 userId,
                 "assistant",
                 reply
             );
-
 
             return jsonResponse({
 
@@ -2119,6 +2163,8 @@ export default async function handler(
 
                 memorySaved,
 
+                memories,
+
                 debug:
                     buildMemoryDebug(
                         memories
@@ -2127,10 +2173,18 @@ export default async function handler(
             });
         }
 
-
         /* =================================================
            NORMAL GROQ
         ================================================= */
+
+        /*
+         * Current user message history में save हो चुका है।
+         *
+         * इसलिए उसे Groq को manually दोबारा push करने की जरूरत नहीं।
+         *
+         * लेकिन loadHistory में current message मौजूद है,
+         * इसलिए Groq latest message देख पाएगा।
+         */
 
         const reply =
             await askGroq({
@@ -2151,7 +2205,6 @@ export default async function handler(
 
             });
 
-
         /* =================================================
            SAVE AI RESPONSE
         ================================================= */
@@ -2162,10 +2215,18 @@ export default async function handler(
             reply
         );
 
-
         /* =================================================
            FINAL RESPONSE
         ================================================= */
+
+        /*
+         * Final response में fresh memories भेजें।
+         */
+
+        memories =
+            await loadMemories(
+                userId
+            );
 
         return jsonResponse({
 
@@ -2188,7 +2249,6 @@ export default async function handler(
 
         });
 
-
     } catch (error) {
 
         console.error(
@@ -2196,6 +2256,9 @@ export default async function handler(
             error
         );
 
+        const errorMessage =
+            error?.message ||
+            String(error);
 
         return jsonResponse(
 
@@ -2206,13 +2269,8 @@ export default async function handler(
                 error:
                     "KAIRA server में समस्या आ गई।",
 
-                /*
-                 * Debug information temporarily दिखाई जाएगी।
-                 * इससे deployment problem पकड़ना आसान होगा।
-                 */
-
                 details:
-                    error?.message || String(error),
+                    errorMessage,
 
                 userId:
                     KAIRA_USER_ID
