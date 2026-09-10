@@ -7,7 +7,6 @@
 <title>KAIRA AI</title>
 
 <style>
-
 *{
     box-sizing:border-box;
     margin:0;
@@ -18,14 +17,10 @@
 body{
     background:
         radial-gradient(circle at top,#10264a 0%,#07101f 35%,#030711 100%);
-    color:white;
+    color:#fff;
     min-height:100vh;
     overflow:hidden;
 }
-
-/* =========================
-   APP
-========================= */
 
 .app{
     width:100%;
@@ -34,20 +29,19 @@ body{
     flex-direction:column;
 }
 
-/* =========================
-   HEADER
-========================= */
+/* HEADER */
 
 header{
     height:68px;
+    flex:none;
     display:flex;
     align-items:center;
     justify-content:space-between;
     padding:0 16px;
-    background:rgba(4,10,22,.88);
+    background:rgba(4,10,22,.9);
     border-bottom:1px solid rgba(255,255,255,.08);
     backdrop-filter:blur(15px);
-    z-index:10;
+    z-index:20;
 }
 
 .logo-area{
@@ -61,7 +55,14 @@ header{
     height:42px;
     border-radius:50%;
     background:
-        radial-gradient(circle at 35% 30%,#ffffff 0%,#8ec5ff 8%,#3187ff 35%,#0751c9 65%,#021d57 100%);
+        radial-gradient(
+            circle at 35% 30%,
+            #fff 0%,
+            #8ec5ff 8%,
+            #3187ff 35%,
+            #0751c9 65%,
+            #021d57 100%
+        );
     box-shadow:
         0 0 12px #2387ff,
         0 0 30px rgba(35,135,255,.5);
@@ -71,11 +72,16 @@ header{
 @keyframes pulse{
     0%,100%{
         transform:scale(1);
-        box-shadow:0 0 12px #2387ff,0 0 30px rgba(35,135,255,.5);
+        box-shadow:
+            0 0 12px #2387ff,
+            0 0 30px rgba(35,135,255,.5);
     }
+
     50%{
         transform:scale(1.06);
-        box-shadow:0 0 20px #2387ff,0 0 45px rgba(35,135,255,.7);
+        box-shadow:
+            0 0 20px #2387ff,
+            0 0 45px rgba(35,135,255,.7);
     }
 }
 
@@ -94,7 +100,7 @@ header{
 .header-right{
     display:flex;
     align-items:center;
-    gap:10px;
+    gap:8px;
 }
 
 .usage{
@@ -106,9 +112,7 @@ header{
     color:#bcd4f5;
 }
 
-/* =========================
-   CHAT
-========================= */
+/* CHAT */
 
 .chat{
     flex:1;
@@ -139,6 +143,7 @@ header{
         opacity:0;
         transform:translateY(8px);
     }
+
     to{
         opacity:1;
         transform:translateY(0);
@@ -160,7 +165,7 @@ header{
 }
 
 .ai .bubble{
-    background:rgba(15,31,57,.88);
+    background:rgba(15,31,57,.9);
     border:1px solid rgba(90,145,220,.15);
     border-top-left-radius:5px;
 }
@@ -188,9 +193,7 @@ header{
     display:none;
 }
 
-/* =========================
-   WELCOME
-========================= */
+/* WELCOME */
 
 .welcome{
     min-height:55vh;
@@ -210,7 +213,14 @@ header{
     margin:0 auto 22px;
     border-radius:50%;
     background:
-        radial-gradient(circle at 35% 30%,#fff 0%,#8ec5ff 8%,#2780ff 32%,#0749b7 60%,#02143d 100%);
+        radial-gradient(
+            circle at 35% 30%,
+            #fff 0%,
+            #8ec5ff 8%,
+            #2780ff 32%,
+            #0749b7 60%,
+            #02143d 100%
+        );
     box-shadow:
         0 0 30px #2688ff,
         0 0 80px rgba(30,120,255,.35);
@@ -227,16 +237,16 @@ header{
     font-size:15px;
 }
 
-/* =========================
-   TYPING
-========================= */
+/* TYPING */
 
 .typing{
     display:none;
     max-width:850px;
+    width:100%;
     margin:0 auto 15px;
     align-items:center;
     gap:10px;
+    padding:0 14px;
 }
 
 .typing .avatar{
@@ -276,15 +286,14 @@ header{
         transform:translateY(0);
         opacity:.4;
     }
+
     30%{
         transform:translateY(-5px);
         opacity:1;
     }
 }
 
-/* =========================
-   TOOLS
-========================= */
+/* TOOLS */
 
 .tools{
     position:fixed;
@@ -302,7 +311,7 @@ header{
 .tool-btn{
     pointer-events:auto;
     border:1px solid rgba(100,160,230,.15);
-    background:rgba(8,19,37,.92);
+    background:rgba(8,19,37,.94);
     color:#d7e7ff;
     padding:9px 12px;
     border-radius:20px;
@@ -321,9 +330,7 @@ header{
     transform:scale(.96);
 }
 
-/* =========================
-   INPUT AREA
-========================= */
+/* INPUT */
 
 .input-area{
     position:fixed;
@@ -331,11 +338,12 @@ header{
     left:0;
     right:0;
     padding:10px 12px 13px;
-    background:linear-gradient(
-        to top,
-        #030711 70%,
-        rgba(3,7,17,.85)
-    );
+    background:
+        linear-gradient(
+            to top,
+            #030711 70%,
+            rgba(3,7,17,.85)
+        );
     z-index:8;
 }
 
@@ -347,7 +355,7 @@ header{
     gap:8px;
     padding:7px;
     border-radius:25px;
-    background:rgba(12,27,49,.96);
+    background:rgba(12,27,49,.97);
     border:1px solid rgba(90,150,230,.18);
     box-shadow:0 10px 40px rgba(0,0,0,.35);
 }
@@ -360,7 +368,7 @@ header{
     border:0;
     outline:0;
     background:transparent;
-    color:white;
+    color:#fff;
     padding:10px 8px;
     font-size:15px;
 }
@@ -396,9 +404,7 @@ header{
     cursor:not-allowed;
 }
 
-/* =========================
-   MODAL
-========================= */
+/* MODAL */
 
 .modal{
     display:none;
@@ -440,7 +446,7 @@ header{
 .close-btn{
     border:0;
     background:#172941;
-    color:white;
+    color:#fff;
     width:32px;
     height:32px;
     border-radius:50%;
@@ -449,7 +455,7 @@ header{
 
 .camera-wrap{
     position:relative;
-    background:black;
+    background:#000;
     aspect-ratio:4/3;
 }
 
@@ -477,7 +483,7 @@ header{
     border-radius:12px;
     padding:12px;
     background:#12345c;
-    color:white;
+    color:#fff;
     cursor:pointer;
 }
 
@@ -485,9 +491,7 @@ header{
     background:linear-gradient(135deg,#207df0,#0752c8);
 }
 
-/* =========================
-   STATUS
-========================= */
+/* STATUS */
 
 .status{
     text-align:center;
@@ -496,9 +500,21 @@ header{
     margin-top:4px;
 }
 
-/* =========================
-   MOBILE
-========================= */
+/* ERROR */
+
+.error-box{
+    max-width:850px;
+    margin:10px auto;
+    padding:12px 14px;
+    border-radius:12px;
+    background:rgba(120,20,20,.25);
+    border:1px solid rgba(255,80,80,.25);
+    color:#ffb5b5;
+    font-size:12px;
+    white-space:pre-wrap;
+}
+
+/* MOBILE */
 
 @media(max-width:600px){
 
@@ -566,19 +582,13 @@ header{
     #messageInput{
         font-size:14px;
     }
-
 }
-
 </style>
 </head>
 
 <body>
 
 <div class="app">
-
-<!-- =========================
-     HEADER
-========================= -->
 
 <header>
 
@@ -596,17 +606,14 @@ header{
     <div class="header-right">
 
         <div class="usage">
-            AI Usage: <span id="usageCount">0</span>
+            AI Usage:
+            <span id="usageCount">0</span>
         </div>
 
     </div>
 
 </header>
 
-
-<!-- =========================
-     CHAT
-========================= -->
 
 <main id="chat" class="chat">
 
@@ -630,10 +637,6 @@ header{
 </main>
 
 
-<!-- =========================
-     TYPING
-========================= -->
-
 <div id="typing" class="typing">
 
     <div class="avatar">K</div>
@@ -651,10 +654,6 @@ header{
 </div>
 
 
-<!-- =========================
-     TOOLS
-========================= -->
-
 <div class="tools">
 
     <button class="tool-btn" onclick="openCamera()">
@@ -671,10 +670,6 @@ header{
 
 </div>
 
-
-<!-- =========================
-     INPUT
-========================= -->
 
 <div class="input-area">
 
@@ -712,10 +707,6 @@ header{
 
 </div>
 
-
-<!-- =========================
-     CAMERA MODAL
-========================= -->
 
 <div id="cameraModal" class="modal">
 
@@ -772,45 +763,51 @@ header{
 <script>
 
 /* =====================================================
-   KAIRA AI FRONTEND
-   Groq + Neon Permanent Memory
+   KAIRA FRONTEND
+   ALIGNED WITH BACKEND
 ===================================================== */
 
 
 /* =====================================================
-   USER ID
+   IMPORTANT
 ===================================================== */
 
-/*
-   अभी single-user testing के लिए test-user रखा है।
+const KAIRA_USER_ID = "test-user";
 
-   Neon में आपकी memory भी test-user के अंदर है,
-   इसलिए KAIRA उसे पढ़ पाएगी।
-*/
-
-const userId = "test-user";
-
-localStorage.setItem("kairaUserId", userId);
+const API_URL = "/api/chat";
 
 
 /* =====================================================
-   GLOBAL VARIABLES
+   GLOBAL STATE
 ===================================================== */
 
 let isSending = false;
+
 let historyLoaded = false;
+
 let cameraStream = null;
+
 let screenStream = null;
+
 let recognition = null;
+
 let listening = false;
 
+let weatherCache = null;
+
 let normalUsage =
-    Number(localStorage.getItem("kairaNormalUsage") || 0);
+    Number(
+        localStorage.getItem(
+            "kairaNormalUsage"
+        ) || 0
+    );
 
 let visionUsage =
-    Number(localStorage.getItem("kairaVisionUsage") || 0);
-
-let weatherCache = null;
+    Number(
+        localStorage.getItem(
+            "kairaVisionUsage"
+        ) || 0
+    );
 
 
 /* =====================================================
@@ -859,12 +856,12 @@ function updateUsage(){
 
     localStorage.setItem(
         "kairaNormalUsage",
-        normalUsage
+        String(normalUsage)
     );
 
     localStorage.setItem(
         "kairaVisionUsage",
-        visionUsage
+        String(visionUsage)
     );
 }
 
@@ -877,8 +874,41 @@ updateUsage();
 
 function setStatus(text){
 
-    statusText.textContent = text;
+    statusText.textContent =
+        text || "";
 
+}
+
+
+/* =====================================================
+   ERROR DISPLAY
+===================================================== */
+
+function showError(message){
+
+    const old =
+        document.querySelector(
+            ".error-box"
+        );
+
+    if(old){
+        old.remove();
+    }
+
+    const box =
+        document.createElement(
+            "div"
+        );
+
+    box.className =
+        "error-box";
+
+    box.textContent =
+        message;
+
+    chat.appendChild(box);
+
+    scrollToBottom();
 }
 
 
@@ -886,42 +916,66 @@ function setStatus(text){
    ADD MESSAGE
 ===================================================== */
 
-function addMessage(role, text){
+function addMessage(role,text){
 
-    if(!text) return;
+    if(
+        text === undefined ||
+        text === null ||
+        String(text).trim() === ""
+    ){
+        return;
+    }
 
     if(welcome){
-        welcome.style.display = "none";
+        welcome.style.display =
+            "none";
     }
 
     const message =
-        document.createElement("div");
+        document.createElement(
+            "div"
+        );
 
     message.className =
         "message " + role;
 
     const avatar =
-        document.createElement("div");
+        document.createElement(
+            "div"
+        );
 
-    avatar.className = "avatar";
+    avatar.className =
+        "avatar";
 
     avatar.textContent =
-        role === "ai" ? "K" : "U";
+        role === "ai"
+            ? "K"
+            : "U";
 
     const bubble =
-        document.createElement("div");
+        document.createElement(
+            "div"
+        );
 
-    bubble.className = "bubble";
+    bubble.className =
+        "bubble";
 
-    bubble.textContent = text;
+    bubble.textContent =
+        String(text);
 
-    message.appendChild(avatar);
-    message.appendChild(bubble);
+    message.appendChild(
+        avatar
+    );
 
-    chat.appendChild(message);
+    message.appendChild(
+        bubble
+    );
+
+    chat.appendChild(
+        message
+    );
 
     scrollToBottom();
-
 }
 
 
@@ -931,13 +985,14 @@ function addMessage(role, text){
 
 function scrollToBottom(){
 
-    requestAnimationFrame(() => {
+    requestAnimationFrame(
+        () => {
 
-        chat.scrollTop =
-            chat.scrollHeight;
+            chat.scrollTop =
+                chat.scrollHeight;
 
-    });
-
+        }
+    );
 }
 
 
@@ -947,38 +1002,41 @@ function scrollToBottom(){
 
 function showTyping(){
 
-    typing.style.display = "flex";
+    typing.style.display =
+        "flex";
 
     scrollToBottom();
-
 }
 
 function hideTyping(){
 
-    typing.style.display = "none";
-
+    typing.style.display =
+        "none";
 }
 
 
 /* =====================================================
-   AUTO RESIZE TEXTAREA
+   AUTO RESIZE
 ===================================================== */
 
 input.addEventListener(
     "input",
     function(){
 
-        this.style.height = "auto";
+        this.style.height =
+            "auto";
 
         this.style.height =
-            Math.min(this.scrollHeight,120) + "px";
-
+            Math.min(
+                this.scrollHeight,
+                120
+            ) + "px";
     }
 );
 
 
 /* =====================================================
-   ENTER TO SEND
+   ENTER
 ===================================================== */
 
 input.addEventListener(
@@ -993,11 +1051,72 @@ input.addEventListener(
             event.preventDefault();
 
             sendMessage();
-
         }
-
     }
 );
+
+
+/* =====================================================
+   API REQUEST HELPER
+===================================================== */
+
+async function apiRequest(payload){
+
+    const response =
+        await fetch(
+            API_URL,
+            {
+                method:"POST",
+
+                headers:{
+                    "Content-Type":
+                        "application/json"
+                },
+
+                body:JSON.stringify(
+                    payload
+                )
+            }
+        );
+
+    const contentType =
+        response.headers.get(
+            "content-type"
+        ) || "";
+
+    let data;
+
+    if(
+        contentType.includes(
+            "application/json"
+        )
+    ){
+
+        data =
+            await response.json();
+
+    }else{
+
+        const text =
+            await response.text();
+
+        throw new Error(
+            text ||
+            "API ने JSON response नहीं दिया।"
+        );
+    }
+
+    if(!response.ok){
+
+        throw new Error(
+            data?.error ||
+            data?.message ||
+            "API request failed."
+        );
+    }
+
+    return data;
+}
 
 
 /* =====================================================
@@ -1010,7 +1129,9 @@ async function getWeather(){
         return weatherCache;
     }
 
-    if(!navigator.geolocation){
+    if(
+        !navigator.geolocation
+    ){
         return null;
     }
 
@@ -1020,16 +1141,17 @@ async function getWeather(){
             await new Promise(
                 (resolve,reject)=>{
 
-                    navigator.geolocation.getCurrentPosition(
-                        resolve,
-                        reject,
-                        {
-                            enableHighAccuracy:false,
-                            timeout:8000,
-                            maximumAge:600000
-                        }
-                    );
-
+                    navigator
+                        .geolocation
+                        .getCurrentPosition(
+                            resolve,
+                            reject,
+                            {
+                                enableHighAccuracy:false,
+                                timeout:8000,
+                                maximumAge:600000
+                            }
+                        );
                 }
             );
 
@@ -1041,9 +1163,16 @@ async function getWeather(){
 
         const url =
             "https://api.open-meteo.com/v1/forecast" +
-            "?latitude=" + lat +
-            "&longitude=" + lon +
-            "&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m" +
+            "?latitude=" +
+            encodeURIComponent(lat) +
+            "&longitude=" +
+            encodeURIComponent(lon) +
+            "&current=" +
+            "temperature_2m," +
+            "relative_humidity_2m," +
+            "apparent_temperature," +
+            "weather_code," +
+            "wind_speed_10m" +
             "&timezone=auto";
 
         const response =
@@ -1063,20 +1192,24 @@ async function getWeather(){
         weatherCache = {
 
             temperature:
-                data.current.temperature_2m,
+                data.current
+                    .temperature_2m,
 
             feelsLike:
-                data.current.apparent_temperature,
+                data.current
+                    .apparent_temperature,
 
             humidity:
-                data.current.relative_humidity_2m,
+                data.current
+                    .relative_humidity_2m,
 
             wind:
-                data.current.wind_speed_10m,
+                data.current
+                    .wind_speed_10m,
 
             code:
-                data.current.weather_code
-
+                data.current
+                    .weather_code
         };
 
         return weatherCache;
@@ -1090,64 +1223,6 @@ async function getWeather(){
 
         return null;
     }
-
-}
-
-
-/* =====================================================
-   WEATHER TEXT
-===================================================== */
-
-function weatherCodeText(code){
-
-    const map = {
-
-        0:"साफ आसमान",
-
-        1:"मुख्यतः साफ",
-
-        2:"आंशिक बादल",
-
-        3:"बादल",
-
-        45:"कोहरा",
-
-        48:"कोहरा",
-
-        51:"हल्की बूंदाबांदी",
-
-        53:"बूंदाबांदी",
-
-        55:"तेज बूंदाबांदी",
-
-        61:"हल्की बारिश",
-
-        63:"बारिश",
-
-        65:"तेज बारिश",
-
-        71:"हल्की बर्फबारी",
-
-        73:"बर्फबारी",
-
-        75:"तेज बर्फबारी",
-
-        80:"बारिश की बौछार",
-
-        81:"बारिश की बौछार",
-
-        82:"तेज बारिश की बौछार",
-
-        95:"गरज के साथ बारिश",
-
-        96:"गरज के साथ ओले",
-
-        99:"गरज के साथ ओले"
-
-    };
-
-    return map[code] || "मौसम की जानकारी उपलब्ध है";
-
 }
 
 
@@ -1168,10 +1243,15 @@ async function sendMessage(){
         return;
     }
 
-    addMessage("user",message);
+    addMessage(
+        "user",
+        message
+    );
 
     input.value = "";
-    input.style.height = "auto";
+
+    input.style.height =
+        "auto";
 
     isSending = true;
 
@@ -1179,41 +1259,49 @@ async function sendMessage(){
 
     showTyping();
 
-    setStatus("KAIRA सोच रही है...");
+    setStatus(
+        "KAIRA सोच रही है..."
+    );
 
     try{
 
         /*
-          पहले voice website commands check
+          Website commands
         */
 
-        const commandHandled =
-            handleVoiceCommand(message);
-
-        if(commandHandled){
+        if(
+            handleWebsiteCommand(
+                message
+            )
+        ){
 
             hideTyping();
 
-            setStatus("KAIRA तैयार है");
+            setStatus(
+                "KAIRA तैयार है"
+            );
 
             return;
         }
 
 
         /*
-          Weather context
+          Weather
         */
 
         let weather = null;
 
         if(
-            /मौसम|weather|temperature|तापमान|बारिश|rain|गरमी|ठंड/i
-            .test(message)
+            /मौसम|weather|temperature|तापमान|बारिश|rain|गरमी|गर्मी|ठंड/i
+                .test(message)
         ){
+
+            setStatus(
+                "मौसम की जानकारी देख रही हूँ..."
+            );
 
             weather =
                 await getWeather();
-
         }
 
 
@@ -1221,75 +1309,26 @@ async function sendMessage(){
           Backend
         */
 
-        const response =
-            await fetch(
-                "/api/chat",
-                {
-                    method:"POST",
+        const data =
+            await apiRequest({
 
-                    headers:{
-                        "Content-Type":
-                            "application/json"
-                    },
+                message:
+                    message,
 
-                    body:JSON.stringify({
+                userId:
+                    KAIRA_USER_ID,
 
-                        message:message,
+                weather:
+                    weather
 
-                        userId:userId,
-
-                        weather:weather
-
-                    })
-
-                }
-            );
-
-
-        /*
-          Response JSON
-        */
-
-        const contentType =
-            response.headers.get(
-                "content-type"
-            ) || "";
-
-        let data;
-
-        if(contentType.includes("application/json")){
-
-            data =
-                await response.json();
-
-        }else{
-
-            const text =
-                await response.text();
-
-            throw new Error(
-                text ||
-                "Server ने valid JSON नहीं दिया।"
-            );
-
-        }
-
-
-        if(!response.ok){
-
-            throw new Error(
-                data?.error ||
-                "Server error"
-            );
-
-        }
+            });
 
 
         const reply =
             data.reply ||
             data.message ||
             data.response ||
-            "मुझे अभी जवाब नहीं मिला।";
+            "KAIRA को अभी जवाब नहीं मिला।";
 
 
         hideTyping();
@@ -1304,28 +1343,61 @@ async function sendMessage(){
 
         updateUsage();
 
+
+        /*
+          Debug console
+        */
+
+        console.log(
+            "KAIRA API DEBUG:",
+            data
+        );
+
+
+        if(
+            data.memory
+        ){
+
+            console.log(
+                "KAIRA MEMORY:",
+                data.memory
+            );
+        }
+
+
         setStatus(
             "KAIRA ONLINE • Memory Active"
         );
 
-
-        /*
-          Hindi voice reply
-        */
 
         speak(reply);
 
 
     }catch(error){
 
-        console.error(error);
+        console.error(
+            "KAIRA REQUEST ERROR:",
+            error
+        );
 
         hideTyping();
 
+        const errorMessage =
+            error?.message ||
+            "Unknown server error";
+
+
         addMessage(
             "ai",
-            "माफ़ कीजिए बॉस 😕 अभी server से connection में problem आ रही है। एक बार फिर कोशिश करो।"
+            "माफ़ कीजिए बॉस 😕 KAIRA server से connect नहीं कर पाई।"
         );
+
+
+        showError(
+            "Technical error:\n" +
+            errorMessage
+        );
+
 
         setStatus(
             "Connection error"
@@ -1338,9 +1410,7 @@ async function sendMessage(){
         sendBtn.disabled = false;
 
         input.focus();
-
     }
-
 }
 
 
@@ -1348,241 +1418,174 @@ async function sendMessage(){
    WEBSITE COMMANDS
 ===================================================== */
 
-function handleVoiceCommand(text){
+function handleWebsiteCommand(text){
 
     const t =
-        text.toLowerCase().trim();
+        text
+            .toLowerCase()
+            .trim();
 
 
-    /*
-      YouTube
-    */
+    const websites = [
 
-    if(
-        t.includes("youtube") ||
-        t.includes("यूट्यूब")
+        {
+            names:[
+                "youtube खोलो",
+                "youtube open",
+                "यूट्यूब खोलो"
+            ],
+            url:
+                "https://www.youtube.com"
+        },
+
+        {
+            names:[
+                "google खोलो",
+                "google open",
+                "गूगल खोलो"
+            ],
+            url:
+                "https://www.google.com"
+        },
+
+        {
+            names:[
+                "instagram खोलो",
+                "instagram open",
+                "इंस्टाग्राम खोलो"
+            ],
+            url:
+                "https://www.instagram.com"
+        },
+
+        {
+            names:[
+                "whatsapp खोलो",
+                "whatsapp open",
+                "व्हाट्सएप खोलो"
+            ],
+            url:
+                "https://web.whatsapp.com"
+        },
+
+        {
+            names:[
+                "facebook खोलो",
+                "facebook open",
+                "फेसबुक खोलो"
+            ],
+            url:
+                "https://www.facebook.com"
+        },
+
+        {
+            names:[
+                "telegram खोलो",
+                "telegram open",
+                "टेलीग्राम खोलो"
+            ],
+            url:
+                "https://web.telegram.org"
+        },
+
+        {
+            names:[
+                "gmail खोलो",
+                "gmail open",
+                "जीमेल खोलो"
+            ],
+            url:
+                "https://mail.google.com"
+        },
+
+        {
+            names:[
+                "maps खोलो",
+                "map खोलो",
+                "maps open",
+                "मैप खोलो"
+            ],
+            url:
+                "https://maps.google.com"
+        },
+
+        {
+            names:[
+                "tradingview खोलो",
+                "tradingview open",
+                "trading view खोलो",
+                "ट्रेडिंग व्यू खोलो"
+            ],
+            url:
+                "https://www.tradingview.com"
+        },
+
+        {
+            names:[
+                "github खोलो",
+                "github open",
+                "गिटहब खोलो"
+            ],
+            url:
+                "https://github.com"
+        },
+
+        {
+            names:[
+                "vercel खोलो",
+                "vercel open",
+                "वर्सेल खोलो"
+            ],
+            url:
+                "https://vercel.com"
+        },
+
+        {
+            names:[
+                "neon खोलो",
+                "neon open",
+                "नियॉन खोलो"
+            ],
+            url:
+                "https://console.neon.tech"
+        },
+
+        {
+            names:[
+                "x खोलो",
+                "twitter खोलो",
+                "twitter open",
+                "ट्विटर खोलो"
+            ],
+            url:
+                "https://x.com"
+        }
+
+    ];
+
+
+    for(
+        const website of websites
     ){
 
-        openWebsite(
-            "https://www.youtube.com"
-        );
+        if(
+            website.names.some(
+                name =>
+                    t === name ||
+                    t.includes(name)
+            )
+        ){
 
-        return true;
-    }
+            openWebsite(
+                website.url
+            );
 
-
-    /*
-      Google
-    */
-
-    if(
-        t === "google खोलो" ||
-        t.includes("google open") ||
-        t.includes("गूगल खोलो")
-    ){
-
-        openWebsite(
-            "https://www.google.com"
-        );
-
-        return true;
-    }
-
-
-    /*
-      Instagram
-    */
-
-    if(
-        t.includes("instagram खोलो") ||
-        t.includes("इंस्टाग्राम खोलो") ||
-        t.includes("instagram open")
-    ){
-
-        openWebsite(
-            "https://www.instagram.com"
-        );
-
-        return true;
-    }
-
-
-    /*
-      WhatsApp
-    */
-
-    if(
-        t.includes("whatsapp खोलो") ||
-        t.includes("व्हाट्सएप खोलो") ||
-        t.includes("whatsapp open")
-    ){
-
-        openWebsite(
-            "https://web.whatsapp.com"
-        );
-
-        return true;
-    }
-
-
-    /*
-      Facebook
-    */
-
-    if(
-        t.includes("facebook खोलो") ||
-        t.includes("फेसबुक खोलो")
-    ){
-
-        openWebsite(
-            "https://www.facebook.com"
-        );
-
-        return true;
-    }
-
-
-    /*
-      Telegram
-    */
-
-    if(
-        t.includes("telegram खोलो") ||
-        t.includes("टेलीग्राम खोलो")
-    ){
-
-        openWebsite(
-            "https://web.telegram.org"
-        );
-
-        return true;
-    }
-
-
-    /*
-      Gmail
-    */
-
-    if(
-        t.includes("gmail खोलो") ||
-        t.includes("जीमेल खोलो")
-    ){
-
-        openWebsite(
-            "https://mail.google.com"
-        );
-
-        return true;
-    }
-
-
-    /*
-      Maps
-    */
-
-    if(
-        t.includes("maps खोलो") ||
-        t.includes("map खोलो") ||
-        t.includes("मैप खोलो")
-    ){
-
-        openWebsite(
-            "https://maps.google.com"
-        );
-
-        return true;
-    }
-
-
-    /*
-      TradingView
-    */
-
-    if(
-        t.includes("tradingview खोलो") ||
-        t.includes("trading view खोलो") ||
-        t.includes("ट्रेडिंग व्यू खोलो")
-    ){
-
-        openWebsite(
-            "https://www.tradingview.com"
-        );
-
-        return true;
-    }
-
-
-    /*
-      GitHub
-    */
-
-    if(
-        t.includes("github खोलो") ||
-        t.includes("गिटहब खोलो")
-    ){
-
-        openWebsite(
-            "https://github.com"
-        );
-
-        return true;
-    }
-
-
-    /*
-      Vercel
-    */
-
-    if(
-        t.includes("vercel खोलो") ||
-        t.includes("वर्सेल खोलो")
-    ){
-
-        openWebsite(
-            "https://vercel.com"
-        );
-
-        return true;
-    }
-
-
-    /*
-      Neon
-    */
-
-    if(
-        t.includes("neon खोलो") ||
-        t.includes("नियॉन खोलो")
-    ){
-
-        openWebsite(
-            "https://console.neon.tech"
-        );
-
-        return true;
-    }
-
-
-    /*
-      X / Twitter
-    */
-
-    if(
-        t === "x खोलो" ||
-        t.includes("twitter खोलो") ||
-        t.includes("ट्विटर खोलो")
-    ){
-
-        openWebsite(
-            "https://x.com"
-        );
-
-        return true;
+            return true;
+        }
     }
 
 
     return false;
-
 }
 
 
@@ -1592,23 +1595,23 @@ function handleVoiceCommand(text){
 
 function openWebsite(url){
 
-    const newWindow =
+    const popup =
         window.open(
             url,
-            "_blank"
+            "_blank",
+            "noopener,noreferrer"
         );
 
-    if(!newWindow){
+    if(!popup){
 
-        window.location.href = url;
-
+        window.location.href =
+            url;
     }
-
 }
 
 
 /* =====================================================
-   VOICE RECOGNITION
+   VOICE
 ===================================================== */
 
 function startVoice(){
@@ -1631,9 +1634,7 @@ function startVoice(){
     if(listening){
 
         if(recognition){
-
             recognition.stop();
-
         }
 
         return;
@@ -1668,7 +1669,6 @@ function startVoice(){
         function(){
 
             listening = true;
-
         };
 
 
@@ -1676,7 +1676,9 @@ function startVoice(){
         function(event){
 
             const transcript =
-                event.results[0][0].transcript;
+                event.results[0][0]
+                    .transcript
+                    .trim();
 
             input.value =
                 transcript;
@@ -1690,7 +1692,6 @@ function startVoice(){
             );
 
             sendMessage();
-
         };
 
 
@@ -1702,10 +1703,11 @@ function startVoice(){
                 event.error
             );
 
+            listening = false;
+
             setStatus(
                 "Voice में problem हुई"
             );
-
         };
 
 
@@ -1714,16 +1716,12 @@ function startVoice(){
 
             listening = false;
 
-            if(
-                !isSending
-            ){
+            if(!isSending){
 
                 setStatus(
                     "KAIRA तैयार है"
                 );
-
             }
-
         };
 
 
@@ -1740,14 +1738,12 @@ function startVoice(){
         setStatus(
             "Voice start नहीं हो पाई"
         );
-
     }
-
 }
 
 
 /* =====================================================
-   SPEECH SYNTHESIS
+   SPEECH
 ===================================================== */
 
 function speak(text){
@@ -1756,18 +1752,15 @@ function speak(text){
         !window.speechSynthesis ||
         !text
     ){
-
         return;
     }
-
 
     try{
 
         window.speechSynthesis.cancel();
 
-
         const cleanText =
-            text
+            String(text)
                 .replace(/[*#_`]/g,"")
                 .replace(/\n+/g," ");
 
@@ -1792,7 +1785,8 @@ function speak(text){
 
 
         const voices =
-            window.speechSynthesis.getVoices();
+            window.speechSynthesis
+                .getVoices();
 
 
         const hindiVoice =
@@ -1809,7 +1803,6 @@ function speak(text){
 
             utterance.voice =
                 hindiVoice;
-
         }
 
 
@@ -1823,9 +1816,7 @@ function speak(text){
             "Speech error:",
             error
         );
-
     }
-
 }
 
 
@@ -1835,33 +1826,48 @@ function speak(text){
 
 async function openCamera(){
 
+    if(
+        !navigator.mediaDevices ||
+        !navigator.mediaDevices.getUserMedia
+    ){
+
+        alert(
+            "इस Browser में Camera उपलब्ध नहीं है।"
+        );
+
+        return;
+    }
+
+
     cameraModal.classList.add(
         "show"
     );
 
+
     try{
 
         cameraStream =
-            await navigator.mediaDevices.getUserMedia({
+            await navigator
+                .mediaDevices
+                .getUserMedia({
 
-                video:{
-                    facingMode:{
-                        ideal:"environment"
+                    video:{
+                        facingMode:{
+                            ideal:
+                                "environment"
+                        },
+
+                        width:{
+                            ideal:1280
+                        },
+
+                        height:{
+                            ideal:720
+                        }
                     },
 
-                    width:{
-                        ideal:1280
-                    },
-
-                    height:{
-                        ideal:720
-                    }
-
-                },
-
-                audio:false
-
-            });
+                    audio:false
+                });
 
 
         cameraVideo.srcObject =
@@ -1869,22 +1875,30 @@ async function openCamera(){
 
         await cameraVideo.play();
 
+        cameraVideo.style.display =
+            "block";
+
+        cameraCanvas.style.display =
+            "none";
+
+
         setStatus(
             "Camera ON"
         );
 
     }catch(error){
 
-        console.error(error);
+        console.error(
+            "Camera error:",
+            error
+        );
 
         closeCamera();
 
         alert(
             "Camera permission नहीं मिली या camera उपलब्ध नहीं है।"
         );
-
     }
-
 }
 
 
@@ -1904,7 +1918,6 @@ function closeCamera(){
             );
 
         cameraStream = null;
-
     }
 
 
@@ -1914,12 +1927,11 @@ function closeCamera(){
     cameraModal.classList.remove(
         "show"
     );
-
 }
 
 
 /* =====================================================
-   CAPTURE CAMERA
+   CAPTURE
 ===================================================== */
 
 function captureCurrentFrame(){
@@ -1969,12 +1981,11 @@ function captureCurrentFrame(){
     setStatus(
         "Photo captured"
     );
-
 }
 
 
 /* =====================================================
-   ANALYZE CAMERA
+   CAMERA VISION
 ===================================================== */
 
 async function analyzeCamera(){
@@ -2039,44 +2050,19 @@ async function analyzeCamera(){
 
     try{
 
-        const response =
-            await fetch(
-                "/api/chat",
-                {
-                    method:"POST",
-
-                    headers:{
-                        "Content-Type":
-                            "application/json"
-                    },
-
-                    body:JSON.stringify({
-
-                        message:
-                            "इस image को ध्यान से analyze करके हिंदी में बताओ कि इसमें क्या दिखाई दे रहा है।",
-
-                        userId:userId,
-
-                        image:image
-
-                    })
-
-                }
-            );
-
-
         const data =
-            await response.json();
+            await apiRequest({
 
+                message:
+                    "इस image को ध्यान से analyze करके हिंदी में बताओ कि इसमें क्या दिखाई दे रहा है।",
 
-        if(!response.ok){
+                userId:
+                    KAIRA_USER_ID,
 
-            throw new Error(
-                data?.error ||
-                "Vision error"
-            );
+                image:
+                    image
 
-        }
+            });
 
 
         const reply =
@@ -2106,7 +2092,10 @@ async function analyzeCamera(){
 
     }catch(error){
 
-        console.error(error);
+        console.error(
+            "Camera Vision error:",
+            error
+        );
 
         hideTyping();
 
@@ -2115,12 +2104,15 @@ async function analyzeCamera(){
             "माफ़ कीजिए बॉस, image analyze करते समय problem आ गई।"
         );
 
+        showError(
+            "Camera Vision error:\n" +
+            (error?.message || "Unknown error")
+        );
+
         setStatus(
             "Vision error"
         );
-
     }
-
 }
 
 
@@ -2151,13 +2143,14 @@ async function analyzeScreen(){
 
 
         screenStream =
-            await navigator.mediaDevices.getDisplayMedia({
+            await navigator
+                .mediaDevices
+                .getDisplayMedia({
 
-                video:true,
+                    video:true,
 
-                audio:false
-
-            });
+                    audio:false
+                });
 
 
         const video =
@@ -2183,9 +2176,20 @@ async function analyzeScreen(){
             resolve =>
                 setTimeout(
                     resolve,
-                    500
+                    700
                 )
         );
+
+
+        if(
+            !video.videoWidth ||
+            !video.videoHeight
+        ){
+
+            throw new Error(
+                "Screen frame प्राप्त नहीं हुआ।"
+            );
+        }
 
 
         const canvas =
@@ -2246,44 +2250,19 @@ async function analyzeScreen(){
         );
 
 
-        const response =
-            await fetch(
-                "/api/chat",
-                {
-                    method:"POST",
-
-                    headers:{
-                        "Content-Type":
-                            "application/json"
-                    },
-
-                    body:JSON.stringify({
-
-                        message:
-                            "इस screen को ध्यान से analyze करके हिंदी में बताओ कि इसमें क्या है और अगर कोई important information/error दिखाई दे तो बताओ।",
-
-                        userId:userId,
-
-                        image:image
-
-                    })
-
-                }
-            );
-
-
         const data =
-            await response.json();
+            await apiRequest({
 
+                message:
+                    "इस screen को ध्यान से analyze करके हिंदी में बताओ कि इसमें क्या है और अगर कोई important information या error दिखाई दे तो बताओ।",
 
-        if(!response.ok){
+                userId:
+                    KAIRA_USER_ID,
 
-            throw new Error(
-                data?.error ||
-                "Screen vision error"
-            );
+                image:
+                    image
 
-        }
+            });
 
 
         const reply =
@@ -2313,7 +2292,11 @@ async function analyzeScreen(){
 
     }catch(error){
 
-        console.error(error);
+        console.error(
+            "Screen Vision error:",
+            error
+        );
+
 
         if(screenStream){
 
@@ -2325,8 +2308,8 @@ async function analyzeScreen(){
                 );
 
             screenStream = null;
-
         }
+
 
         hideTyping();
 
@@ -2335,12 +2318,17 @@ async function analyzeScreen(){
             "Screen Vision cancel हो गया या browser ने permission नहीं दी।"
         );
 
+
+        showError(
+            "Screen Vision error:\n" +
+            (error?.message || "Unknown error")
+        );
+
+
         setStatus(
             "Screen Vision बंद"
         );
-
     }
-
 }
 
 
@@ -2348,63 +2336,43 @@ async function analyzeScreen(){
    LOAD HISTORY
 ===================================================== */
 
-async function loadMemory(){
+async function loadHistory(){
 
     if(historyLoaded){
         return;
     }
 
+
     try{
 
-        const response =
-            await fetch(
-                "/api/chat",
-                {
-                    method:"POST",
-
-                    headers:{
-                        "Content-Type":
-                            "application/json"
-                    },
-
-                    body:JSON.stringify({
-
-                        action:"history",
-
-                        userId:userId
-
-                    })
-
-                }
-            );
-
-
-        if(!response.ok){
-            return;
-        }
-
-
         const data =
-            await response.json();
+            await apiRequest({
+
+                action:
+                    "history",
+
+                userId:
+                    KAIRA_USER_ID
+
+            });
 
 
         const history =
-            Array.isArray(data.history)
+            Array.isArray(
+                data.history
+            )
                 ? data.history
                 : [];
 
 
-        if(history.length > 0){
+        if(history.length){
 
             if(welcome){
+
                 welcome.style.display =
                     "none";
             }
 
-
-            /*
-              पुराने messages
-            */
 
             history.forEach(
                 item => {
@@ -2424,93 +2392,86 @@ async function loadMemory(){
 
                         item.message
                     );
-
                 }
             );
-
         }
 
 
         historyLoaded = true;
 
 
-        setStatus(
-            "KAIRA ONLINE • Memory Active"
+        console.log(
+            "KAIRA history loaded:",
+            history.length
         );
 
 
     }catch(error){
 
-        console.log(
-            "History load error:",
+        console.error(
+            "History error:",
             error
         );
 
+        showError(
+            "History load error:\n" +
+            (error?.message || "Unknown error")
+        );
     }
-
 }
 
 
 /* =====================================================
-   CHECK MEMORY
+   LOAD MEMORIES
 ===================================================== */
 
-async function checkMemory(){
+async function loadMemories(){
 
     try{
 
-        const response =
-            await fetch(
-                "/api/chat",
-                {
-                    method:"POST",
-
-                    headers:{
-                        "Content-Type":
-                            "application/json"
-                    },
-
-                    body:JSON.stringify({
-
-                        action:"memories",
-
-                        userId:userId
-
-                    })
-
-                }
-            );
-
-
-        if(!response.ok){
-            return;
-        }
-
-
         const data =
-            await response.json();
+            await apiRequest({
+
+                action:
+                    "memories",
+
+                userId:
+                    KAIRA_USER_ID
+
+            });
 
 
         console.log(
-            "KAIRA memories:",
+            "KAIRA permanent memories:",
             data.memories
         );
 
 
+        console.log(
+            "KAIRA memory debug:",
+            data.memory ||
+            data.debug ||
+            null
+        );
+
+
     }catch(error){
 
-        console.log(
+        console.error(
             "Memory check error:",
             error
         );
 
+        showError(
+            "Memory check error:\n" +
+            (error?.message || "Unknown error")
+        );
     }
-
 }
 
 
 /* =====================================================
-   CAMERA MODAL OUTSIDE CLICK
+   CAMERA OUTSIDE CLICK
 ===================================================== */
 
 cameraModal.addEventListener(
@@ -2518,19 +2479,18 @@ cameraModal.addEventListener(
     function(event){
 
         if(
-            event.target === cameraModal
+            event.target ===
+            cameraModal
         ){
 
             closeCamera();
-
         }
-
     }
 );
 
 
 /* =====================================================
-   PAGE VISIBILITY
+   VISIBILITY
 ===================================================== */
 
 document.addEventListener(
@@ -2543,15 +2503,13 @@ document.addEventListener(
         ){
 
             window.speechSynthesis.cancel();
-
         }
-
     }
 );
 
 
 /* =====================================================
-   PAGE UNLOAD CLEANUP
+   CLEANUP
 ===================================================== */
 
 window.addEventListener(
@@ -2566,8 +2524,8 @@ window.addEventListener(
                     track =>
                         track.stop()
                 );
-
         }
+
 
         if(screenStream){
 
@@ -2577,23 +2535,21 @@ window.addEventListener(
                     track =>
                         track.stop()
                 );
-
         }
+
 
         if(
             window.speechSynthesis
         ){
 
             window.speechSynthesis.cancel();
-
         }
-
     }
 );
 
 
 /* =====================================================
-   LOAD HINDI VOICES
+   VOICES
 ===================================================== */
 
 if(
@@ -2605,14 +2561,12 @@ if(
 
             window.speechSynthesis
                 .getVoices();
-
         };
-
 }
 
 
 /* =====================================================
-   START
+   START KAIRA
 ===================================================== */
 
 (async function(){
@@ -2621,19 +2575,24 @@ if(
         "KAIRA memory check कर रही है..."
     );
 
-    await checkMemory();
 
-    await loadMemory();
+    await loadMemories();
+
+
+    await loadHistory();
+
 
     setStatus(
         "KAIRA ONLINE • Memory Active"
     );
 
+
     input.focus();
 
 })();
-
 </script>
 
+</div>
+
 </body>
-    </html>
+        </html>
