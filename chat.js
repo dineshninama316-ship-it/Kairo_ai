@@ -1,26 +1,25 @@
 /**
  * =========================================================
- * KAIRA AI — FINAL BACKEND v5
+ * KAIRA AI — STABLE BACKEND v6
  * =========================================================
  *
- * Groq + Neon Permanent Memory
- * - Name Memory
- * - Multiple Preferences
- * - Goals
- * - About User
- * - Chat History
- * - Weather
- * - Trading
- * - Vision
- * - Hindi/Hinglish
- *
- * File:
- * api/chat.js
+ * Groq + Neon
+ * ✅ Permanent Memory
+ * ✅ Name Memory
+ * ✅ Multiple Preferences
+ * ✅ Goals
+ * ✅ About User
+ * ✅ Chat History
+ * ✅ Weather Context
+ * ✅ Trading Context
+ * ✅ Vision
+ * ✅ Single User ID Protection
+ * ✅ Fresh Memory Reload
+ * ✅ Memory Diagnostics
  * =========================================================
  */
 
 import { neon } from "@neondatabase/serverless";
-
 
 /* =========================================================
    CONFIG
@@ -35,6 +34,16 @@ const TEXT_MODEL =
 const VISION_MODEL =
     "qwen/qwen3.6-27b";
 
+/*
+ * अभी KAIRA single-user mode में है।
+ *
+ * Frontend चाहे कोई भी userId भेजे,
+ * backend हमेशा इसी user की memory इस्तेमाल करेगा।
+ *
+ * इससे userId mismatch की समस्या खत्म होगी।
+ */
+const KAIRA_USER_ID = "test-user";
+
 
 /* =========================================================
    DATABASE
@@ -46,14 +55,16 @@ const DATABASE_URL =
     process.env.POSTGRES_PRISMA_URL;
 
 if (!DATABASE_URL) {
-    throw new Error("DATABASE_URL is not configured.");
+    throw new Error(
+        "DATABASE_URL is not configured."
+    );
 }
 
 const sql = neon(DATABASE_URL);
 
 
 /* =========================================================
-   HELPERS
+   BASIC HELPERS
 ========================================================= */
 
 function cleanText(value) {
@@ -69,25 +80,11 @@ function cleanText(value) {
 }
 
 
-function getUserId(body) {
-
-    /*
-     * अभी single-user mode.
-     * Neon memory भी इसी ID पर रहेगी।
-     */
-
-    const id =
-        cleanText(body?.userId);
-
-    return id || "test-user";
-}
-
-
 function normalizeText(text) {
 
     return cleanText(text)
         .toLowerCase()
-        .replace(/[।!?,"']/g, " ")
+        .replace(/[।!?,"'`]/g, " ")
         .replace(/\s+/g, " ")
         .trim();
 }
@@ -104,7 +101,75 @@ function safeJsonParse(text) {
 
 
 /* =========================================================
-   INTENT
+   USER ID
+========================================================= */
+
+function getUserId() {
+
+    /*
+     * IMPORTANT:
+     * अभी single-user system है।
+     *
+     * Frontend से आने वाले userId को ignore करके
+     * हमेशा test-user इस्तेमाल करेंगे।
+     */
+
+    return KAIRA_USER_ID;
+}
+
+
+/* =========================================================
+   CORS
+========================================================= */
+
+function corsHeaders() {
+
+    return {
+
+        "Access-Control-Allow-Origin": "*",
+
+        "Access-Control-Allow-Methods":
+            "POST, OPTIONS",
+
+        "Access-Control-Allow-Headers":
+            "Content-Type",
+
+        "Access-Control-Max-Age":
+            "86400"
+    };
+}
+
+
+/* =========================================================
+   RESPONSE
+========================================================= */
+
+function jsonResponse(
+    body,
+    status = 200
+) {
+
+    return new Response(
+        JSON.stringify(body),
+        {
+            status,
+
+            headers: {
+                "Content-Type":
+                    "application/json",
+
+                "Cache-Control":
+                    "no-store",
+
+                ...corsHeaders()
+            }
+        }
+    );
+}
+
+
+/* =========================================================
+   INTENT DETECTION
 ========================================================= */
 
 function detectIntent(
@@ -115,6 +180,10 @@ function detectIntent(
     const text =
         normalizeText(message);
 
+
+    /* =========================
+       VISION
+    ========================= */
 
     if (hasImage) {
         return "vision";
@@ -128,6 +197,8 @@ function detectIntent(
     if (
 
         text.includes("मेरा नाम क्या") ||
+
+        text.includes("मेरा नाम कौन") ||
 
         (
             text.includes("मेरा नाम") &&
@@ -149,6 +220,10 @@ function detectIntent(
         text.includes("मेरा लक्ष्य") ||
 
         text.includes("मेरे बारे में") ||
+
+        text.includes("मेरे बारे मे") ||
+
+        text.includes("आप मेरे बारे में क्या जानते") ||
 
         text.includes("what is my name") ||
 
@@ -180,13 +255,21 @@ function detectIntent(
 
         text.includes("याद रखना है") ||
 
+        text.includes("इसे याद") ||
+
+        text.includes("इसे याद रखना") ||
+
+        text.includes("इसे याद रखो") ||
+
         text.includes("remember this") ||
 
         text.includes("remember it") ||
 
         text.includes("save this") ||
 
-        text.includes("don't forget")
+        text.includes("don't forget") ||
+
+        text.includes("dont forget")
 
     ) {
 
@@ -201,9 +284,13 @@ function detectIntent(
     if (
 
         text.includes("मौसम") ||
+
         text.includes("weather") ||
+
         text.includes("बारिश") ||
+
         text.includes("तापमान") ||
+
         text.includes("temperature")
 
     ) {
@@ -224,8 +311,10 @@ function detectIntent(
         text.includes("crypto") ||
         text.includes("bitcoin") ||
         text.includes("btc") ||
+        text.includes("eth") ||
         text.includes("nifty") ||
         text.includes("banknifty") ||
+        text.includes("sensex") ||
         text.includes("support") ||
         text.includes("resistance") ||
         text.includes("fibonacci") ||
@@ -234,7 +323,10 @@ function detectIntent(
         text.includes("buy") ||
         text.includes("sell") ||
         text.includes("long") ||
-        text.includes("short")
+        text.includes("short") ||
+        text.includes("indicator") ||
+        text.includes("rsi") ||
+        text.includes("macd")
 
     ) {
 
@@ -247,30 +339,112 @@ function detectIntent(
 
 
 /* =========================================================
-   MEMORY EXTRACTION
+   REMOVE MEMORY COMMAND
 ========================================================= */
 
 function removeRememberWords(text) {
 
     return cleanText(text)
 
-        .replace(/इसे\s+याद\s+रखना/gi, "")
-        .replace(/इसे\s+याद\s+रखो/gi, "")
-        .replace(/इसे\s+याद\s+रख/gi, "")
+        .replace(
+            /इसे\s+याद\s+रखना\s+है/giu,
+            ""
+        )
 
-        .replace(/याद\s+रखना\s+है/gi, "")
-        .replace(/याद\s+रखना/gi, "")
-        .replace(/याद\s+रखो/gi, "")
-        .replace(/याद\s+रख/gi, "")
+        .replace(
+            /इसे\s+याद\s+रखना/giu,
+            ""
+        )
 
-        .replace(/remember\s+this/gi, "")
-        .replace(/remember\s+it/gi, "")
-        .replace(/save\s+this/gi, "")
-        .replace(/don't\s+forget/gi, "")
+        .replace(
+            /इसे\s+याद\s+रखो/giu,
+            ""
+        )
+
+        .replace(
+            /इसे\s+याद\s+रख/giu,
+            ""
+        )
+
+        .replace(
+            /याद\s+रखना\s+है/giu,
+            ""
+        )
+
+        .replace(
+            /याद\s+रखना/giu,
+            ""
+        )
+
+        .replace(
+            /याद\s+रखो/giu,
+            ""
+        )
+
+        .replace(
+            /याद\s+रख/giu,
+            ""
+        )
+
+        .replace(
+            /remember\s+this/gi,
+            ""
+        )
+
+        .replace(
+            /remember\s+it/gi,
+            ""
+        )
+
+        .replace(
+            /save\s+this/gi,
+            ""
+        )
+
+        .replace(
+            /don't\s+forget/gi,
+            ""
+        )
+
+        .replace(
+            /dont\s+forget/gi,
+            ""
+        )
+
+        .replace(
+            /\s+/g,
+            " "
+        )
 
         .trim();
 }
 
+
+/* =========================================================
+   NORMALIZE MEMORY VALUE
+========================================================= */
+
+function normalizeMemoryValue(value) {
+
+    return cleanText(value)
+
+        .replace(
+            /^[\s:：\-]+/,
+            ""
+        )
+
+        .replace(
+            /[।.!?]+$/g,
+            ""
+        )
+
+        .trim();
+}
+
+
+/* =========================================================
+   MEMORY EXTRACTION
+========================================================= */
 
 function extractMemory(message) {
 
@@ -285,28 +459,32 @@ function extractMemory(message) {
     const text =
         removeRememberWords(original);
 
+    if (!text) {
+        return null;
+    }
+
 
     /* =====================================================
-       NAME
+       NAME — HINDI
     ===================================================== */
 
     let match =
         text.match(
-            /^मेरा\s+नाम(?:\s+है)?\s*[:\-]?\s*(.+?)\s*$/iu
+            /^मेरा\s+नाम\s*(?:है\s*)?[:\-]?\s*(.+?)\s*$/iu
         );
-
 
     if (match) {
 
         let value =
-            cleanText(match[1]);
-
+            normalizeMemoryValue(
+                match[1]
+            );
 
         value =
-            value
-                .replace(/\s+(है|हूँ|हूं|हो)$/iu, "")
-                .trim();
-
+            value.replace(
+                /\s+(है|हूँ|हूं|हो)$/iu,
+                ""
+            ).trim();
 
         if (value) {
 
@@ -314,25 +492,25 @@ function extractMemory(message) {
                 key: "name",
                 value
             };
-
         }
-
     }
 
+
+    /* =====================================================
+       NAME — ENGLISH
+    ===================================================== */
 
     match =
         text.match(
             /^my\s+name\s+is\s+(.+)$/i
         );
 
-
     if (match) {
 
         const value =
-            cleanText(match[1])
-                .replace(/\s+(is)$/i, "")
-                .trim();
-
+            normalizeMemoryValue(
+                match[1]
+            );
 
         if (value) {
 
@@ -340,14 +518,12 @@ function extractMemory(message) {
                 key: "name",
                 value
             };
-
         }
-
     }
 
 
     /* =====================================================
-       I AM / मैं
+       "I AM AJAY"
     ===================================================== */
 
     match =
@@ -355,14 +531,12 @@ function extractMemory(message) {
             /^(?:i\s+am|i'm)\s+(.+)$/i
         );
 
-
     if (match) {
 
         const value =
-            cleanText(match[1])
-                .replace(/\s+(हूँ|हूं|है)$/iu, "")
-                .trim();
-
+            normalizeMemoryValue(
+                match[1]
+            );
 
         if (value) {
 
@@ -370,14 +544,12 @@ function extractMemory(message) {
                 key: "name",
                 value
             };
-
         }
-
     }
 
 
     /* =====================================================
-       PREFERENCES
+       PREFERENCE PATTERNS
     ===================================================== */
 
     const preferencePatterns = [
@@ -392,12 +564,15 @@ function extractMemory(message) {
 
         /^मैं\s+(.+?)\s+पसंद\s+करता\s+हूं$/iu,
 
+        /^मैं\s+(.+?)\s+पसंद\s+करता$/iu,
+
         /^i\s+like\s+(.+)$/i,
 
         /^i\s+love\s+(.+)$/i,
 
-        /^my\s+favorite\s+is\s+(.+)$/i
+        /^my\s+favorite\s+is\s+(.+)$/i,
 
+        /^my\s+favourite\s+is\s+(.+)$/i
     ];
 
 
@@ -409,22 +584,24 @@ function extractMemory(message) {
         const found =
             text.match(pattern);
 
-
         if (!found) {
             continue;
         }
 
 
-        let value =
-            cleanText(found[1])
-                .replace(/[।.!?]+$/g, "")
-                .trim();
-
+        const value =
+            normalizeMemoryValue(
+                found[1]
+            );
 
         if (!value) {
             continue;
         }
 
+
+        /*
+         * Preference key सुरक्षित तरीके से बनाना।
+         */
 
         const normalizedValue =
             value
@@ -437,7 +614,7 @@ function extractMemory(message) {
                     /^_+|_+$/g,
                     ""
                 )
-                .slice(0, 50);
+                .slice(0, 60);
 
 
         return {
@@ -446,9 +623,7 @@ function extractMemory(message) {
                 `preference_${normalizedValue || "general"}`,
 
             value
-
         };
-
     }
 
 
@@ -458,16 +633,15 @@ function extractMemory(message) {
 
     const goalPatterns = [
 
-        /^मेरा\s+goal\s+(.+)$/iu,
+        /^मेरा\s+goal\s*(?:है)?\s*(.+)$/iu,
 
-        /^मेरा\s+गोल\s+(.+)$/iu,
+        /^मेरा\s+गोल\s*(?:है)?\s*(.+)$/iu,
 
-        /^मेरा\s+लक्ष्य\s+(.+)$/iu,
+        /^मेरा\s+लक्ष्य\s*(?:है)?\s*(.+)$/iu,
 
         /^my\s+goal\s+is\s+(.+)$/i,
 
         /^i\s+want\s+to\s+(.+)$/i
-
     ];
 
 
@@ -479,17 +653,15 @@ function extractMemory(message) {
         const found =
             text.match(pattern);
 
-
         if (!found) {
             continue;
         }
 
 
         const value =
-            cleanText(found[1])
-                .replace(/[।.!?]+$/g, "")
-                .trim();
-
+            normalizeMemoryValue(
+                found[1]
+            );
 
         if (value) {
 
@@ -498,11 +670,8 @@ function extractMemory(message) {
                 key: "goal",
 
                 value
-
             };
-
         }
-
     }
 
 
@@ -525,7 +694,6 @@ async function saveMemory(
     ) {
 
         return false;
-
     }
 
 
@@ -558,6 +726,7 @@ async function saveMemory(
 
             updated_at =
                 NOW()
+
     `;
 
 
@@ -566,7 +735,7 @@ async function saveMemory(
 
 
 /* =========================================================
-   LOAD MEMORIES
+   LOAD MEMORY
 ========================================================= */
 
 async function loadMemories(
@@ -591,10 +760,12 @@ async function loadMemories(
 
             ORDER BY
                 updated_at DESC
+
         `;
 
-
-    return rows || [];
+    return Array.isArray(rows)
+        ? rows
+        : [];
 }
 
 
@@ -611,8 +782,9 @@ function buildMemoryContext(
         memories.length === 0
     ) {
 
-        return "कोई permanent memory उपलब्ध नहीं है।";
-
+        return (
+            "कोई permanent memory उपलब्ध नहीं है।"
+        );
     }
 
 
@@ -630,7 +802,72 @@ function buildMemoryContext(
         )
 
         .join("\n");
+}
 
+
+/* =========================================================
+   MEMORY DEBUG SUMMARY
+========================================================= */
+
+function buildMemoryDebug(
+    memories
+) {
+
+    const rows =
+        Array.isArray(memories)
+            ? memories
+            : [];
+
+
+    const name =
+        rows.find(
+            item =>
+                item.memory_key === "name"
+        )?.memory_value || null;
+
+
+    const preferences =
+        rows
+
+            .filter(
+                item =>
+                    typeof item?.memory_key === "string" &&
+                    item.memory_key.startsWith(
+                        "preference_"
+                    )
+            )
+
+            .map(
+                item =>
+                    cleanText(
+                        item.memory_value
+                    )
+            )
+
+            .filter(Boolean);
+
+
+    const goal =
+        rows.find(
+            item =>
+                item.memory_key === "goal"
+        )?.memory_value || null;
+
+
+    return {
+
+        userId: KAIRA_USER_ID,
+
+        memoryCount:
+            rows.length,
+
+        name,
+
+        preferences:
+            [...new Set(preferences)],
+
+        goal
+    };
 }
 
 
@@ -661,6 +898,8 @@ function getDirectMemoryReply(
 
         text.includes("मेरा नाम क्या") ||
 
+        text.includes("मेरा नाम कौन") ||
+
         text.includes("what is my name") ||
 
         (
@@ -680,23 +919,25 @@ function getDirectMemoryReply(
 
         if (
             name &&
-            cleanText(name.memory_value)
+            cleanText(
+                name.memory_value
+            )
         ) {
 
-            return `आपका नाम ${name.memory_value} है 😊`;
-
+            return (
+                `आपका नाम ${name.memory_value} है 😊`
+            );
         }
 
 
         return (
             "अभी मेरी permanent memory में आपका नाम सेव नहीं है।"
         );
-
     }
 
 
     /* =====================================================
-       PREFERENCES
+       PREFERENCE
     ===================================================== */
 
     const askingPreference =
@@ -719,18 +960,17 @@ function getDirectMemoryReply(
 
                 .filter(
                     item =>
-                        item?.memory_key === "preference" ||
-                        (
-                            typeof item?.memory_key === "string" &&
-                            item.memory_key.startsWith(
-                                "preference_"
-                            )
+                        typeof item?.memory_key === "string" &&
+                        item.memory_key.startsWith(
+                            "preference_"
                         )
                 )
 
                 .map(
                     item =>
-                        cleanText(item.memory_value)
+                        cleanText(
+                            item.memory_value
+                        )
                 )
 
                 .filter(Boolean);
@@ -749,25 +989,12 @@ function getDirectMemoryReply(
             return (
                 "अभी मेरी permanent memory में आपकी कोई पसंद सेव नहीं है।"
             );
-
-        }
-
-
-        if (
-            uniquePreferences.length === 1
-        ) {
-
-            return (
-                `मुझे याद है कि आपको ${uniquePreferences[0]} पसंद है 😊`
-            );
-
         }
 
 
         return (
             `मुझे याद है कि आपको ${uniquePreferences.join(", ")} पसंद है 😊`
         );
-
     }
 
 
@@ -797,30 +1024,34 @@ function getDirectMemoryReply(
 
         if (
             goal &&
-            cleanText(goal.memory_value)
+            cleanText(
+                goal.memory_value
+            )
         ) {
 
             return (
                 `आपका goal है: ${goal.memory_value} 🎯`
             );
-
         }
 
 
         return (
             "अभी मेरी permanent memory में आपका goal सेव नहीं है।"
         );
-
     }
 
 
     /* =====================================================
-       ABOUT USER
+       ABOUT
     ===================================================== */
 
     const askingAbout =
 
         text.includes("मेरे बारे में") ||
+
+        text.includes("मेरे बारे मे") ||
+
+        text.includes("आप मेरे बारे में क्या जानते") ||
 
         text.includes("what do you know about me");
 
@@ -832,7 +1063,6 @@ function getDirectMemoryReply(
             return (
                 "अभी मेरी permanent memory में आपके बारे में कोई जानकारी सेव नहीं है।"
             );
-
         }
 
 
@@ -848,18 +1078,17 @@ function getDirectMemoryReply(
 
                 .filter(
                     item =>
-                        item?.memory_key === "preference" ||
-                        (
-                            typeof item?.memory_key === "string" &&
-                            item.memory_key.startsWith(
-                                "preference_"
-                            )
+                        typeof item?.memory_key === "string" &&
+                        item.memory_key.startsWith(
+                            "preference_"
                         )
                 )
 
                 .map(
                     item =>
-                        cleanText(item.memory_value)
+                        cleanText(
+                            item.memory_value
+                        )
                 )
 
                 .filter(Boolean);
@@ -880,20 +1109,16 @@ function getDirectMemoryReply(
             parts.push(
                 `नाम: ${name}`
             );
-
         }
 
 
         if (preferences.length) {
 
             parts.push(
-                `पसंद: ${
-                    [
-                        ...new Set(preferences)
-                    ].join(", ")
-                }`
+                `पसंद: ${[
+                    ...new Set(preferences)
+                ].join(", ")}`
             );
-
         }
 
 
@@ -902,7 +1127,6 @@ function getDirectMemoryReply(
             parts.push(
                 `Goal: ${goal}`
             );
-
         }
 
 
@@ -911,7 +1135,6 @@ function getDirectMemoryReply(
             return (
                 "मेरी permanent memory में अभी personal information उपलब्ध नहीं है।"
             );
-
         }
 
 
@@ -919,7 +1142,6 @@ function getDirectMemoryReply(
             "मुझे आपके बारे में यह याद है:\n\n" +
             parts.join("\n")
         );
-
     }
 
 
@@ -945,49 +1167,42 @@ function buildWeatherContext(
     ) {
 
         return weather;
-
     }
 
 
     return `
 
 Live Weather:
-Location: ${
-        weather.location ||
-        weather.city ||
-        "Unknown"
-    }
 
-Temperature: ${
-        weather.temperature ??
-        weather.temp ??
-        "Unknown"
-    }°C
+Location:
+${weather.location ||
+    weather.city ||
+    "Unknown"}
 
-Feels Like: ${
-        weather.feelsLike ??
-        "Unknown"
-    }°C
+Temperature:
+${weather.temperature ??
+    weather.temp ??
+    "Unknown"}°C
 
-Humidity: ${
-        weather.humidity ??
-        "Unknown"
-    }%
+Feels Like:
+${weather.feelsLike ??
+    "Unknown"}°C
 
-Wind: ${
-        weather.wind ??
-        "Unknown"
-    }
+Humidity:
+${weather.humidity ??
+    "Unknown"}%
 
-Weather Code: ${
-        weather.code ??
-        weather.weatherCode ??
-        weather.weathercode ??
-        "Unknown"
-    }
+Wind:
+${weather.wind ??
+    "Unknown"}
+
+Weather Code:
+${weather.code ??
+    weather.weatherCode ??
+    weather.weathercode ??
+    "Unknown"}
 
 `;
-
 }
 
 
@@ -1008,51 +1223,56 @@ You are KAIRA AI.
 You are the user's personal AI assistant and digital partner.
 
 IDENTITY:
+
 - Your name is KAIRA.
 - You are an AI assistant.
-- Be friendly, caring, natural and helpful.
+- Be friendly, natural and helpful.
 - Use Hindi/Hinglish when the user does.
 - You may call the user "बॉस" naturally, but do not overuse it.
 
-USER PERMANENT MEMORY:
+PERMANENT USER MEMORY:
 
 ${memoryContext}
 
 MEMORY RULES:
 
-1. The memory above is trusted information provided by the user.
-2. Never invent personal information.
-3. If the requested information exists in memory, use it.
-4. If it does not exist, honestly say that it is not stored.
-5. Do not contradict stored memory.
-6. Preferences may contain multiple items.
-7. Name, goal and preferences are permanent memory.
+1. The memory above comes from the user's Neon permanent memory.
+2. Treat it as trusted user-provided information.
+3. Never invent personal information.
+4. Never say you forgot information that is present in memory.
+5. If information exists in memory, use it.
+6. If information does not exist, honestly say it is not stored.
+7. Do not contradict stored memory.
+8. Multiple preferences may exist.
 
 WEATHER:
 
 ${weatherContext || "No live weather information."}
 
 GENERAL:
+
 - Answer clearly.
-- Hindi/Hinglish is preferred for Hindi users.
-- Don't unnecessarily repeat questions.
-- Don't pretend to have performed actions that you did not perform.
+- Prefer Hindi/Hinglish for Hindi users.
+- Do not unnecessarily repeat questions.
+- Never claim an action happened if it did not happen.
 
 TRADING:
-- Explain support, resistance, Fibonacci, indicators, trend and risk/reward.
+
+- Explain trend, support, resistance, Fibonacci, indicators and risk/reward.
 - Never guarantee profit.
 - Never claim 100% accuracy.
-- Separate analysis from certainty.
+- Clearly separate analysis from certainty.
 
 VISION:
-- Only describe what is actually visible.
-- If an image is unclear, say so.
+
+- Describe only what is actually visible.
+- If the image is unclear, say so.
 
 CURRENT INTENT:
+
 ${intent}
 
 `;
-
 }
 
 
@@ -1076,7 +1296,6 @@ async function askGroq({
         throw new Error(
             "GROQ_API_KEY is not configured."
         );
-
     }
 
 
@@ -1094,7 +1313,6 @@ async function askGroq({
 
                     "Authorization":
                         `Bearer ${apiKey}`
-
                 },
 
                 body:
@@ -1108,9 +1326,7 @@ async function askGroq({
 
                         max_tokens:
                             maxTokens
-
                     })
-
             }
         );
 
@@ -1131,7 +1347,6 @@ async function askGroq({
             raw ||
             `Groq error ${response.status}`
         );
-
     }
 
 
@@ -1144,17 +1359,15 @@ async function askGroq({
         throw new Error(
             "Groq returned empty response."
         );
-
     }
 
 
     return cleanText(answer);
-
 }
 
 
 /* =========================================================
-   CONVERSATION
+   CONVERSATION SAVE
 ========================================================= */
 
 async function saveConversation(
@@ -1189,9 +1402,12 @@ async function saveConversation(
         )
 
     `;
-
 }
 
+
+/* =========================================================
+   HISTORY
+========================================================= */
 
 async function loadHistory(
     userId,
@@ -1231,9 +1447,10 @@ async function loadHistory(
 
 
     return (
-        rows || []
-    ).reverse();
-
+        Array.isArray(rows)
+            ? rows.reverse()
+            : []
+    );
 }
 
 
@@ -1246,7 +1463,6 @@ function buildHistoryMessages(
     ) {
 
         return [];
-
     }
 
 
@@ -1271,10 +1487,8 @@ function buildHistoryMessages(
                     cleanText(
                         item.message
                     )
-
             })
         );
-
 }
 
 
@@ -1292,16 +1506,23 @@ function isValidImage(
     ) {
 
         return false;
-
     }
 
 
     return (
-        image.startsWith("data:image/") ||
-        image.startsWith("https://") ||
-        image.startsWith("http://")
-    );
 
+        image.startsWith(
+            "data:image/"
+        ) ||
+
+        image.startsWith(
+            "https://"
+        ) ||
+
+        image.startsWith(
+            "http://"
+        )
+    );
 }
 
 
@@ -1323,7 +1544,6 @@ function buildVisionMessage(
                 text:
                     message ||
                     "इस image को ध्यान से analyze करके बताओ कि इसमें क्या दिखाई दे रहा है।"
-
             },
 
             {
@@ -1331,66 +1551,12 @@ function buildVisionMessage(
                 type: "image_url",
 
                 image_url: {
+
                     url: image
                 }
-
             }
-
         ]
-
     };
-
-}
-
-
-/* =========================================================
-   RESPONSE
-========================================================= */
-
-function jsonResponse(
-    body,
-    status = 200
-) {
-
-    return new Response(
-        JSON.stringify(body),
-        {
-
-            status,
-
-            headers: {
-
-                "Content-Type":
-                    "application/json",
-
-                "Cache-Control":
-                    "no-store",
-
-                ...corsHeaders()
-
-            }
-
-        }
-    );
-
-}
-
-
-function corsHeaders() {
-
-    return {
-
-        "Access-Control-Allow-Origin":
-            "*",
-
-        "Access-Control-Allow-Methods":
-            "POST, OPTIONS",
-
-        "Access-Control-Allow-Headers":
-            "Content-Type"
-
-    };
-
 }
 
 
@@ -1413,11 +1579,13 @@ export default async function handler(
         return new Response(
             null,
             {
+
                 status: 204,
-                headers: corsHeaders()
+
+                headers:
+                    corsHeaders()
             }
         );
-
     }
 
 
@@ -1431,13 +1599,15 @@ export default async function handler(
 
         return jsonResponse(
             {
+
                 success: false,
+
                 error:
                     "Only POST requests are allowed."
             },
+
             405
         );
-
     }
 
 
@@ -1460,22 +1630,24 @@ export default async function handler(
 
             return jsonResponse(
                 {
+
                     success: false,
+
                     error:
                         "Invalid request body."
                 },
+
                 400
             );
-
         }
 
 
         /* =================================================
-           USER
+           FORCE SINGLE USER
         ================================================= */
 
         const userId =
-            getUserId(body);
+            getUserId();
 
 
         /* =================================================
@@ -1489,7 +1661,7 @@ export default async function handler(
 
 
         /* =================================================
-           HISTORY
+           HISTORY ACTION
         ================================================= */
 
         if (
@@ -1512,17 +1684,19 @@ export default async function handler(
                 history
 
             });
-
         }
 
 
         /* =================================================
-           MEMORIES
+           MEMORY ACTION
         ================================================= */
 
         if (
+
             action === "memories" ||
+
             action === "memory"
+
         ) {
 
             const memories =
@@ -1537,10 +1711,14 @@ export default async function handler(
 
                 userId,
 
-                memories
+                memories,
+
+                debug:
+                    buildMemoryDebug(
+                        memories
+                    )
 
             });
-
         }
 
 
@@ -1573,18 +1751,20 @@ export default async function handler(
 
             return jsonResponse(
                 {
+
                     success: false,
+
                     error:
                         "Message or image is required."
                 },
+
                 400
             );
-
         }
 
 
         /* =================================================
-           LOAD MEMORY
+           LOAD CURRENT MEMORY
         ================================================= */
 
         let memories =
@@ -1619,7 +1799,7 @@ export default async function handler(
 
 
         /* =================================================
-           SAVE NEW MEMORY
+           SAVE MEMORY
         ================================================= */
 
         if (
@@ -1634,15 +1814,14 @@ export default async function handler(
 
 
             /*
-             * सबसे important:
-             * Save के बाद तुरंत Neon से फिर पढ़ना।
+             * Save के तुरंत बाद database से
+             * fresh memory reload।
              */
 
             memories =
                 await loadMemories(
                     userId
                 );
-
         }
 
 
@@ -1657,7 +1836,6 @@ export default async function handler(
                 "user",
                 message
             );
-
         }
 
 
@@ -1670,8 +1848,7 @@ export default async function handler(
         ) {
 
             /*
-             * Neon से fresh memory
-             * फिर से पढ़ रहे हैं।
+             * हमेशा fresh Neon data।
              */
 
             memories =
@@ -1711,12 +1888,15 @@ export default async function handler(
 
                     memorySaved,
 
-                    memories
+                    memories,
+
+                    debug:
+                        buildMemoryDebug(
+                            memories
+                        )
 
                 });
-
             }
-
         }
 
 
@@ -1754,7 +1934,6 @@ export default async function handler(
 
                 reply =
                     `ठीक है 😊 मैंने याद रख लिया कि आपको ${extractedMemory.value} पसंद है।`;
-
             }
 
 
@@ -1780,10 +1959,14 @@ export default async function handler(
                 savedMemory:
                     extractedMemory,
 
-                memories
+                memories,
+
+                debug:
+                    buildMemoryDebug(
+                        memories
+                    )
 
             });
-
         }
 
 
@@ -1802,8 +1985,7 @@ export default async function handler(
         ================================================= */
 
         const weather =
-            body.weather ||
-            null;
+            body.weather || null;
 
 
         const weatherContext =
@@ -1830,7 +2012,7 @@ export default async function handler(
 
 
         /* =================================================
-           SYSTEM
+           SYSTEM PROMPT
         ================================================= */
 
         const systemPrompt =
@@ -1845,28 +2027,19 @@ export default async function handler(
             });
 
 
-        let groqMessages = [
+        const groqMessages = [
 
             {
+
                 role: "system",
 
                 content:
                     systemPrompt
+            },
 
-            }
+            ...historyMessages
 
         ];
-
-
-        if (
-            historyMessages.length
-        ) {
-
-            groqMessages.push(
-                ...historyMessages
-            );
-
-        }
 
 
         /* =================================================
@@ -1878,7 +2051,8 @@ export default async function handler(
         ) {
 
             /*
-             * Current user text history से remove.
+             * History में अभी जो current user message save हुआ है
+             * उसे vision message से duplicate नहीं करेंगे।
              */
 
             if (
@@ -1896,9 +2070,7 @@ export default async function handler(
                 ) {
 
                     groqMessages.pop();
-
                 }
-
             }
 
 
@@ -1908,7 +2080,6 @@ export default async function handler(
                     message,
                     image
                 )
-
             );
 
 
@@ -1926,7 +2097,6 @@ export default async function handler(
 
                     maxTokens:
                         1400
-
                 });
 
 
@@ -1947,10 +2117,14 @@ export default async function handler(
 
                 intent: "vision",
 
-                memorySaved
+                memorySaved,
+
+                debug:
+                    buildMemoryDebug(
+                        memories
+                    )
 
             });
-
         }
 
 
@@ -1979,7 +2153,7 @@ export default async function handler(
 
 
         /* =================================================
-           SAVE AI
+           SAVE AI RESPONSE
         ================================================= */
 
         await saveConversation(
@@ -1990,7 +2164,7 @@ export default async function handler(
 
 
         /* =================================================
-           RESPONSE
+           FINAL RESPONSE
         ================================================= */
 
         return jsonResponse({
@@ -2005,7 +2179,12 @@ export default async function handler(
 
             memorySaved,
 
-            memories
+            memories,
+
+            debug:
+                buildMemoryDebug(
+                    memories
+                )
 
         });
 
@@ -2027,17 +2206,20 @@ export default async function handler(
                 error:
                     "KAIRA server में समस्या आ गई।",
 
+                /*
+                 * Debug information temporarily दिखाई जाएगी।
+                 * इससे deployment problem पकड़ना आसान होगा।
+                 */
+
                 details:
-                    process.env.NODE_ENV === "development"
-                        ? error?.message
-                        : undefined
+                    error?.message || String(error),
+
+                userId:
+                    KAIRA_USER_ID
 
             },
 
             500
-
         );
-
     }
-
 }
